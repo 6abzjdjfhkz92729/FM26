@@ -296,7 +296,7 @@ if(load())launch();else initSetup();\nsetTimeout(()=>{const b=$("startCareer");i
   window.fmRole=function(id,role){state.tacticRoles[id]=role;save();delete $("view-tactics").dataset.v2;renderTactics();toast("◈ Rôle tactique : "+role)};
 
   // Make the new views reachable even if renderAll was called before the navigation injection.
-  document.querySelectorAll(".sidebar .side-item[data-view]").forEach(b=>b.onclick=()=>go(b.dataset.view));
+  document.querySelectorAll(".sidebar .side-item[data-view]").forEach(b=>b.onclick=()=>go(b.dataset.view)); $("advanceBtn").onclick=window.advanceWeek;
   toast("✨ Mise à jour FM26 chargée");
 })();
 
