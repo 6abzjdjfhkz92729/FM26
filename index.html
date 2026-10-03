@@ -171,6 +171,135 @@ document.querySelectorAll(".filter-chip").forEach(b=>b.onclick=()=>{document.que
 $("advanceBtn").onclick=advanceWeek;$("saveBtn").onclick=save;$("resetBtn").onclick=reset;
 window.go=go;window.openMail=openMail;window.handleMailAction=handleMailAction;window.openPlayerChat=openPlayerChat;window.selectChat=selectChat;window.sendPlayerMessage=sendPlayerMessage;window.setTactic=setTactic;window.sendOffer=sendOffer;window.playNextMatch=playNextMatch;window.playFixture=playFixture;window.advanceWeek=advanceWeek;window.answerPress=answerPress;window.generateWeeklyMail=generateWeeklyMail;window.simulateSeason=simulateSeason;
 if(load())launch();else initSetup();\nsetTimeout(()=>{const b=$("startCareer");if(b){b.addEventListener("click",()=>b.blur());}},0);
+
+/* ===== FM26 MEGA UPDATE 2026 ===== */
+(function(){
+  const style=document.createElement("style");style.textContent="\n.v2-grid{display:grid;gap:12px}.v2-grid-2{grid-template-columns:1.15fr .85fr}.v2-grid-3{grid-template-columns:repeat(3,1fr)}\n.v2-panel{background:linear-gradient(145deg,#101a30,#0b1222);border:1px solid #ffffff12;border-radius:16px;box-shadow:0 18px 55px rgba(0,0,0,.25);padding:16px}\n.v2-panel h2,.v2-panel h3{margin:0}.v2-sub{font-size:11px;color:#7f90ab;margin-top:4px}.v2-row{display:flex;justify-content:space-between;align-items:center;gap:10px}.v2-list{display:grid;gap:8px;margin-top:12px}.v2-item{padding:11px;border:1px solid #ffffff0b;border-radius:12px;background:#ffffff03}.v2-item:hover{border-color:#ffffff20;background:#ffffff06}\n.v2-meter{height:7px;background:#050913;border-radius:99px;overflow:hidden}.v2-meter span{display:block;height:100%;background:linear-gradient(90deg,#7040d0,#d95ce8);border-radius:99px}\n.v2-tag{display:inline-flex;padding:4px 7px;border-radius:999px;background:#ffffff07;border:1px solid #ffffff10;color:#a8b5ca;font-size:9px}.v2-big{font-size:30px;font-weight:950;letter-spacing:-.05em}.v2-stat{padding:12px;border-radius:12px;background:#ffffff04;border:1px solid #ffffff0b}.v2-stat b{font-size:18px}.v2-stat span{display:block;color:#7385a1;font-size:9px;margin-top:3px}\n.v2-action{border:1px solid #ffffff12;background:#ffffff07;color:#fff;border-radius:9px;padding:8px 10px}.v2-action:hover{border-color:#b56cff55;background:#9a4dff12}\n.v2-pitch{position:relative;min-height:360px;border-radius:18px;overflow:hidden;background:linear-gradient(90deg,#0b3925,#0e512e);border:1px solid #ffffff18}.v2-pitch:before{content:\"\";position:absolute;inset:18px;border:1px solid #ffffff55;border-radius:8px}.v2-pitch:after{content:\"\";position:absolute;left:50%;top:18px;bottom:18px;width:1px;background:#ffffff55}.v2-player{position:absolute;transform:translate(-50%,-50%);width:72px;text-align:center}.v2-dot{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;margin:auto;background:linear-gradient(145deg,#7137cf,#bd55dc);border:2px solid #ffffffaa;font-size:9px;font-weight:900}.v2-player b{display:block;font-size:8px;margin-top:3px;text-shadow:0 1px 3px #000}.v2-player span{font-size:7px;color:#d7e1ef}\n@media(max-width:1050px){.v2-grid-3{grid-template-columns:1fr}.v2-grid-2{grid-template-columns:1fr}}@media(max-width:760px){.workspace{grid-template-columns:58px 1fr}.inbox-panel{display:none}.sidebar{padding:8px 4px}.side-item{width:44px;height:44px}.content{padding:12px}.v2-pitch{min-height:300px}}\n";document.head.appendChild(style);
+  function v2Init(){
+    state.training=state.training||{focus:"Récupération",intensity:62,weeklyPlan:["Récupération","Tactique","Défense","Attaque","Repos","Match","Récupération"]};
+    state.injuries=state.injuries||[];
+    state.youth=state.youth||Array.from({length:6},(_,i)=>({id:uid(),name:pick(FIRST_NAMES)+" "+pick(LAST_NAMES),age:rnd(16,19),pos:pick(["GB","DC","DD","MC","MOC","AD","AG","BT"]),ovr:rnd(52,67),pot:rnd(72,90),progress:rnd(0,8)}));
+    state.staff=state.staff||[
+      {role:"Adjoint",name:"Thomas Laurent",skill:82},
+      {role:"Préparateur physique",name:"Marc Vidal",skill:79},
+      {role:"Analyste",name:"Nicolas Rey",skill:86},
+      {role:"Responsable recrutement",name:"Julien Morel",skill:84},
+      {role:"Médecin",name:"Dr. Claire Martin",skill:88}
+    ];
+    state.historyStats=state.historyStats||{shots:0,goals:0,poss:50,matches:0,cleanSheets:0};
+    state.tacticRoles=state.tacticRoles||{};
+    state.weeklyDecisions=state.weeklyDecisions||0;
+  }
+  v2Init();
+
+  const nav='<button class="side-item" data-view="training" title="Entraînement">◒</button><button class="side-item" data-view="medical" title="Médical">✚</button><button class="side-item" data-view="youth" title="Jeunes">★</button><button class="side-item" data-view="data" title="Data Hub">◌</button><button class="side-item" data-view="board" title="Direction">♛</button>';
+  const clubButton='<button class="side-item" data-view="club" title="Club">⚑</button>';
+  const side=document.querySelector(".sidebar");
+  if(side && !side.querySelector('[data-view="training"]')) side.insertAdjacentHTML("beforeend",nav);
+  if(!document.getElementById("view-training")){
+    document.querySelector("main.content").insertAdjacentHTML("beforeend",
+      '<section id="view-training" class="view"></section><section id="view-medical" class="view"></section><section id="view-youth" class="view"></section><section id="view-data" class="view"></section><section id="view-board" class="view"></section>'
+    );
+  }
+
+  function panel(title,sub,body,actions=""){return '<div class="v2-panel"><div class="v2-row"><div><h2>'+title+'</h2><div class="v2-sub">'+sub+'</div></div><div>'+actions+'</div></div>'+body+'</div>'}
+  function esc2(s){return esc(s)}
+  function renderTraining(){
+    const plans=["Récupération","Tactique","Défense","Attaque","Physique","Construction","Coups de pied arrêtés"];
+    const buttons=plans.map(p=>'<button class="v2-action" onclick="window.fmSetTraining(\''+p.replace(/'/g,"\\'")+'\')">'+p+'</button>').join("");
+    const rows=state.squad.slice(0,12).map(p=>'<div class="v2-item"><div class="v2-row"><b>'+esc2(p.name)+'</b><span class="v2-tag">'+p.pos+' · '+p.ovr+'</span></div><div class="v2-meter" style="margin-top:8px"><span style="width:'+p.fitness+'%"></span></div><div class="v2-sub">Condition '+p.fitness+'% · forme '+p.form.toFixed(1)+'/10</div></div>').join("");
+    $("view-training").innerHTML='<div class="title-row"><div><h1>Centre d’entraînement</h1><p>Prépare ton équipe semaine après semaine.</p></div><span class="badge purple">Focus : '+esc2(state.training.focus)+'</span></div><div class="v2-grid v2-grid-2"><div>'+panel("Plan de la semaine","Choisis le travail prioritaire",'<div class="actions" style="margin-top:14px">'+buttons+'</div><div class="v2-list">'+state.training.weeklyPlan.map((x,i)=>'<div class="v2-item"><div class="v2-row"><b>J'+(i+1)+'</b><span class="v2-tag">'+x+'</span></div></div>').join("")+'</div>')+'</div><div>'+panel("Intensité","Impact sur forme et fatigue",'<div class="v2-big">'+state.training.intensity+'%</div><input class="input" type="range" min="25" max="95" value="'+state.training.intensity+'" oninput="window.fmSetIntensity(this.value)"><div class="v2-sub">Une intensité élevée accélère la progression mais augmente la fatigue.</div>')+panel("Groupe","État de l’effectif",rows)+'</div></div>';
+  }
+  function renderMedical(){
+    const injured=state.squad.filter(p=>p.injured>0);
+    const body=injured.length?injured.map(p=>'<div class="v2-item"><div class="v2-row"><b>'+esc2(p.name)+'</b><span class="v2-tag">indisponible '+p.injured+' j</span></div><div class="v2-sub">'+p.pos+' · condition '+p.fitness+'%</div></div>').join(""):'<div class="notice good">Aucune blessure actuellement signalée.</div>';
+    $("view-medical").innerHTML='<div class="title-row"><div><h1>Médical</h1><p>Disponibilité, fatigue et prévention.</p></div></div><div class="v2-grid v2-grid-3">'+panel("Disponibilité","Joueurs actuellement indisponibles",body)+panel("Prévention","Charge collective",'<div class="v2-stat"><b>'+Math.round(state.squad.reduce((a,p)=>a+p.fitness,0)/state.squad.length)+'%</b><span>condition moyenne</span></div><div class="v2-stat" style="margin-top:8px"><b>'+state.training.intensity+'%</b><span>intensité d’entraînement</span></div>')+panel("Équipe médicale","Staff",state.staff.filter(s=>s.role==="Médecin").map(s=>'<div class="v2-item"><b>'+esc2(s.name)+'</b><div class="v2-sub">'+s.role+' · compétence '+s.skill+'</div></div>').join(""))+'</div><div style="margin-top:12px">'+panel("Recommandation médicale","Analyse automatique",'<div class="notice">'+(injured.length?"Réduis la charge des joueurs fragiles et évite d’enchaîner les matchs sans récupération.":"Le groupe est disponible. Une charge progressive permet de conserver de bonnes conditions physiques.")+'</div>')+'</div>';
+  }
+  function renderYouth(){
+    const rows=state.youth.map(p=>'<div class="v2-item"><div class="v2-row"><div><b>'+esc2(p.name)+'</b><div class="v2-sub">'+p.age+' ans · '+p.pos+'</div></div><span class="v2-tag">Potentiel '+p.pot+'</span></div><div style="margin-top:9px"><div class="v2-meter"><span style="width:'+p.ovr+'%"></span></div><div class="v2-sub">Niveau '+p.ovr+' · progression +'+p.progress+' cette saison</div></div></div>').join("");
+    $("view-youth").innerHTML='<div class="title-row"><div><h1>Centre de formation</h1><p>Construis la prochaine génération du club.</p></div><button class="primary-btn" onclick="window.fmPromoteYouth()">Promouvoir un jeune</button></div>'+panel("Génération montante","Potentiel et progression",'<div class="v2-grid v2-grid-2">'+rows+'</div>');
+  }
+  function renderData(){
+    const s=state.historyStats;
+    const avgPoss=s.matches?Math.round(s.poss/s.matches):50;
+    const body='<div class="grid-4"><div class="v2-stat"><b>'+s.matches+'</b><span>matchs analysés</span></div><div class="v2-stat"><b>'+s.goals+'</b><span>buts marqués</span></div><div class="v2-stat"><b>'+s.shots+'</b><span>tirs</span></div><div class="v2-stat"><b>'+avgPoss+'%</b><span>possession moyenne</span></div></div><div class="v2-grid v2-grid-2" style="margin-top:12px"><div class="v2-panel"><h3>Profil de jeu</h3><div class="v2-list"><div class="v2-item"><div class="v2-row"><span>Pressing</span><b>'+esc2(state.tactics.pressing)+'</b></div></div><div class="v2-item"><div class="v2-row"><span>Bloc</span><b>'+esc2(state.tactics.line)+'</b></div></div><div class="v2-item"><div class="v2-row"><span>Largeur</span><b>'+esc2(state.tactics.width)+'</b></div></div><div class="v2-item"><div class="v2-row"><span>Mentalité</span><b>'+esc2(state.tactics.mentality)+'</b></div></div></div></div><div class="v2-panel"><h3>Conseil de l’analyste</h3><div class="v2-sub">Basé sur les derniers matchs</div><div class="notice" style="margin-top:12px">'+(avgPoss<45?"Ton équipe subit beaucoup : envisage une sortie de balle plus sécurisée.":avgPoss>60?"Tu contrôles le ballon : travaille les occasions créées dans le dernier tiers.":"Le contrôle est équilibré : cherche les espaces derrière le bloc.")+'</div></div></div>';
+    $("view-data").innerHTML='<div class="title-row"><div><h1>Data Hub</h1><p>Les chiffres qui expliquent tes résultats.</p></div></div>'+body;
+  }
+  function renderBoard(){
+    const trust=state.boardTrust, fans=state.fans;
+    $("view-board").innerHTML='<div class="title-row"><div><h1>Direction</h1><p>Objectifs, confiance et stratégie du club.</p></div><span class="badge '+(trust>=70?"green":trust>=50?"orange":"red")+'">'+trust+'% confiance</span></div><div class="grid-3"><div class="card pad"><div class="v2-big">'+trust+'%</div><div class="v2-sub">Confiance du conseil</div><div class="v2-meter" style="margin-top:10px"><span style="width:'+trust+'%"></span></div></div><div class="card pad"><div class="v2-big">'+fans+'%</div><div class="v2-sub">Satisfaction supporters</div><div class="v2-meter" style="margin-top:10px"><span style="width:'+fans+'%"></span></div></div><div class="card pad"><div class="v2-big">'+fmtMoney(state.budget)+'</div><div class="v2-sub">Budget transfert restant</div></div></div><div style="margin-top:12px" class="v2-grid v2-grid-2">'+panel("Objectifs","Ce que la direction surveille",'<div class="v2-list"><div class="v2-item"><b>Résultats</b><div class="v2-sub">Progresser en championnat et respecter les attentes.</div></div><div class="v2-item"><b>Jeunesse</b><div class="v2-sub">Donner une place aux jeunes à potentiel.</div></div><div class="v2-item"><b>Finances</b><div class="v2-sub">Ne pas dépasser durablement la masse salariale.</div></div></div>')+panel("Réputation","Évolution du manager",'<div class="v2-big">'+state.reputation+'</div><div class="v2-sub">réputation actuelle</div><div class="notice" style="margin-top:12px">'+(state.reputation>=75?"Ton nom commence à circuler parmi les grands clubs.":state.reputation>=55?"Les performances commencent à construire ta réputation.":"Chaque décision compte : les résultats restent le principal levier.")+'</div>')+'</div>';
+  }
+
+  window.fmSetTraining=function(f){state.training.focus=f;state.training.weeklyPlan=state.training.weeklyPlan.map((x,i)=>i===1?f:x);state.weeklyDecisions++;save();renderTraining();toast("🎯 Focus d’entraînement : "+f)};
+  window.fmSetIntensity=function(v){state.training.intensity=Number(v);renderTraining()};
+  window.fmPromoteYouth=function(){const p=state.youth.find(x=>x.age>=18)||state.youth[0];if(!p)return;state.squad.push({id:uid(),name:p.name,age:p.age,pos:p.pos,role:"Jeune",ovr:p.ovr,pot:p.pot,fitness:86,morale:78,form:6.5,apps:0,goals:0,assists:0,minutes:0,yellow:0,red:0,injured:0,contract:3,value:Math.max(1,(p.ovr-45)*.5),personality:"ambitieux"});state.youth=state.youth.filter(x=>x.id!==p.id);addMail("player","Responsable formation","Un jeune rejoint le groupe",p.name+" est promu dans l’effectif professionnel.","player",true);save();renderAll();toast("⭐ "+p.name+" rejoint l'effectif.")};
+
+  const originalAdvance=advanceWeek;
+  window.advanceWeek=function(){
+    originalAdvance();
+    state.squad.forEach(p=>{
+      if(p.injured>0)p.injured=Math.max(0,p.injured-7);
+      const fatigue=Math.max(0,state.training.intensity-60);
+      p.fitness=clamp(p.fitness+(state.training.focus==="Récupération"?5:2)-Math.round(fatigue/12),35,100);
+      if(p.fitness<50 && Math.random()<.08){p.injured=rnd(7,21);addMail("assistant","Staff médical","Alerte physique",p.name+" présente une fatigue importante. Indisponibilité estimée : "+p.injured+" jours.","match",true);}
+    });
+    state.youth.forEach(p=>{p.progress+=rnd(0,2);p.ovr=clamp(p.ovr+(state.training.focus==="Jeunes"?1:0),p.ovr,90)});
+    state.historyStats.matches=state.historyStats.matches;
+    save();renderAll();
+  };
+  window.playFixture=playFixture;
+
+  const oldSim=simulateMatch;
+  simulateMatch=function(f){
+    const m=oldSim(f);
+    m.xgH=Number((m.shotsH*(0.08+Math.random()*0.05)).toFixed(2));
+    m.xgA=Number((m.shotsA*(0.08+Math.random()*0.05)).toFixed(2));
+    m.poss=Math.round(m.poss);
+    if(Math.random()<.35)m.events.splice(Math.max(0,m.events.length-1),0,evt(rnd(58,82),"chance","▣","Analyse : une transition rapide crée un décalage dans le bloc."));
+    return m;
+  };
+
+  const oldPost=postMatchEffects;
+  postMatchEffects=function(us,opp,f,m){
+    oldPost(us,opp,f,m);
+    state.historyStats.matches++;
+    state.historyStats.goals+=us;
+    state.historyStats.shots+=m.home===state.club?m.shotsH:m.shotsA;
+    state.historyStats.poss+=m.home===state.club?m.poss:100-m.poss;
+    if((m.home===state.club?m.awayScore:m.homeScore)===0)state.historyStats.cleanSheets++;
+    if(Math.random()<.18){
+      const p=pick(state.squad.filter(x=>x.fitness>55));
+      if(p){p.injured=rnd(7,18);addMail("assistant","Staff médical","Rapport après match",p.name+" termine la rencontre avec une gêne. Prudence recommandée.","match");}
+    }
+    save();
+  };
+
+  const oldRenderAll=renderAll;
+  renderAll=function(){
+    v2Init();
+    oldRenderAll();
+    renderTraining();renderMedical();renderYouth();renderData();renderBoard();
+    document.querySelectorAll(".side-item[data-view]").forEach(b=>{b.onclick=null;b.addEventListener("click",()=>go(b.dataset.view),{once:true})});
+  };
+
+  // Advanced tactical board injected into existing tactics screen.
+  const oldRenderTactics=renderTactics;
+  renderTactics=function(){
+    oldRenderTactics();
+    const root=$("view-tactics");if(!root||root.dataset.v2==="1")return;
+    root.dataset.v2="1";
+    const names=state.squad.slice(0,11);
+    const pos=[[50,90],[25,72],[42,76],[58,76],[75,72],[35,53],[65,53],[50,48],[22,27],[78,27],[50,20]];
+    const pitch=names.map((p,i)=>'<div class="v2-player" style="left:'+pos[i][0]+'%;top:'+pos[i][1]+'%"><div class="v2-dot">'+esc2(p.pos)+'</div><b>'+esc2(p.name.split(" ")[0])+'</b><span>'+p.ovr+'</span></div>').join("");
+    root.insertAdjacentHTML("beforeend",panel("Visualiseur tactique","Onze de départ — lecture avec ballon",'<div class="v2-grid v2-grid-2" style="margin-top:12px"><div class="v2-pitch">'+pitch+'</div><div><div class="v2-list">'+names.map(p=>'<div class="v2-item"><div class="v2-row"><b>'+esc2(p.name)+'</b><span class="v2-tag">'+p.pos+' · '+p.ovr+'</span></div><div class="v2-sub">Rôle : '+esc2(state.tacticRoles[p.id]||"Standard")+'</div><div class="actions" style="margin-top:7px"><button class="small-btn" onclick="window.fmRole(\''+p.id+'\',\'Relanceur\')">Relanceur</button><button class="small-btn" onclick="window.fmRole(\''+p.id+'\',\'Piston\')">Piston</button><button class="small-btn" onclick="window.fmRole(\''+p.id+'\',\'Créateur\')">Créateur</button></div></div>').join("")+'</div></div></div>'));
+  };
+  window.fmRole=function(id,role){state.tacticRoles[id]=role;save();delete $("view-tactics").dataset.v2;renderTactics();toast("◈ Rôle tactique : "+role)};
+
+  // Make the new views reachable even if renderAll was called before the navigation injection.
+  document.querySelectorAll(".sidebar .side-item[data-view]").forEach(b=>b.onclick=()=>go(b.dataset.view));
+  toast("✨ Mise à jour FM26 chargée");
+})();
+
 </script>
 </body>
 </html>
