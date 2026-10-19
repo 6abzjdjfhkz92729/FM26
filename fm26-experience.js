@@ -126,7 +126,7 @@
       'Allemagne':['Oberliga régionale','3. Liga','2. Bundesliga','Bundesliga'],
       'Portugal':['Campeonato distrital','Liga Portugal 2','Primeira Liga'],
       'Pays-Bas':['Regionale klasse','Eerste Divisie','Eredivisie'],
-      'Belgique':['Provinciale afdeling','Challenger Pro League']
+      'Belgique':['Provinciale afdeling','Challenger Pro League','Jupiler Pro League']
     };
     return pyramids[country] || [];
   }
