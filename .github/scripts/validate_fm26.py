@@ -62,28 +62,31 @@ else:
         for name, teams in leagues.items():
             if len(teams) < 8:
                 errors.append(f"{name}: too few teams ({len(teams)}).")
-            if len(teams) % 2:
-                errors.append(f"{name}: round-robin scheduler requires an even number of teams.")
             if len(teams) != len(set(teams)):
                 errors.append(f"{name}: duplicate club names.")
-            # Re-run the circle-method scheduler and verify each club appears once per round.
-            n = len(teams)
-            ring = list(teams)
+            # The circle method supports odd-size leagues by adding a BYE slot.
+            bye = "__FM26_BYE__"
+            schedule_teams = list(teams) + ([bye] if len(teams) % 2 else [])
+            n = len(schedule_teams)
+            ring = list(schedule_teams)
             pairings = []
+            expected_count = len(teams) * (len(teams) - 1) // 2
             for r in range(n - 1):
                 used = set()
                 for i in range(n // 2):
                     home, away = ring[i], ring[n - 1 - i]
                     if (r + i) % 2:
                         home, away = away, home
+                    if home == bye or away == bye:
+                        continue
                     if home in used or away in used:
                         errors.append(f"{name}: club scheduled twice in round {r + 1}.")
                     used.add(home); used.add(away)
                     pairings.append((home, away))
-                if len(used) != n:
-                    errors.append(f"{name}: a club is missing in round {r + 1}.")
+                if used != set(teams):
+                    errors.append(f"{name}: a club is missing or scheduled twice in round {r + 1}.")
                 ring = [ring[0], ring[-1], *ring[1:-1]]
-            if len(pairings) != n * (n - 1) // 2:
+            if len(pairings) != expected_count:
                 errors.append(f"{name}: incorrect first-half fixture count.")
             if len({frozenset(pair) for pair in pairings}) != len(pairings):
                 errors.append(f"{name}: duplicate pairing in first half.")
