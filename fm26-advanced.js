@@ -74,7 +74,7 @@ const titles={contracts:'Contrats',scouting:'Centre de recrutement',club:'Club &
 ub & installations',press:'Conférence de presse',history:'Historique',settings:'Options & diagnostic'};
 const beforeRender=render;render=function(){ensure();beforeRender();const h=document.querySelector('#hd h2');if(h&&titles[S.view])h.textContent=titles[S.view];if(S.view==='home'){const vw=document.querySelector('#vw');if(vw&&!document.querySelector('#globalSearchWrap')){const wrap=document.createElement('div');wrap.id='globalSearchWrap';wrap.className='pn';wrap.style.marginBottom='12px';wrap.innerHTML='<h3>Recherche globale</h3><input id="globalSearch" placeholder="Rechercher un joueur, un message ou un club…" oninput="FM26A.search(this.value)"><div id="globalSearchResults" class="mu">Recherche dans la carrière</div>';vw.prepend(wrap)}}};
 const oldEnd=endMatch;endMatch=function(){oldEnd();if(!S)return;ensure();const oldSusp=new Map((S.preMatchSusp||[]).map(x=>[x.id,x.susp]));S.sq.forEach(p=>{const before=oldSusp.get(p.id)||0;if((p.susp||0)<=before&&p.susp>0)p.susp--;});S.preMatchSusp=[];const win=M.h===M.a?0:(M.f.home===S.club?M.h>M.a:M.a>M.h)?1:-1;S.sq.forEach(p=>{if(xi().some(x=>x.id===p.id))p.morale=clamp(p.morale+win*3+(p.form>7.5?1:0),0,100);else p.morale=clamp(p.morale+(win>0?1:-1),0,100)});advanceScout();if(S.sq.some(p=>(p.end||2029)<=2027)&&!S.contractAlertSent){S.contractAlertSent=true;mail('Ressources humaines','Contrats à examiner','Au moins un contrat arrive bientôt à échéance. Consulte le menu Contrats.')}S.subsUsed=0;sv()};
-const oldNewSeason=newSeason;newSeason=function(){ensure();const t=tbl(),my=t.find(x=>x.c===S.club),pos=(t.findIndex(x=>x.c===S.club)+1)||t.length;const games=S.fx.filter(f=>f.played&&(f.home===S.club||f.away===S.club));const goals=S.sq.reduce((a,p)=>a+(p.g||0),0),wins=games.filter(f=>{const [h,a]=f.score.split('-').map(Number);return f.home===S.club?h>a:a>h}).length;S.history.push({season:S.season,club:S.club,league:S.lg,position:pos,points:my?.pts||0,wins,goals});S.history=S.history.slice(-30);if(S.boardGoals){S.boardGoals.forEach(g=>{if(g.id==='league')g.done=pos<=(S.objectives.position||10);if(g.id==='budget')g.done=S.bud>=0;if(g.id==='youth')g.done=games.some(f=>f.played)&&S.sq.some(p=>p.age<21&&p.ap>0);});const completed=S.boardGoals.filter(g=>g.done).length;S.board=clamp(S.board+(completed-1)*3,0,100)}if(pos<=Math.min(4,t.length/4)&&S.managerRep<100){S.managerRep=(S.managerRep||20)+4;const alternatives=Object.entries(LG).flatMap(([league,clubs])=>clubs.map(club=>({league,club}))).filter(x=>x.club!==S.club&&x.club!==S.clubObj.stadium);if(alternatives.length&&Math.random()<.45)S.jobOffers.push({...pick(alternatives),ambition:pos<=2?'Élevée':'Modérée'});S.jobOffers=S.jobOffers.slice(-3)}oldNewSeason();ensure();S.contractAlertSent=false;sv();render()};
+const oldNewSeason=newSeason;newSeason=function(){ensure();const t=tbl(),my=t.find(x=>x.c===S.club),pos=(t.findIndex(x=>x.c===S.club)+1)||t.length;const games=S.fx.filter(f=>f.played&&(f.home===S.club||f.away===S.club)&&(!f.comp||f.comp===S.lg));const goals=S.sq.reduce((a,p)=>a+(p.g||0),0),wins=games.filter(f=>{const [h,a]=f.score.split('-').map(Number);return f.home===S.club?h>a:a>h}).length;S.history.push({season:S.season,club:S.club,league:S.lg,position:pos,points:my?.pts||0,wins,goals});S.history=S.history.slice(-30);if(S.boardGoals){S.boardGoals.forEach(g=>{if(g.id==='league')g.done=pos<=(S.objectives.position||10);if(g.id==='budget')g.done=S.bud>=0;if(g.id==='youth')g.done=games.some(f=>f.played)&&S.sq.some(p=>p.age<21&&p.ap>0);});const completed=S.boardGoals.filter(g=>g.done).length;S.board=clamp(S.board+(completed-1)*3,0,100)}if(pos<=Math.min(4,t.length/4)&&S.managerRep<100){S.managerRep=(S.managerRep||20)+4;const alternatives=Object.entries(LG).flatMap(([league,clubs])=>clubs.map(club=>({league,club}))).filter(x=>x.club!==S.club&&x.club!==S.clubObj.stadium);if(alternatives.length&&Math.random()<.45)S.jobOffers.push({...pick(alternatives),ambition:pos<=2?'Élevée':'Modérée'});S.jobOffers=S.jobOffers.slice(-3)}oldNewSeason();ensure();S.contractAlertSent=false;sv();render()};
 const oldStartMatch=startMatch;startMatch=function(){initCareer();S.preMatchSusp=S.sq.map(p=>({id:p.id,susp:p.susp||0}));oldStartMatch();if(M){M.sp=S.options.speed||170;const bonus=((S.tc.press-50)*.018)+((S.tc.line-50)*.012)+((S.tc.tempo-50)*.01)+((S.tc.width-50)*.006);if(M.f.home===S.club)M.hp=clamp(M.hp+bonus,35,100);else M.ap=clamp(M.ap+bonus,35,100);clearInterval(T);T=setInterval(tick,M.sp)}};
 window.FM26A={
  instruction(k,v){if(!['press','line','tempo','width'].includes(k))return;S.tc[k]=clamp(v,0,100);const out=document.getElementById(k+'Value');if(out)out.textContent=S.tc[k]+'%';sv()},
@@ -90,7 +90,7 @@ window.FM26A={
  hireStaff(role,speciality){if(S.staff.length>=14)return alert('Limite de staff atteinte.');const fee=25000;if(S.bud*1000000<fee)return alert('Budget insuffisant.');S.bud-=fee/1000000;S.staff.push({id:Date.now(),name:pick(FN)+' '+pick(LN),role,speciality,quality:8+rnd(0,11),salary:4000+rnd(0,15)*1000});mail('Ressources humaines',role+' recruté',`Un nouveau membre du staff arrive pour ${money(fee)} de frais.`);sv();render()},
  speed(n){S.options.speed=n;sv();render()},
  anim(){S.options.animations=!S.options.animations;document.documentElement.classList.toggle('reduce-motion',!S.options.animations);sv();render()},
- audit(){const errs=(window.FMX?.validate?.()||[]);if(S){const ids=new Set(),rounds=new Map();if(!Array.isArray(S.fx)||S.fx.length!==LG[S.lg].length*(LG[S.lg].length-1))errs.push('calendrier incomplet ou nombre de matchs incohérent');(S.fx||[]).forEach(f=>{if(ids.has(f.id))errs.push('identifiant de match en double : '+f.id);ids.add(f.id);const key=f.round||String(f.date).slice(0,10);const used=rounds.get(key)||new Set();if(used.has(f.home)||used.has(f.away))errs.push('club programmé deux fois lors de la journée '+key);used.add(f.home);used.add(f.away);rounds.set(key,used)});const pids=new Set();(S.sq||[]).forEach(p=>{if(pids.has(p.id))errs.push('identifiant de joueur en double : '+p.id);pids.add(p.id);if(!Number.isFinite(p.sal)||p.sal<0)errs.push('salaire invalide pour '+p.name);if(!Number.isFinite(p.ovr)||p.ovr<1||p.ovr>100)errs.push('note invalide pour '+p.name)});if(!Number.isFinite(S.bud)||S.bud<0)errs.push('budget transferts invalide')}const el=$('auditResult');if(el)el.innerHTML=errs.length?'<p style="color:#f0717d">'+errs.slice(0,15).map(esc).join('<br>')+'</p>':'<p style="color:#85d36b">Tous les contrôles disponibles sont passés : effectif, budget, identifiants et calendrier.</p>'},
+ audit(){const errs=(window.FMX?.validate?.()||[]);if(S){const ids=new Set(),rounds=new Map();if(!Array.isArray(S.fx)||(S.fx.filter(f=>!f.comp||f.comp===S.lg).length)!==LG[S.lg].length*(LG[S.lg].length-1))errs.push('calendrier de championnat incomplet ou nombre de matchs incohérent');(S.fx||[]).forEach(f=>{if(ids.has(f.id))errs.push('identifiant de match en double : '+f.id);ids.add(f.id);const key=f.round||String(f.date).slice(0,10);const used=rounds.get(key)||new Set();if(used.has(f.home)||used.has(f.away))errs.push('club programmé deux fois lors de la journée '+key);used.add(f.home);used.add(f.away);rounds.set(key,used)});const pids=new Set();(S.sq||[]).forEach(p=>{if(pids.has(p.id))errs.push('identifiant de joueur en double : '+p.id);pids.add(p.id);if(!Number.isFinite(p.sal)||p.sal<0)errs.push('salaire invalide pour '+p.name);if(!Number.isFinite(p.ovr)||p.ovr<1||p.ovr>100)errs.push('note invalide pour '+p.name)});if(!Number.isFinite(S.bud)||S.bud<0)errs.push('budget transferts invalide')}const el=$('auditResult');if(el)el.innerHTML=errs.length?'<p style="color:#f0717d">'+errs.slice(0,15).map(esc).join('<br>')+'</p>':'<p style="color:#85d36b">Tous les contrôles disponibles sont passés : effectif, budget, identifiants et calendrier.</p>'},
  search(q){const el=$('globalSearchResults');if(!el)return;const s=q.trim().toLocaleLowerCase('fr');if(!s){el.textContent='Recherche dans les joueurs, clubs et messages';return}const hits=[];S.sq.filter(p=>(p.name+' '+p.pos).toLocaleLowerCase('fr').includes(s)).slice(0,8).forEach(p=>hits.push(`<div class="ar"><span>${esc(p.name)} · ${p.pos}</span><button class="chip" onclick="openP(${p.id})">Ouvrir</button></div>`));Object.entries(LG).forEach(([league,clubs])=>clubs.filter(c=>c.toLocaleLowerCase('fr').includes(s)).slice(0,4).forEach(c=>hits.push(`<div class="ar"><span>${esc(c)} <small class="mu">${esc(league)}</small></span><button class="chip" onclick="FM26A.clubSearch('${esc(c)}','${esc(league)}')">Voir</button></div>`)));S.ib.filter(m=>(m.t+' '+m.s+' '+m.b).toLocaleLowerCase('fr').includes(s)).slice(0,5).forEach(m=>hits.push(`<div class="ar"><span>${esc(m.t)} <small class="mu">${esc(m.s)}</small></span></div>`));el.innerHTML=hits.join('')||'<p class="mu">Aucun résultat.</p>'},
  clubSearch(club,league){const p=LG[league]||[];alert(`${club}\nChampionnat : ${league}\nClub répertorié : ${p.includes(club)?'oui':'non'}. Le profil complet est disponible lorsque ce club est dirigé dans ta carrière.`)},
  sub(outId,inId){if(!M||M.done)return alert('Les remplacements sont disponibles uniquement pendant un match.');ensure();const xiNow=xi(),out=xiNow.find(p=>p.id===Number(outId)),inn=S.sq.find(p=>p.id===Number(inId));if(!out||!inn||xiNow.some(p=>p.id===inn.id))return alert('Sélection de remplacement invalide.');if((inn.inj||0)>0||(inn.susp||0)>0)return alert('Ce joueur est indisponible.');if(S.subsUsed>=5)return alert('Les cinq changements autorisés ont été utilisés.');S.lineup=xiNow.map(p=>p.id===out.id?inn.id:p.id);S.subsUsed++;out.cond=clamp(out.cond+3,0,100);inn.cond=clamp(inn.cond-5,0,100);if(M.ev)M.ev.unshift({m:M.min,k:'⇄',t:`Changement : ${inn.name} remplace ${out.name}.`});M.cm=`${inn.name} remplace ${out.name}.`;sv();render()},
@@ -179,6 +179,104 @@ endMatch=function(){
   });
   sv();
 };
+
+
+/* Domestic and continental knockout cups. Cup results never affect league standings. */
+const cupTeamPool=()=>Object.entries(LG).flatMap(([league,clubs])=>clubs.map(club=>({club,league})));
+function initCups(){
+ if(!S||!S.fx||!LG[S.lg])return;
+ const existing=S.fx.filter(f=>f.cupKey);
+ if(S.cupComps&&S.cupComps.domestic&&S.cupComps.continental&&existing.length)return;
+ S.cupComps={};
+ const addTournament=(key,name,entrants,offset)=>{
+   const teams=[...new Set(entrants)].slice(0,16);
+   if(teams.length<16)return;
+   const nextId=Math.max(-1,...S.fx.map(f=>Number(f.id)||0))+1;
+   const base=new Date((S.date||'2026-08-01')+'T12:00:00Z');base.setUTCDate(base.getUTCDate()+offset);
+   const games=[];
+   for(let i=0;i<8;i++){
+     const home=teams[i],away=teams[15-i],d=new Date(base);d.setUTCDate(d.getUTCDate()+Math.floor(i/4)*1);
+     games.push({id:nextId+i,date:d.toISOString(),home,away,played:false,score:'',round:key+'-R16',comp:name,cupKey:key,cupRound:1});
+   }
+   S.fx.push(...games);S.cupComps[key]={key,name,round:1,done:false,champion:'',history:[]};
+ };
+ const domestic=LG[S.lg].slice().filter(c=>c!==S.club).sort(()=>Math.random()-.5).slice(0,15);
+ addTournament('domestic','Coupe nationale',[S.club,...domestic],10);
+ const pool=cupTeamPool().filter(x=>x.club!==S.club).sort(()=>Math.random()-.5).slice(0,15).map(x=>x.club);
+ addTournament('continental','Coupe continentale',[S.club,...pool],13);
+ S.fx.sort((a,b)=>new Date(a.date)-new Date(b.date)||Number(a.id)-Number(b.id));
+ S.cupStateVersion=1;
+}
+function advanceCup(playedFixture){
+ if(!S||!playedFixture||!playedFixture.cupKey)return;
+ const key=playedFixture.cupKey,state=S.cupComps?.[key];
+ if(!state||state.done)return;
+ const round=Number(playedFixture.cupRound)||state.round||1;
+ if(round!==state.round)return;
+ // Resolve every remaining tie in the current round, including other clubs.
+ S.fx.filter(f=>f.cupKey===key&&f.cupRound===round&&!f.played).forEach(f=>{
+   const score=simLeagueScore(f.home,f.away);f.played=true;f.score=score[0]+'-'+score[1];
+ });
+ const completed=S.fx.filter(f=>f.cupKey===key&&f.cupRound===round&&f.played);
+ const winners=completed.map(f=>{
+   const [h,a]=String(f.score).split('-').map(Number);
+   if(h===a)return pick([f.home,f.away]); // Cup tie decider, represented as extra-time/penalty advancement.
+   return h>a?f.home:f.away;
+ });
+ state.history.push({round,name:round===1?'Huitièmes':round===2?'Quarts':round===3?'Demi-finales':'Finale',matches:completed.length});
+ if(winners.length===1){
+   state.done=true;state.champion=winners[0];
+   mail('Compétitions',state.name+' : champion',state.champion+' remporte '+state.name+'.');
+ }else{
+   const nextRound=round+1,dates=completed.map(f=>new Date(f.date).getTime()).filter(Number.isFinite),base=new Date((dates.length?Math.max(...dates):Date.now())+21*864e5);
+   const startId=Math.max(-1,...S.fx.map(f=>Number(f.id)||0))+1;
+   for(let i=0;i<winners.length;i+=2){
+     const home=winners[i],away=winners[i+1];if(!away)continue;
+     const id=startId+i/2,turn=nextRound===2?'Quarts':nextRound===3?'Demi-finales':'Finale';
+     const roundLabel=key==='domestic'?'CN':'CC';
+     S.fx.push({id,date:new Date(base.getTime()+Math.floor(i/2)*3600e3).toISOString(),home,away,played:false,score:'',round:roundLabel+'-'+nextRound,comp:state.name,cupKey:key,cupRound:nextRound});
+   }
+   state.round=nextRound;
+   mail('Compétitions',state.name+' : tour suivant',turn+' programmé(s). Les résultats des autres confrontations ont été simulés.');
+ }
+ S.fx.sort((a,b)=>new Date(a.date)-new Date(b.date)||Number(a.id)-Number(b.id));
+ sv();
+}
+const startCareerBeforeCups=startCareer;
+startCareer=function(){startCareerBeforeCups();if(S){initCups();sv();render()}};
+const newSeasonBeforeCups=newSeason;
+newSeason=function(){
+ if(S){
+   const doneBefore=!!S.cupStateVersion;
+   if(!S.fx.some(f=>!f.played&&(f.home===S.club||f.away===S.club)))S.cupComps={};
+ }
+ newSeasonBeforeCups();
+ if(S){S.fx=S.fx.filter(f=>!f.cupKey);S.cupComps={};S.cupStateVersion=0;initCups();sv();render();}
+};
+const oldCompWithCups=V.comp;
+V.comp=function(){
+ const league=oldCompWithCups();
+ const status=(key)=>{
+   const s=S.cupComps?.[key];if(!s)return 'Pas commencé';
+   if(s.done)return 'Champion : '+esc(s.champion);
+   return s.round===1?'Huitièmes de finale':s.round===2?'Quarts de finale':s.round===3?'Demi-finales':'Finale';
+ };
+ const cupCard=(key)=>{
+   const s=S.cupComps?.[key];if(!s)return '';
+   const next=S.fx.filter(f=>f.cupKey===key&&f.home===S.club||f.cupKey===key&&f.away===S.club).filter(f=>!f.played).sort((a,b)=>new Date(a.date)-new Date(b.date))[0];
+   const played=S.fx.filter(f=>f.cupKey===key&&f.played);
+   return '<div class="pn"><h3>'+esc(s.name)+'</h3><div class="big" style="font-size:21px">'+esc(status(key))+'</div><p class="mu">'+played.length+' rencontre(s) terminée(s)</p>'+(next?'<div class="ar"><span>Prochain match</span><b>'+esc(next.home)+' – '+esc(next.away)+'</b></div>':'')+(s.history||[]).map(h=>'<div class="ar"><span>'+esc(h.name)+'</span><b>'+h.matches+' matchs</b></div>').join('')+'</div>';
+ };
+ return '<div class="gr" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr));margin-bottom:12px">'+cupCard('domestic')+cupCard('continental')+'</div>'+league;
+};
+const startMatchBeforeCups=startMatch;
+startMatch=function(){
+ if(S){initCups()}
+ startMatchBeforeCups();
+};
+const endBeforeCupAdvance=endMatch;
+endMatch=function(){endBeforeCupAdvance();if(M?.f?.cupKey)advanceCup(M.f)};
+if(S){initCups();sv();render();}
 
 initCareer();if(S){sv();render()}
 })();
