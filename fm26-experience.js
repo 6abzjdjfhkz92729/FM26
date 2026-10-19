@@ -628,7 +628,7 @@
     if(typeof mail==='function')mail('Événement de carrière',title,text);
   }
   function attachCareerMilestone() {
-    const topLeagues=['Premier League','La Liga','Serie A','Bundesliga','Ligue 1','Eredivisie','Primeira Liga','Süper Lig','Women's Super League','Liga F','Super League Greece','Scottish Premiership','Jupiler Pro League'];
+    const topLeagues=['Premier League','La Liga','Serie A','Bundesliga','Ligue 1','Eredivisie','Primeira Liga','Süper Lig',"Women's Super League",'Liga F','Super League Greece','Scottish Premiership','Jupiler Pro League'];
     const leagueTitles=(S.history||[]).filter(h=>h.position===1&&topLeagues.includes(h.league)).length;
     const europeanTitles=Number(S.europeanTitles||0);
     if((leagueTitles>=3 || europeanTitles>=3) && !S.stadiumNamedForManager) {
