@@ -405,7 +405,7 @@
     const bench=(S.sq||[]).filter(p=>!starters.has(p.id));
     const benchHtml=bench.map(p=>'<div class="fm26-player-row">'+face(p.name,p.id%6)+'<div class="meta"><b>'+txt(p.name)+'</b><small>'+txt(p.pos)+' · '+p.ovr+' · Condition '+(p.cond||0)+'%</small></div><button class="chip" onclick="FM26UX.addToLineup('+p.id+')">Remplacer…</button></div>').join('');
     const avg=ids.length?Math.round(ids.reduce((a,p)=>a+(p.ovr||0),0)/ids.length):0;
-    const liveReturn = M && !M.done ? '<div style="margin:8px 0"><button class="chip" onclick="S.view=\'match\';render()">← Retour au match en direct</button></div>' : '';
+    const liveReturn = M && !M.done ? '<div style="margin:8px 0"><button class="chip" onclick="FM26UX.resumeMatch()">← Retour au match en direct</button></div>' : '';
     return liveReturn + '<div class="page-intro"><div><p class="eyebrow">PRÉPARATION DU MATCH</p><h1>Composition d’équipe</h1><p>Choisis tes titulaires, permute-les par glisser-déposer ou avec les menus des postes.</p></div><div class="season-pill">Note moyenne : '+avg+'</div></div><div class="fm26-lineup-layout"><div class="pn"><div class="wr" style="margin-bottom:10px"><button class="chip '+(S.tc.f==='4-3-3'?'on':'')+'" onclick="FM26UX.formation(\'4-3-3\')">4-3-3</button><button class="chip '+(S.tc.f==='4-2-3-1'?'on':'')+'" onclick="FM26UX.formation(\'4-2-3-1\')">4-2-3-1</button><button class="chip '+(S.tc.f==='4-4-2'?'on':'')+'" onclick="FM26UX.formation(\'4-4-2\')">4-4-2</button></div><div class="fm26-lineup-pitch">'+pitch.join('')+'</div><small class="mu">Glisse un joueur sur un autre pour les intervertir. Le onze choisi influence la force de l’équipe en match.</small></div><div class="pn"><h3>Banc et disponibilité</h3>'+benchHtml+'<div class="fm26-event-banner"><b>À vérifier avant le coup d’envoi</b><p class="mu">Un joueur fatigué, blessé, suspendu ou en perte de moral peut diminuer le niveau collectif. Pense à faire tourner.</p><button class="chip" onclick="S.view=\'talk\';S.activeTalk=\'medical\';render()">Parler au staff médical</button></div></div></div>';
   }
   function addToLineup(id) {
@@ -466,7 +466,7 @@
     const tactics=['Cautious','Balanced','Positive','Attacking'];
     let html='<div class="pn" style="margin-top:12px"><h3>Gestion en direct</h3><div class="fm26-live-tools"><span class="mu">Mentalité</span>';
     tactics.forEach(t=>{html+='<button class="'+(S.tc.m===t?'active':'')+'" onclick="FM26UX.liveTactic(\''+t+'\')">'+({Cautious:'Prudente',Balanced:'Équilibrée',Positive:'Positive',Attacking:'Offensive'}[t])+'</button>';});
-    html+='<button onclick="S.view=\'lineup\';render()">Modifier la composition</button></div>';
+    html+='<button onclick="FM26UX.pauseForLineup()">Modifier la composition</button></div>';
     const starters=lineupIds();
     const selectedOut=starters.map(p=>'<option value="'+p.id+'">'+txt(p.name)+' ('+txt(p.pos)+')</option>').join('');
     const bench=(S.sq||[]).filter(p=>!S.lineup.includes(p.id)&&!(p.inj||0)&&!(p.susp||0));
@@ -476,7 +476,17 @@
   }
   function subFromForm() {
     const out=document.getElementById('fm26-sub-out'),inc=document.getElementById('fm26-sub-in');
-    if(out&&inc&&inc.value)substitute(out.value,inc.value);
+    if(!out||!inc||!inc.value)return;
+    if(window.FM26A && typeof window.FM26A.sub==='function') { window.FM26A.sub(out.value,inc.value); return; }
+    substitute(out.value,inc.value);
+  }
+  function pauseForLineup() {
+    if(M && !M.done) { clearInterval(T); M.p=true; }
+    S.view='lineup'; try{sv()}catch(e){}; render();
+  }
+  function resumeMatch() {
+    if(!M || M.done) { S.view='pre'; render(); return; }
+    S.view='match'; M.p=false; render(); clearInterval(T); T=setInterval(tick,M.sp||170);
   }
   function attachPlayerPhoto() {
     if(!S || S.view!=='player')return;
@@ -658,7 +668,7 @@
     openTalk:openTalk, reply:reply, sendFree:sendFree, readMail:readMail, answerMail:answerMail,
     assign:assign, swap:swap, dragStart:dragStart, dropSlot:dropSlot, addToLineup:addToLineup,
     formation:formation, liveTactic:liveTactic, substitute:substitute, subFromForm:subFromForm,
-    changePortrait:changePortrait, get lowerLeagues(){return lowerLeagues;}, getLowerLeague:getLowerLeague,
+    pauseForLineup:pauseForLineup, resumeMatch:resumeMatch, changePortrait:changePortrait, get lowerLeagues(){return lowerLeagues;}, getLowerLeague:getLowerLeague,
     portraitSvg:portraitSvg, effectiveStrength:effectiveStrength
   };
   window.FM26UX=api;
@@ -857,6 +867,10 @@
           }
         }
         maybeUpdatePhotosAfterRender();
+        if(S && S.view==='lineup' && M && !M.done) {
+          const go=document.querySelector('#go');
+          if(go){go.textContent='REPRENDRE LE MATCH';go.onclick=resumeMatch;}
+        }
         if(S && ['staff','academy','scouting','contracts'].includes(S.view)) {
           document.querySelectorAll('#vw table tbody tr, #vw table tr').forEach((tr, index) => {
             if(index===0)return;
