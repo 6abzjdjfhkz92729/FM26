@@ -168,6 +168,7 @@
       captain: {name:'Capitaine', role:'Vestiaire', icon:'C', messages:[{from:'them',text:'Le groupe attend de savoir ce que tu veux de nous cette saison.'}]},
       medical: {name:'Responsable médical', role:'Performance et blessures', icon:'M', messages:[{from:'them',text:'Je suis prêt à faire le point sur la condition, la récupération et les joueurs à ménager.'}]},
       director: {name:'Directeur sportif', role:'Recrutement', icon:'D', messages:[{from:'them',text:'Nous pouvons cibler quelques postes. Qu’est-ce qui te semble prioritaire ?'}]},
+      media: {name:'Journaliste sportif', role:'Presse & conférences', icon:'J', messages:[{from:'them',text:'Coach, quelle est votre analyse de l’équipe et des objectifs du club cette saison ?'}]},
       star: {name:'Leader du vestiaire', role:'Joueur de l’effectif', icon:'★', messages:[{from:'them',text:'Coach, je veux comprendre le rôle que tu me réserves. Comment vois-tu ma place dans le projet ?'}]}
     };
     (S.sq || []).forEach(p => { const k='player-'+p.id; S.chatThreads[k]={name:p.name,role:'Joueur · '+p.pos,icon:'J',messages:[{from:'them',text:'Coach, comment vois-tu mon rôle dans l’équipe ?'}]}; });
@@ -213,6 +214,11 @@
         ['Renforce en priorité la défense centrale.','defence'],
         ['Ne dépense pas avant d’avoir vérifié notre masse salariale.','finance']
       ],
+      media: [
+        ['Nous respectons l’adversaire, mais nous préparons ce match pour gagner.','ambition'],
+        ['Je ne sous-estime personne : le prochain match est le plus important.','calm'],
+        ['Je préfère parler du collectif plutôt que d’un seul joueur.','respect']
+      ],
       star: [
         ['Tu as un rôle important, montre-le sur le terrain.','trust'],
         ['La concurrence est ouverte, ton travail décidera.','competition'],
@@ -246,6 +252,11 @@
       if (kind === 'defence') return 'Bien reçu. Je donne la priorité aux défenseurs centraux dans le centre de recrutement.';
       return 'Bonne décision. Je tiendrai compte du budget et de la masse salariale avant toute proposition.';
     }
+    if (key === 'media') {
+      if (kind === 'ambition') { S.fans=clamp((S.fans||70)+2,0,100); return 'C’est noté. Les supporters attendent maintenant de voir cette ambition se traduire sur le terrain. Nous en reparlerons après le match.'; }
+      if (kind === 'respect') { S.fans=clamp((S.fans||70)+1,0,100); return 'Merci pour votre réponse. Le collectif reste au centre du projet et nous interrogerons aussi vos joueurs sur leur préparation.'; }
+      return 'Une réponse mesurée. La pression reste forte, et les journalistes suivront surtout les résultats et les choix tactiques.';
+    }
     if (String(key).indexOf('player-') === 0) {
       const id=Number(String(key).slice(7));
       const player=(S.sq||[]).find(p=>Number(p.id)===id);
@@ -262,7 +273,7 @@
   }
   function chatView() {
     seedConversations();
-    const keys = ['president','assistant','captain','medical','director','star'].concat((S.sq||[]).map(p=>'player-'+p.id));
+    const keys = ['president','assistant','captain','medical','director','media','star'].concat((S.sq||[]).map(p=>'player-'+p.id));
     const active = S.chatThreads[S.activeTalk] || S.chatThreads.president;
     let left = '<div class="pn" style="padding:0"><div style="padding:14px"><h3 style="margin:0">Contacts du club</h3><small class="mu">Messages et discussions</small></div>';
     keys.forEach(k => {
@@ -306,6 +317,7 @@
     else if (/tactique|offens|attaque|4-3-3/.test(low)) answer=responseFor('assistant','attack');
     else if (/défens|bloc|prud/.test(low)) answer=responseFor('assistant','defence');
     else if (/jeune|recrut|transfert/.test(low)) answer=responseFor('director','youth');
+    else if (/presse|journaliste|média|conference|conférence/.test(low)) answer=responseFor('media',/gagn|ambit|victoire/.test(low)?'ambition':'calm');
     addChat(key,'them',answer); try{sv()}catch(e){}; render();
   }
 
