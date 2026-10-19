@@ -6,7 +6,7 @@ const money=n=>'€'+Math.round(n||0).toLocaleString('fr-FR');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])).slice(0,120);
 const row=(a,b)=>`<div class="ar"><span>${a}</span><b>${b}</b></div>`;
 const ensure=()=>{
- if(!S)return;
+ if(!S||!Array.isArray(S.sq))return;
  S.options=S.options||{speed:170,animations:true};
  S.managerRep=clamp(S.managerRep==null?20:S.managerRep,0,100);
  S.history=Array.isArray(S.history)?S.history:[];
@@ -23,7 +23,7 @@ const ensure=()=>{
 };
 const initCareer=()=>{
  ensure();if(!S)return;
- S.sq.forEach((p,i)=>{if(!p.status||p.status==='Rotation')p.status=i<11?'Titulaire':i<17?'Rotation':'Jeune';});
+ if(!S.statusesInitialized){S.sq.forEach((p,i)=>{p.status=i<11?'Titulaire':i<17?'Rotation':'Jeune';});S.statusesInitialized=true;}
  if(!S.goalsSet){S.boardGoals=[{id:'league',title:S.objectives.position<=4?'Finir dans le top 4':'Finir dans la première moitié',desc:'Objectif sportif',done:false},{id:'youth',title:'Faire débuter un jeune',desc:'Développement du club',done:false},{id:'budget',title:'Respecter le budget transferts',desc:'Gestion financière',done:false}];S.goalsSet=true;}
  if(!S.lineup.length){try{S.lineup=xi().map(p=>p.id)}catch(e){S.lineup=[]}}
 };
@@ -83,7 +83,7 @@ window.FM26A={
  clearShortlist(){S.shortlist=[];sv();render()},
  upgrade(key){const c=S.clubObj;if(!['training','youth','stadiumLevel'].includes(key))return;if(c[key]>=5)return alert('Niveau maximal déjà atteint.');const cost=Math.round(4*Math.pow(2,c[key]-1));if(S.bud<cost)return alert('Budget insuffisant pour cet investissement.');if(!confirm(`Investir €${cost} M dans les installations ?`))return;S.bud-=cost;c[key]++;if(key==='stadiumLevel')c.capacity=Math.round(c.capacity*1.12);mail('Direction','Investissement du club',`Les installations (${key}) passent au niveau ${c[key]}.`);sv();render()},
  press(topic,choice){const topics=['Objectif du match','État du vestiaire','Mercato'];const answers=[['Nous voulons gagner en restant fidèles à notre projet.','Nous respecterons l’adversaire mais jouerons pour la victoire.','Nous devons d’abord éviter les erreurs.'],['Le groupe travaille bien et progresse ensemble.','La concurrence est forte, chacun doit mériter sa place.','Je protège mes joueurs et je ne commenterai pas les rumeurs.'],['Nous étudions les possibilités sans compromettre nos finances.','Je veux renforcer l’effectif si une vraie opportunité existe.','La priorité est de faire progresser les joueurs déjà présents.']];const delta=choice===1?3:choice===0?2:-1;S.pressLog.push({topic:topics[topic],answer:answers[topic][choice],date:S.date});S.mor=clamp(S.mor+delta,0,100);S.fans=clamp(S.fans+(choice===1?2:0),0,100);S.board=clamp(S.board+(choice===2?-1:1),0,100);mail('Presse','Conférence de presse',answers[topic][choice]);sv();render()},
- job(i){const o=S.jobOffers[i];if(!o)return;if(!confirm(`Accepter le poste à ${o.club} ? Cette décision termine ton emploi actuel.`))return;S.club=o.club;S.lg=o.league;S.jobOffers.splice(i,1);S.bud=Math.max(12,Math.round(S.bud*.65));S.lineup=[];S.fx=mkFx();newTb();S.date='2026-08-01';S.sq=S.sq.map(p=>({...p,club:o.club,ap:0,g:0}));mail('Direction',`Bienvenue à ${o.club}`,'Un nouveau chapitre de ta carrière commence. Vérifie le calendrier et les objectifs du nouveau club.');sv();S.view='home';render()},
+ job(i){const o=S.jobOffers[i];if(!o)return;if(!confirm(`Accepter le poste à ${o.club} ? Cette décision termine ton emploi actuel.`))return;S.club=o.club;S.lg=o.league;S.jobOffers.splice(i,1);S.bud=Math.max(12,Math.round(S.bud*.65));S.lineup=[];S.date='2026-08-01';S.goalsSet=false;S.statusesInitialized=false;initCareer();S.fx=mkFx();newTb();S.sq=S.sq.map(p=>({...p,club:o.club,ap:0,g:0}));mail('Direction',`Bienvenue à ${o.club}`,'Un nouveau chapitre de ta carrière commence. Vérifie le calendrier et les objectifs du nouveau club.');sv();S.view='home';render()},
  hireStaff(role,speciality){if(S.staff.length>=14)return alert('Limite de staff atteinte.');const fee=25000;if(S.bud*1000000<fee)return alert('Budget insuffisant.');S.bud-=fee/1000000;S.staff.push({id:Date.now(),name:pick(FN)+' '+pick(LN),role,speciality,quality:8+rnd(0,11),salary:4000+rnd(0,15)*1000});mail('Ressources humaines',role+' recruté',`Un nouveau membre du staff arrive pour ${money(fee)} de frais.`);sv();render()},
  speed(n){S.options.speed=n;sv();render()},
  anim(){S.options.animations=!S.options.animations;document.documentElement.classList.toggle('reduce-motion',!S.options.animations);sv();render()},
