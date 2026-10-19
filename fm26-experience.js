@@ -697,6 +697,7 @@
         const img=holder.querySelector('img');
         if(!img || !url)return;
         img.src=url;img.alt='Photo de '+p.name;
+        img.onerror=()=>{img.onerror=null;img.src=portraitSvg((Number(p.id)||0)%6);holder.dataset.photoStatus='fallback';};
         holder.title='Photo de '+p.name+' — source Wikipédia';
         holder.dataset.photoStatus='loaded';holder.style.cursor='pointer';
         holder.onclick=(event)=>{event.stopPropagation();if(page)window.open(page,'_blank','noopener')};
@@ -962,6 +963,7 @@
       originalRender=render;
       render=function() {
         setupSeed();
+        if(S && S.view==='lineup' && M && !M.done && !M.p) { clearInterval(T); M.p=true; }
         originalRender();
         const titleMap={talk:'Discussions',lineup:'Composition d’équipe',profile:'Profil manager',staff:'Équipe technique',academy:'Centre de formation',data:'Centre de données',contracts:'Contrats',scouting:'Recrutement',club:'Club & installations',press:'Conférence de presse',history:'Historique',settings:'Options & diagnostic'};
         const titleNode=document.querySelector('#hd h2');
