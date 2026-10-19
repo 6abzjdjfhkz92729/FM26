@@ -23,6 +23,10 @@
   function face(name, idx, cls) {
     return '<span class="' + (cls || 'fm26-face') + '"><img alt="" src="' + portraitSvg(idx == null ? (Array.from(String(name || '')).reduce((a,c)=>a+c.charCodeAt(0),0)%6) : idx) + '"></span>';
   }
+  function playerFace(player, cls) {
+    if(!player)return '';
+    return '<span class="'+(cls||'fm26-face')+'" data-fm26-player="'+Number(player.id)+'"><img alt="Portrait de '+txt(player.name)+'" src="'+portraitSvg((Number(player.id)||0)%6)+'"></span>';
+  }
   const style = document.createElement('style');
   style.textContent = [
     '.fm26-portraits{display:grid;grid-template-columns:repeat(6,minmax(72px,1fr));gap:10px;margin:12px 0 18px}',
@@ -278,7 +282,9 @@
     let left = '<div class="pn" style="padding:0"><div style="padding:14px"><h3 style="margin:0">Contacts du club</h3><small class="mu">Messages et discussions</small></div>';
     keys.forEach(k => {
       const t = S.chatThreads[k];
-      left += '<button class="fm26-contact' + (k===S.activeTalk?' active':'') + '" onclick="FM26UX.openTalk(\'' + k + '\')">' + face(t.name, k.length%6) + '<span><b>' + txt(t.name) + '</b><small class="mu">' + txt(t.role) + '</small></span></button>';
+      const person = String(k).indexOf('player-')===0 ? (S.sq||[]).find(p=>Number(p.id)===Number(String(k).slice(7))) : null;
+      const avatar = person ? playerFace(person) : face(t.name, k.length%6);
+      left += '<button class="fm26-contact' + (k===S.activeTalk?' active':'') + '" onclick="FM26UX.openTalk(&quot;' + k + '&quot;)">' + avatar + '<span><b>' + txt(t.name) + '</b><small class="mu">' + txt(t.role) + '</small></span></button>';
     });
     left += '</div>';
     let msgs = '';
@@ -399,11 +405,11 @@
       const p=ids[i]||S.sq[0]; if(!p)return;
       const left=pos[0],top=pos[1];
       const opts=(S.sq||[]).map(q=>'<option value="'+q.id+'" '+(q.id===p.id?'selected':'')+((q.inj||0)>0||(q.susp||0)>0?' disabled':'')+'>'+txt(q.name)+' · '+txt(q.pos)+' · '+txt(q.ovr)+'</option>').join('');
-      pitch.push('<div class="fm26-slot" draggable="true" ondragstart="FM26UX.dragStart(event,'+i+')" ondragover="event.preventDefault()" ondrop="FM26UX.dropSlot(event,'+i+')" style="left:'+left+'%;top:'+top+'%">'+face(p.name,p.id%6,'fm26-face')+'<button onclick="openP('+p.id+')">'+txt(p.name)+'</button><small>'+txt(pos[2])+' · '+txt(p.ovr)+'</small><select aria-label="Joueur pour le poste '+txt(pos[2])+'" onchange="FM26UX.assign('+i+',this.value)">'+opts+'</select></div>');
+      pitch.push('<div class="fm26-slot" draggable="true" ondragstart="FM26UX.dragStart(event,'+i+')" ondragover="event.preventDefault()" ondrop="FM26UX.dropSlot(event,'+i+')" style="left:'+left+'%;top:'+top+'%">'+playerFace(p)+'<button onclick="openP('+p.id+')">'+txt(p.name)+'</button><small>'+txt(pos[2])+' · '+txt(p.ovr)+'</small><select aria-label="Joueur pour le poste '+txt(pos[2])+'" onchange="FM26UX.assign('+i+',this.value)">'+opts+'</select></div>');
     });
     const starters=new Set(S.lineup);
     const bench=(S.sq||[]).filter(p=>!starters.has(p.id));
-    const benchHtml=bench.map(p=>'<div class="fm26-player-row">'+face(p.name,p.id%6)+'<div class="meta"><b>'+txt(p.name)+'</b><small>'+txt(p.pos)+' · '+p.ovr+' · Condition '+(p.cond||0)+'%</small></div><button class="chip" onclick="FM26UX.addToLineup('+p.id+')">Remplacer…</button></div>').join('');
+    const benchHtml=bench.map(p=>'<div class="fm26-player-row">'+playerFace(p)+'<div class="meta"><b>'+txt(p.name)+'</b><small>'+txt(p.pos)+' · '+p.ovr+' · Condition '+(p.cond||0)+'%</small></div><button class="chip" onclick="FM26UX.addToLineup('+p.id+')">Remplacer…</button></div>').join('');
     const avg=ids.length?Math.round(ids.reduce((a,p)=>a+(p.ovr||0),0)/ids.length):0;
     const liveReturn = M && !M.done ? '<div style="margin:8px 0"><button class="chip" onclick="FM26UX.resumeMatch()">← Retour au match en direct</button></div>' : '';
     return liveReturn + '<div class="page-intro"><div><p class="eyebrow">PRÉPARATION DU MATCH</p><h1>Composition d’équipe</h1><p>Choisis tes titulaires, permute-les par glisser-déposer ou avec les menus des postes.</p></div><div class="season-pill">Note moyenne : '+avg+'</div></div><div class="fm26-lineup-layout"><div class="pn"><div class="wr" style="margin-bottom:10px"><button class="chip '+(S.tc.f==='4-3-3'?'on':'')+'" onclick="FM26UX.formation(\'4-3-3\')">4-3-3</button><button class="chip '+(S.tc.f==='4-2-3-1'?'on':'')+'" onclick="FM26UX.formation(\'4-2-3-1\')">4-2-3-1</button><button class="chip '+(S.tc.f==='4-4-2'?'on':'')+'" onclick="FM26UX.formation(\'4-4-2\')">4-4-2</button></div><div class="fm26-lineup-pitch">'+pitch.join('')+'</div><small class="mu">Glisse un joueur sur un autre pour les intervertir. Le onze choisi influence la force de l’équipe en match.</small></div><div class="pn"><h3>Banc et disponibilité</h3>'+benchHtml+'<div class="fm26-event-banner"><b>À vérifier avant le coup d’envoi</b><p class="mu">Un joueur fatigué, blessé, suspendu ou en perte de moral peut diminuer le niveau collectif. Pense à faire tourner.</p><button class="chip" onclick="S.view=\'talk\';S.activeTalk=\'medical\';render()">Parler au staff médical</button></div></div></div>';
@@ -518,7 +524,7 @@
   function squadView() {
     let html='<div class="page-intro"><div><p class="eyebrow">EFFECTIF PROFESSIONNEL</p><h1>'+txt(S.club)+'</h1><p>Portraits de secours disponibles pour chaque joueur ; les photos réelles sont cherchées sur Wikipédia lorsqu’une identité réelle est connue.</p></div><button class="chip" onclick="S.view=\'lineup\';render()">Préparer la composition →</button></div><div class="pn"><table><thead><tr><th>Joueur</th><th>Poste</th><th>Âge</th><th>Niveau</th><th>Forme</th><th>Condition</th><th>Moral</th><th>Matchs</th><th>Buts</th></tr></thead><tbody>';
     (S.sq||[]).forEach(p=>{
-      html+='<tr class="cp" onclick="openP('+p.id+')"><td><span class="fm26-face" data-photo-player="'+p.id+'"><img alt="Portrait de '+txt(p.name)+'" src="'+portraitSvg((Number(p.id)||0)%6)+'"></span> <b>'+txt(p.name)+'</b>'+(p.realPerson?' <small title="Nom réel importé">●</small>':'')+'</td><td>'+txt(p.pos)+'</td><td>'+txt(p.age)+'</td><td>'+txt(p.ovr)+'</td><td>'+Number(p.form||7).toFixed(1)+'</td><td>'+txt(p.cond==null?90:p.cond)+'%</td><td>'+txt(p.morale==null?70:p.morale)+'</td><td>'+txt(p.ap||0)+'</td><td>'+txt(p.g||0)+'</td></tr>';
+      html+='<tr class="cp" onclick="openP('+p.id+')"><td><span class="fm26-face" data-photo-player="'+p.id+'" data-fm26-player="'+p.id+'"><img alt="Portrait de '+txt(p.name)+'" src="'+portraitSvg((Number(p.id)||0)%6)+'"></span> <b>'+txt(p.name)+'</b>'+(p.realPerson?' <small title="Nom réel importé">●</small>':'')+'</td><td>'+txt(p.pos)+'</td><td>'+txt(p.age)+'</td><td>'+txt(p.ovr)+'</td><td>'+Number(p.form||7).toFixed(1)+'</td><td>'+txt(p.cond==null?90:p.cond)+'%</td><td>'+txt(p.morale==null?70:p.morale)+'</td><td>'+txt(p.ap||0)+'</td><td>'+txt(p.g||0)+'</td></tr>';
     });
     html+='</tbody></table></div>';
     return html;
@@ -595,37 +601,34 @@
   function maybeUpdatePhotosAfterRender() {
     if (!S) return;
     if (S.view==='player') attachPlayerPhoto();
-    if (S.view==='squad') {
-      (S.sq||[]).filter(p=>p.realPerson && p.name).forEach(p=>{
-        const holder=document.querySelector('[data-photo-player="'+String(p.id)+'"]');
-        if(!holder || holder.dataset.photoStatus) return;
-        holder.dataset.photoStatus='loading';
-        const key='fm26-photo:'+p.name.toLowerCase();
-        let cached=null;
-        try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
-        const apply=(url,page)=>{
-          const img=holder.querySelector('img');
-          if(!img || !url)return;
-          img.src=url;
-          img.alt='Photo de '+p.name;
-          holder.title='Photo de '+p.name+' — Wikipédia';
-          holder.dataset.photoStatus='loaded';
-          holder.style.cursor='pointer';
-          holder.onclick=(event)=>{event.stopPropagation();if(page)window.open(page,'_blank','noopener')};
-        };
-        if(cached&&cached.url){apply(cached.url,cached.page);return;}
-        if(cached&&cached.missing){holder.dataset.photoStatus='fallback';return;}
-        fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(p.name.replace(/ /g,'_')),{headers:{'Accept':'application/json'}})
-        .then(r=>{if(!r.ok)throw new Error('no page');return r.json()})
-        .then(data=>{
-          if(!data||!data.thumbnail||!data.thumbnail.source)throw new Error('no thumbnail');
-          const url=data.thumbnail.source;
-          const page=data.content_urls&&data.content_urls.desktop&&data.content_urls.desktop.page||('https://en.wikipedia.org/wiki/'+encodeURIComponent(p.name));
-          try{localStorage.setItem(key,JSON.stringify({url,page}))}catch(e){}
-          apply(url,page);
-        }).catch(()=>{holder.dataset.photoStatus='fallback';try{localStorage.setItem(key,JSON.stringify({missing:true}))}catch(e){}});
-      });
-    }
+    document.querySelectorAll('[data-fm26-player], [data-photo-player]').forEach(holder=>{
+      const id=holder.dataset.fm26Player || holder.dataset.photoPlayer;
+      const p=(S.sq||[]).find(player=>Number(player.id)===Number(id));
+      if(!p || !p.realPerson || !p.name || holder.dataset.photoStatus)return;
+      holder.dataset.photoStatus='loading';
+      const key='fm26-photo:'+p.name.toLowerCase();
+      let cached=null;
+      try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
+      const apply=(url,page)=>{
+        const img=holder.querySelector('img');
+        if(!img || !url)return;
+        img.src=url;img.alt='Photo de '+p.name;
+        holder.title='Photo de '+p.name+' — source Wikipédia';
+        holder.dataset.photoStatus='loaded';holder.style.cursor='pointer';
+        holder.onclick=(event)=>{event.stopPropagation();if(page)window.open(page,'_blank','noopener')};
+      };
+      if(cached&&cached.url){apply(cached.url,cached.page);return;}
+      if(cached&&cached.missing){holder.dataset.photoStatus='fallback';return;}
+      fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(p.name.replace(/ /g,'_')),{headers:{'Accept':'application/json'}})
+      .then(r=>{if(!r.ok)throw new Error('no page');return r.json()})
+      .then(data=>{
+        if(!data||!data.thumbnail||!data.thumbnail.source)throw new Error('no thumbnail');
+        const url=data.thumbnail.source;
+        const page=data.content_urls&&data.content_urls.desktop&&data.content_urls.desktop.page||('https://en.wikipedia.org/wiki/'+encodeURIComponent(p.name));
+        try{localStorage.setItem(key,JSON.stringify({url,page}))}catch(e){}
+        apply(url,page);
+      }).catch(()=>{holder.dataset.photoStatus='fallback';try{localStorage.setItem(key,JSON.stringify({missing:true}))}catch(e){}});
+    });
     const header=document.querySelector('#hd');
     if(header && S.managerPortrait!=null && !header.querySelector('.fm26-header-face')) {
       const faceEl=document.createElement('span');
