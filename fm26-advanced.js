@@ -7,7 +7,7 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const row=(a,b)=>`<div class="ar"><span>${a}</span><b>${b}</b></div>`;
 const ensure=()=>{
  if(!S||!Array.isArray(S.sq))return;
- S.options=S.options||{speed:170,animations:true};
+ S.options=S.options||{speed:170,animations:true};S.tc=S.tc||{};S.tc.press=clamp(S.tc.press==null?50:S.tc.press,0,100);S.tc.line=clamp(S.tc.line==null?50:S.tc.line,0,100);S.tc.tempo=clamp(S.tc.tempo==null?50:S.tc.tempo,0,100);S.tc.width=clamp(S.tc.width==null?50:S.tc.width,0,100);
  S.managerRep=clamp(S.managerRep==null?20:S.managerRep,0,100);
  S.history=Array.isArray(S.history)?S.history:[];
  S.shortlist=Array.isArray(S.shortlist)?S.shortlist:[];
@@ -75,8 +75,11 @@ ub & installations',press:'Conférence de presse',history:'Historique',settings:
 const beforeRender=render;render=function(){ensure();beforeRender();const h=document.querySelector('#hd h2');if(h&&titles[S.view])h.textContent=titles[S.view];if(S.view==='home'){const vw=document.querySelector('#vw');if(vw&&!document.querySelector('#globalSearchWrap')){const wrap=document.createElement('div');wrap.id='globalSearchWrap';wrap.className='pn';wrap.style.marginBottom='12px';wrap.innerHTML='<h3>Recherche globale</h3><input id="globalSearch" placeholder="Rechercher un joueur, un message ou un club…" oninput="FM26A.search(this.value)"><div id="globalSearchResults" class="mu">Recherche dans la carrière</div>';vw.prepend(wrap)}}};
 const oldEnd=endMatch;endMatch=function(){oldEnd();if(!S)return;ensure();const oldSusp=new Map((S.preMatchSusp||[]).map(x=>[x.id,x.susp]));S.sq.forEach(p=>{const before=oldSusp.get(p.id)||0;if((p.susp||0)<=before&&p.susp>0)p.susp--;});S.preMatchSusp=[];const win=M.h===M.a?0:(M.f.home===S.club?M.h>M.a:M.a>M.h)?1:-1;S.sq.forEach(p=>{if(xi().some(x=>x.id===p.id))p.morale=clamp(p.morale+win*3+(p.form>7.5?1:0),0,100);else p.morale=clamp(p.morale+(win>0?1:-1),0,100)});advanceScout();if(S.sq.some(p=>(p.end||2029)<=2027)&&!S.contractAlertSent){S.contractAlertSent=true;mail('Ressources humaines','Contrats à examiner','Au moins un contrat arrive bientôt à échéance. Consulte le menu Contrats.')}S.subsUsed=0;sv()};
 const oldNewSeason=newSeason;newSeason=function(){ensure();const t=tbl(),my=t.find(x=>x.c===S.club),pos=(t.findIndex(x=>x.c===S.club)+1)||t.length;const games=S.fx.filter(f=>f.played&&(f.home===S.club||f.away===S.club));const goals=S.sq.reduce((a,p)=>a+(p.g||0),0),wins=games.filter(f=>{const [h,a]=f.score.split('-').map(Number);return f.home===S.club?h>a:a>h}).length;S.history.push({season:S.season,club:S.club,league:S.lg,position:pos,points:my?.pts||0,wins,goals});S.history=S.history.slice(-30);if(S.boardGoals){S.boardGoals.forEach(g=>{if(g.id==='league')g.done=pos<=(S.objectives.position||10);if(g.id==='budget')g.done=S.bud>=0;if(g.id==='youth')g.done=games.some(f=>f.played)&&S.sq.some(p=>p.age<21&&p.ap>0);});const completed=S.boardGoals.filter(g=>g.done).length;S.board=clamp(S.board+(completed-1)*3,0,100)}if(pos<=Math.min(4,t.length/4)&&S.managerRep<100){S.managerRep=(S.managerRep||20)+4;const alternatives=Object.entries(LG).flatMap(([league,clubs])=>clubs.map(club=>({league,club}))).filter(x=>x.club!==S.club&&x.club!==S.clubObj.stadium);if(alternatives.length&&Math.random()<.45)S.jobOffers.push({...pick(alternatives),ambition:pos<=2?'Élevée':'Modérée'});S.jobOffers=S.jobOffers.slice(-3)}oldNewSeason();ensure();S.contractAlertSent=false;sv();render()};
-const oldStartMatch=startMatch;startMatch=function(){initCareer();S.preMatchSusp=S.sq.map(p=>({id:p.id,susp:p.susp||0}));oldStartMatch();if(M){M.sp=S.options.speed||170;clearInterval(T);T=setInterval(tick,M.sp)}};
+const oldStartMatch=startMatch;startMatch=function(){initCareer();S.preMatchSusp=S.sq.map(p=>({id:p.id,susp:p.susp||0}));oldStartMatch();if(M){M.sp=S.options.speed||170;const bonus=((S.tc.press-50)*.018)+((S.tc.line-50)*.012)+((S.tc.tempo-50)*.01)+((S.tc.width-50)*.006);if(M.f.home===S.club)M.hp=clamp(M.hp+bonus,35,100);else M.ap=clamp(M.ap+bonus,35,100);clearInterval(T);T=setInterval(tick,M.sp)}};
 window.FM26A={
+ instruction(k,v){if(!['press','line','tempo','width'].includes(k))return;S.tc[k]=clamp(v,0,100);const out=document.getElementById(k+'Value');if(out)out.textContent=S.tc[k]+'%';sv()},
+ setLineup(){ensure();const form=FM[S.tc.f]||FM['4-3-3'];const ids=form.map((_,i)=>Number(document.getElementById('lineupslot'+i)?.value));if(ids.length!==11||new Set(ids).size!==11)return alert('Choisis 11 joueurs différents.');const ps=ids.map(id=>S.sq.find(p=>p.id===id));if(ps.some(p=>!p||(p.inj||0)>0||(p.susp||0)>0))return alert('Un joueur sélectionné est indisponible.');S.lineup=ids;sv();render()},
+ loanYouth(id){ensure();const p=(S.youth||[]).find(x=>x.id===id);if(!p)return;if(p.loanLeft>0)return alert('Ce jeune est déjà prêté.');p.loanLeft=8;p.status='Prêté';mail('Centre de formation',p.name+' part en prêt',p.name+' part chercher du temps de jeu pendant huit journées.');sv();render()},
  role(id,v){const p=S.sq.find(p=>p.id===id);if(!p)return;p.status=esc(v);sv();render()},
  renew(id){const p=S.sq.find(p=>p.id===id);if(!p)return;const bonus=Math.round((p.sal||10000)*8),newSal=Math.round((p.sal||10000)*1.12);if((S.bud||0)*1000000<bonus)return alert('Budget insuffisant pour la prime de signature.');if(!confirm(`Proposer à ${p.name} un contrat jusqu’en ${p.end+3} avec un salaire de ${money(newSal)} par semaine et une prime de ${money(bonus)} ?`))return;S.bud-=bonus/1000000;p.sal=newSal;p.end+=3;p.morale=clamp((p.morale||70)+3,0,100);mail('Contrats',p.name+' prolonge','Le nouveau contrat court désormais jusqu’en juin '+p.end+'.');sv();render()},
  mission(){ensure();const price=.2;if(S.bud<price)return alert('Budget insuffisant pour cette mission.');S.bud=Math.round((S.bud-price)*10)/10;S.scoutMissions.push({id:Date.now(),league:$('scLeague').value,pos:$('scPos').value,age:Number($('scAge').value),left:Number($('scWeeks').value),done:false});mail('Recrutement','Nouvelle mission lancée','Un recruteur observe le marché : '+$('scLeague').value+'. Rapport attendu dans '+$('scWeeks').value+' semaine(s).');sv();render()},
@@ -95,6 +98,35 @@ window.FM26A={
  exportCareer(){window.XF?.exp?.()}
 };
 const oldMatch=V.match;V.match=function(){const core=oldMatch();ensure();if(!M||M.done)return core;const players=xi(),bench=S.sq.filter(p=>!players.some(x=>x.id===p.id)&&(p.inj||0)<=0&&(p.susp||0)<=0);return core+`<div class="pn" style="margin-top:12px"><h3>Gestion du banc · ${S.subsUsed}/5 changements</h3><div class="row"><div><label>Sortant</label><select id="subOut">${players.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.pos}</option>`).join('')}</select></div><div><label>Entrant</label><select id="subIn">${bench.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.pos}</option>`).join('')}</select></div><div style="align-self:end"><button class="btn" onclick="FM26A.sub($('subOut').value,$('subIn').value)">Effectuer le changement</button></div></div></div>`};
+
+
+/* Nouvelles interactions tactiques et progression des jeunes prêtés. */
+const oldTactics=V.tactics;
+V.tactics=function(){
+  ensure();
+  const base=oldTactics();
+  const form=FM[S.tc.f]||FM['4-3-3'];
+  const xs=xi();
+  const choices=form.map((pos,i)=>`<div><label>${pos[2]} · Poste ${i+1}</label><select id="lineupslot${i}">${S.sq.filter(p=>(p.inj||0)<=0&&(p.susp||0)<=0).map(p=>`<option value="${p.id}" ${xs[i]?.id===p.id?'selected':''}>${esc(p.name)} · ${p.pos} · ${p.ovr}</option>`).join('')}</select></div>`).join('');
+  return base+`<div class="pn" style="margin-top:12px"><h3>Composition personnalisée</h3><p class="mu">Choisis chaque titulaire. Les blessés, suspendus et doublons sont refusés.</p><div class="gr" style="grid-template-columns:repeat(auto-fit,minmax(175px,1fr))">${choices}</div><button class="btn" style="margin-top:12px" onclick="FM26A.setLineup()">Enregistrer le onze titulaire</button></div><div class="pn" style="margin-top:12px"><h3>Consignes collectives</h3><p class="mu">Ces curseurs modifient la force de l'équipe au match suivant. Plus haut n'est pas toujours mieux : un pressing et une ligne trop élevés demandent un effectif adapté.</p>${[['press','Intensité du pressing'],['line','Hauteur de la ligne défensive'],['tempo','Rythme de jeu'],['width','Largeur offensive']].map(([k,l])=>`<div style="display:grid;grid-template-columns:minmax(130px,210px) 1fr 48px;align-items:center;gap:12px;margin:10px 0"><label>${l}</label><input type="range" min="0" max="100" value="${S.tc[k]}" oninput="FM26A.instruction('${k}',this.value)"><b id="${k}Value">${S.tc[k]}%</b></div>`).join('')}</div>`;
+};
+const previousEndAdvanced=endMatch;
+endMatch=function(){
+  previousEndAdvanced();
+  if(!S||!Array.isArray(S.youth))return;
+  S.youth.forEach(p=>{
+    if((p.loanLeft||0)>0){
+      p.loanLeft--;
+      if(p.loanLeft===0){
+        p.status='Revenu de prêt';
+        p.ovr=clamp((p.ovr||50)+rnd(0,2),1,95);
+        p.pot=clamp(Math.max(p.ovr,p.pot||p.ovr),p.ovr,96);
+        mail('Centre de formation',p.name+' revient de prêt','Le prêt est terminé. Le rapport de retour a été ajouté à son dossier.');
+      }
+    }
+  });
+  sv();
+};
 
 initCareer();if(S){sv();render()}
 })();
