@@ -201,8 +201,12 @@ function initCups(){
  };
  const domestic=LG[S.lg].slice().filter(c=>c!==S.club).sort(()=>Math.random()-.5).slice(0,15);
  addTournament('domestic','Coupe nationale',[S.club,...domestic],10);
- const pool=cupTeamPool().filter(x=>x.club!==S.club).sort(()=>Math.random()-.5).slice(0,15).map(x=>x.club);
- addTournament('continental','Coupe continentale',[S.club,...pool],13);
+ const women's = /women|liga f|féminin/i.test(String(S.lg||''));
+ const pool=cupTeamPool()
+   .filter(x=>x.club!==S.club && (/women|liga f|féminin/i.test(String(x.league||''))===women's))
+   .sort(()=>Math.random()-.5).slice(0,15).map(x=>x.club);
+ const europeanCupName = women's ? 'Ligue des championnes européenne (format simplifié)' : 'Ligue des champions européenne (format simplifié)';
+ addTournament('continental',europeanCupName,[S.club,...pool],13);
  S.fx.sort((a,b)=>new Date(a.date)-new Date(b.date)||Number(a.id)-Number(b.id));
  S.cupStateVersion=1;
 }
