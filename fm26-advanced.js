@@ -297,5 +297,27 @@ const endBeforeCupAdvance=endMatch;
 endMatch=function(){endBeforeCupAdvance();if(M?.f?.cupKey)advanceCup(M.f)};
 if(S){initCups();sv();render();}
 
+
+/* Multiple independent career slots, in addition to JSON export/import. */
+const savedSlots=()=>Array.from({length:5},(_,i)=>{
+ const raw=localStorage.getItem(K+'_slot_'+(i+1));if(!raw)return {slot:i+1,empty:true};
+ try{const v=JSON.parse(raw);return {slot:i+1,empty:false,manager:v.mg||'Manager',club:v.club||'Club',league:v.lg||'Championnat',season:v.season||1,date:v.date||'',valid:Array.isArray(v.sq)&&Array.isArray(v.fx)}}catch(e){return {slot:i+1,empty:false,valid:false}}
+});
+const oldSavePage=V.save;
+V.save=function(){
+ const base=oldSavePage(),slots=savedSlots();
+ return base+`<div class="pn" style="margin-top:12px"><h3>Carrières sauvegardées · 5 emplacements</h3><p class="mu">Tu peux garder plusieurs carrières séparées dans ce navigateur. Les sauvegardes peuvent aussi être exportées en JSON pour les transférer sur un autre appareil.</p><table><tr><th>Emplacement</th><th>Carrière</th><th>Championnat</th><th>Saison</th><th>Actions</th></tr>${slots.map(x=>`<tr><td>${x.slot}</td><td>${x.empty?'Vide':esc(x.manager)+' · '+esc(x.club)}</td><td>${x.empty?'—':esc(x.league)}</td><td>${x.empty?'—':x.season}</td><td><div class="wr">${x.empty?`<button class="chip" onclick="FM26A.slotSave(${x.slot})">Enregistrer ici</button>`: `<button class="chip" ${x.valid?'':'disabled'} onclick="FM26A.slotLoad(${x.slot})">Charger</button><button class="chip" onclick="FM26A.slotSave(${x.slot})">Remplacer</button><button class="chip" onclick="FM26A.slotDelete(${x.slot})">Supprimer</button>`}</div></td></tr>`).join('')}</table></div>`;
+};
+FM26A.slotSave=function(n){if(!Number.isInteger(n)||n<1||n>5)return;const key=K+'_slot_'+n;if(localStorage.getItem(key)&&!confirm('Remplacer la carrière de cet emplacement ?'))return;try{sv();localStorage.setItem(key,JSON.stringify(S));mail('Sauvegarde','Carrière enregistrée','La carrière '+S.club+' a été enregistrée dans l’emplacement '+n+'.');sv();localStorage.setItem(key,JSON.stringify(S));alert('Carrière enregistrée dans l’emplacement '+n+'.');render()}catch(e){alert('Impossible d’enregistrer cette carrière : stockage du navigateur plein.') }};
+FM26A.slotLoad=function(n){const raw=localStorage.getItem(K+'_slot_'+n);if(!raw)return alert('Cet emplacement est vide.');let v;try{v=JSON.parse(raw)}catch(e){return alert('La sauvegarde est illisible.')};if(!v||!Array.isArray(v.sq)||v.sq.length<11||!Array.isArray(v.fx)||!LG[v.lg]?.includes(v.club)||!v.tb)return alert('La sauvegarde est invalide; la partie actuelle reste inchangée.');if(!confirm('Charger la carrière de '+v.club+' ?'))return;localStorage.setItem(K,JSON.stringify(v));location.reload()};
+FM26A.slotDelete=function(n){if(!confirm('Supprimer définitivement cette sauvegarde locale ?'))return;localStorage.removeItem(K+'_slot_'+n);render()};
+const oldSub=FM26A.sub;
+FM26A.sub=function(outId,inId){
+ const xiBefore=xi(),out=xiBefore.find(p=>p.id===Number(outId)),inn=S.sq.find(p=>p.id===Number(inId));
+ if(!out||!inn)return alert('Sélection de remplacement invalide.');
+ oldSub(outId,inId);
+ if(M&&!M.done){const delta=(inn.ovr||60)-(out.ovr||60);if(M.f.home===S.club)M.hp=clamp(M.hp+delta*.18,35,100);else M.ap=clamp(M.ap+delta*.18,35,100);sv();render()}
+};
+
 initCareer();if(S){sv();render()}
 })();
