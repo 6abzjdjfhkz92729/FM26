@@ -97,6 +97,58 @@ window.FM26A={
  promote(id){window.FMX?.promote?.(id)},
  exportCareer(){window.XF?.exp?.()}
 };
+
+/* Mercato : les propositions deviennent négociables au lieu d'un achat automatique. */
+const oldMarket=V.xfer;
+V.xfer=function(){
+  ensure();
+  let html=oldMarket();
+  html=html.replace(/onclick="XF\.buy\((\d+)\)"/g,'onclick="FM26A.startOffer($1)"').replace(/>Acheter<\/button>/g,'>Négocier<\/button>');
+  if(S.negotiation){
+    const n=S.negotiation,p=(S.mk||[])[n.index];
+    if(p)html+=`<div class="pn" style="margin-top:12px;border-color:#7b73ef"><h3>Négociation · ${esc(p.name)}</h3><p class="mu">Le club vendeur demande €${p.price} M. Ajuste ton offre : une proposition trop basse peut être refusée.</p><div class="row"><div><label>Indemnité proposée (en millions d’euros)</label><input id="offerAmount" type="number" min="0.1" max="${S.bud}" step="0.1" value="${n.bid}"></div><div><label>État de la négociation</label><input readonly value="${n.status||'Première proposition'}"></div></div><div class="wr"><button class="btn" onclick="FM26A.submitOffer()">Envoyer l’offre</button><button class="chip" onclick="FM26A.cancelOffer()">Annuler</button></div></div>`;
+  }
+  return html;
+};
+FM26A.startOffer=function(i){ensure();const p=(S.mk||[])[i];if(!p)return;S.negotiation={index:i,bid:Math.round(p.price*.85*10)/10,round:0,status:'Première proposition'};sv();render()};
+FM26A.cancelOffer=function(){S.negotiation=null;sv();render()};
+FM26A.submitOffer=function(){
+ ensure();const n=S.negotiation,p=n&&(S.mk||[])[n.index];if(!p)return;
+ const bid=Number(document.getElementById('offerAmount')?.value);
+ if(!Number.isFinite(bid)||bid<=0)return alert('Entre une offre valide.');
+ if(bid>S.bud)return alert('Cette offre dépasse le budget transferts disponible.');
+ if(bid>=p.price*.95){
+  const fee=Math.round(bid*10)/10;
+  if(S.sq.length>=30)return alert('Effectif complet : 30 joueurs maximum.');
+  const q={...p};delete q.price;delete q.u;delete q.reportConfidence;delete q.club;
+  q.id=Math.max(-1,...S.sq.map(x=>Number(x.id)||0))+1;
+  q.no=Math.max(0,...S.sq.map(x=>Number(x.no)||0))+1;
+  q.club=S.club;q.ap=0;q.g=0;q.inj=0;q.susp=0;q.morale=72;
+  S.sq.push(q);S.mk.splice(n.index,1);S.bud=Math.round((S.bud-fee)*10)/10;S.negotiation=null;
+  mail('Direction sportive',q.name+' signe à '+S.club,q.name+' rejoint ton équipe après une négociation de €'+fee+' M.');
+  mail('Agent',q.name+' · accord trouvé','Le joueur a accepté le projet sportif et les conditions du transfert.');
+  sv();render();return;
+ }
+ if(bid<p.price*.72||n.round>=2){
+  n.status='Offre refusée';mail('Recrutement','Offre refusée pour '+p.name,'Le club vendeur n’accepte pas ton offre. Tu peux relancer une mission ou suivre une autre cible.');S.negotiation=null;sv();render();return;
+ }
+ n.round++;n.bid=Math.round(p.price*(n.round===1?.94:.98)*10)/10;n.status='Contre-offre du club : €'+n.bid+' M';
+ mail('Recrutement','Contre-offre pour '+p.name,'Le club demande désormais €'+n.bid+' M. Consulte le Centre de recrutement pour répondre.');
+ sv();render();
+};
+/* Rendre les prêts de jeunes accessibles depuis l'académie. */
+const oldAcademy=V.academy;
+V.academy=function(){
+ let html=oldAcademy();
+ html=html.replace(/<button class="chip" onclick="FMX\.promote\((\d+)\)">Promouvoir<\/button>/g,(_,rawId)=>{
+   const id=Number(rawId),p=(S.youth||[]).find(x=>x.id===id),loaned=(p?.loanLeft||0)>0;
+   return `<button class="chip" onclick="FMX.promote(${id})">${loaned?'À promouvoir au retour':'Promouvoir'}</button><button class="chip" ${loaned?'disabled':''} onclick="FM26A.loanYouth(${id})">${loaned?'Prêt · '+p.loanLeft+' match(s)':'Prêter'}</button>`;
+ });
+ return html;
+};
+const oldPromote=window.FMX?.promote;
+if(oldPromote)window.FMX.promote=function(id){const p=(S.youth||[]).find(x=>x.id===id);if(p&&(p.loanLeft||0)>0)return alert('Ce jeune doit terminer son prêt avant d’être promu.');return oldPromote(id)};
+
 const oldMatch=V.match;V.match=function(){const core=oldMatch();ensure();if(!M||M.done)return core;const players=xi(),bench=S.sq.filter(p=>!players.some(x=>x.id===p.id)&&(p.inj||0)<=0&&(p.susp||0)<=0);return core+`<div class="pn" style="margin-top:12px"><h3>Gestion du banc · ${S.subsUsed}/5 changements</h3><div class="row"><div><label>Sortant</label><select id="subOut">${players.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.pos}</option>`).join('')}</select></div><div><label>Entrant</label><select id="subIn">${bench.map(p=>`<option value="${p.id}">${esc(p.name)} · ${p.pos}</option>`).join('')}</select></div><div style="align-self:end"><button class="btn" onclick="FM26A.sub($('subOut').value,$('subIn').value)">Effectuer le changement</button></div></div></div>`};
 
 
