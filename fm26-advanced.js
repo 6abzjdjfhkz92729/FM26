@@ -237,10 +237,30 @@ function advanceCup(playedFixture){
    }
    state.round=nextRound;
    mail('Compétitions',state.name+' : tour suivant',turn+' programmé(s). Les résultats des autres confrontations ont été simulés.');
+   if(!winners.includes(S.club))simulateRemainingCup(key);
  }
  S.fx.sort((a,b)=>new Date(a.date)-new Date(b.date)||Number(a.id)-Number(b.id));
  sv();
 }
+
+function simulateRemainingCup(key){
+ const state=S.cupComps?.[key];if(!state||state.done)return;
+ let guard=4;
+ while(!state.done&&guard-->0){
+  const round=state.round;
+  const fixtures=S.fx.filter(f=>f.cupKey===key&&f.cupRound===round);
+  if(!fixtures.length)break;
+  fixtures.forEach(f=>{if(!f.played){const z=simLeagueScore(f.home,f.away);f.played=true;f.score=z[0]+'-'+z[1]}});
+  const winners=fixtures.map(f=>{const [h,a]=String(f.score).split('-').map(Number);return h===a?pick([f.home,f.away]):h>a?f.home:f.away});
+  state.history.push({round,name:round===1?'Huitièmes':round===2?'Quarts':round===3?'Demi-finales':'Finale',matches:fixtures.length});
+  if(winners.length===1){state.done=true;state.champion=winners[0];mail('Compétitions',state.name+' : champion',state.champion+' remporte '+state.name+'.');break;}
+  const nextRound=round+1,base=new Date(Math.max(...fixtures.map(f=>new Date(f.date).getTime()).filter(Number.isFinite))+21*864e5),startId=Math.max(-1,...S.fx.map(f=>Number(f.id)||0))+1,roundLabel=key==='domestic'?'CN':'CC';
+  for(let i=0;i<winners.length;i+=2){if(!winners[i+1])continue;S.fx.push({id:startId+i/2,date:new Date(base.getTime()+Math.floor(i/2)*3600e3).toISOString(),home:winners[i],away:winners[i+1],played:false,score:'',round:roundLabel+'-'+nextRound,comp:state.name,cupKey:key,cupRound:nextRound});}
+  state.round=nextRound;
+ }
+ S.fx.sort((a,b)=>new Date(a.date)-new Date(b.date)||Number(a.id)-Number(b.id));
+}
+
 const startCareerBeforeCups=startCareer;
 startCareer=function(){startCareerBeforeCups();if(S){initCups();sv();render()}};
 const newSeasonBeforeCups=newSeason;
