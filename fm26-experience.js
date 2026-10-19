@@ -138,7 +138,7 @@
     }
   }
   function setupSeed() {
-    if (!window.S) return;
+    if (typeof S === 'undefined' || !S) return;
     if (!Array.isArray(S.sq)) S.sq = [];
     S.managerPortrait = Number.isFinite(Number(S.managerPortrait)) ? Number(S.managerPortrait) : selectedPortrait;
     selectedPortrait = S.managerPortrait;
@@ -162,6 +162,7 @@
       director: {name:'Directeur sportif', role:'Recrutement', icon:'D', messages:[{from:'them',text:'Nous pouvons cibler quelques postes. Qu’est-ce qui te semble prioritaire ?'}]},
       star: {name:'Leader du vestiaire', role:'Joueur de l’effectif', icon:'★', messages:[{from:'them',text:'Coach, je veux comprendre le rôle que tu me réserves. Comment vois-tu ma place dans le projet ?'}]}
     };
+    (S.sq || []).forEach(p => { const k='player-'+p.id; S.chatThreads[k]={name:p.name,role:'Joueur · '+p.pos,icon:'J',messages:[{from:'them',text:'Coach, comment vois-tu mon rôle dans l’équipe ?'}]}; });
   }
   function addChat(key, from, text) {
     seedConversations();
@@ -173,6 +174,11 @@
     try { sv(); } catch (e) {}
   }
   function chatChoices(key) {
+    if (String(key).indexOf('player-') === 0) return [
+      ['Je compte sur toi : tu auras des occasions de montrer ta valeur.','trust'],
+      ['Ton temps de jeu dépendra de tes performances et du collectif.','competition'],
+      ['Que penses-tu de ton rôle et de l’ambiance du groupe ?','honest']
+    ];
     const roleText = {
       president: [
         ['Je veux construire un projet durable, avec un effectif équilibré.','durable'],
@@ -232,6 +238,12 @@
       if (kind === 'defence') return 'Bien reçu. Je donne la priorité aux défenseurs centraux dans le centre de recrutement.';
       return 'Bonne décision. Je tiendrai compte du budget et de la masse salariale avant toute proposition.';
     }
+    if (String(key).indexOf('player-') === 0) {
+      const id=Number(String(key).slice(7));
+      const player=(S.sq||[]).find(p=>Number(p.id)===id);
+      if(player){ if(player.morale==null)player.morale=70; player.morale=clamp(player.morale+(kind==='trust'?5:kind==='honest'?2:-2),0,100); }
+      return kind==='trust' ? 'Merci coach. Je vais faire le maximum pour aider le collectif.' : kind==='honest' ? 'Je pense que des échanges réguliers nous aideront à progresser.' : 'C’est clair. Je vais travailler pour mériter davantage de temps de jeu.';
+    }
     if (key === 'star') {
       S.sq.forEach(p=>{if(p.morale==null)p.morale=70;});
       const p = (S.sq||[]).slice().sort((a,b)=>(b.ovr||0)-(a.ovr||0))[0];
@@ -242,7 +254,7 @@
   }
   function chatView() {
     seedConversations();
-    const keys = ['president','assistant','captain','medical','director','star'];
+    const keys = ['president','assistant','captain','medical','director','star'].concat((S.sq||[]).map(p=>'player-'+p.id));
     const active = S.chatThreads[S.activeTalk] || S.chatThreads.president;
     let left = '<div class="pn" style="padding:0"><div style="padding:14px"><h3 style="margin:0">Contacts du club</h3><small class="mu">Messages et discussions</small></div>';
     keys.forEach(k => {
@@ -373,7 +385,8 @@
     const bench=(S.sq||[]).filter(p=>!starters.has(p.id));
     const benchHtml=bench.map(p=>'<div class="fm26-player-row">'+face(p.name,p.id%6)+'<div class="meta"><b>'+txt(p.name)+'</b><small>'+txt(p.pos)+' · '+p.ovr+' · Condition '+(p.cond||0)+'%</small></div><button class="chip" onclick="FM26UX.addToLineup('+p.id+')">Remplacer…</button></div>').join('');
     const avg=ids.length?Math.round(ids.reduce((a,p)=>a+(p.ovr||0),0)/ids.length):0;
-    return '<div class="page-intro"><div><p class="eyebrow">PRÉPARATION DU MATCH</p><h1>Composition d’équipe</h1><p>Choisis tes titulaires, permute-les par glisser-déposer ou avec les menus des postes.</p></div><div class="season-pill">Note moyenne : '+avg+'</div></div><div class="fm26-lineup-layout"><div class="pn"><div class="wr" style="margin-bottom:10px"><button class="chip '+(S.tc.f==='4-3-3'?'on':'')+'" onclick="FM26UX.formation(\'4-3-3\')">4-3-3</button><button class="chip '+(S.tc.f==='4-2-3-1'?'on':'')+'" onclick="FM26UX.formation(\'4-2-3-1\')">4-2-3-1</button><button class="chip '+(S.tc.f==='4-4-2'?'on':'')+'" onclick="FM26UX.formation(\'4-4-2\')">4-4-2</button></div><div class="fm26-lineup-pitch">'+pitch.join('')+'</div><small class="mu">Glisse un joueur sur un autre pour les intervertir. Le onze choisi influence la force de l’équipe en match.</small></div><div class="pn"><h3>Banc et disponibilité</h3>'+benchHtml+'<div class="fm26-event-banner"><b>À vérifier avant le coup d’envoi</b><p class="mu">Un joueur fatigué, blessé, suspendu ou en perte de moral peut diminuer le niveau collectif. Pense à faire tourner.</p><button class="chip" onclick="S.view=\'talk\';S.activeTalk=\'medical\';render()">Parler au staff médical</button></div></div></div>';
+    const liveReturn = M && !M.done ? '<div style="margin:8px 0"><button class="chip" onclick="S.view=\'match\';render()">← Retour au match en direct</button></div>' : '';
+    return liveReturn + '<div class="page-intro"><div><p class="eyebrow">PRÉPARATION DU MATCH</p><h1>Composition d’équipe</h1><p>Choisis tes titulaires, permute-les par glisser-déposer ou avec les menus des postes.</p></div><div class="season-pill">Note moyenne : '+avg+'</div></div><div class="fm26-lineup-layout"><div class="pn"><div class="wr" style="margin-bottom:10px"><button class="chip '+(S.tc.f==='4-3-3'?'on':'')+'" onclick="FM26UX.formation(\'4-3-3\')">4-3-3</button><button class="chip '+(S.tc.f==='4-2-3-1'?'on':'')+'" onclick="FM26UX.formation(\'4-2-3-1\')">4-2-3-1</button><button class="chip '+(S.tc.f==='4-4-2'?'on':'')+'" onclick="FM26UX.formation(\'4-4-2\')">4-4-2</button></div><div class="fm26-lineup-pitch">'+pitch.join('')+'</div><small class="mu">Glisse un joueur sur un autre pour les intervertir. Le onze choisi influence la force de l’équipe en match.</small></div><div class="pn"><h3>Banc et disponibilité</h3>'+benchHtml+'<div class="fm26-event-banner"><b>À vérifier avant le coup d’envoi</b><p class="mu">Un joueur fatigué, blessé, suspendu ou en perte de moral peut diminuer le niveau collectif. Pense à faire tourner.</p><button class="chip" onclick="S.view=\'talk\';S.activeTalk=\'medical\';render()">Parler au staff médical</button></div></div></div>';
   }
   function addToLineup(id) {
     const current=lineupIds();
@@ -701,7 +714,7 @@
       draw=drawWithMovement;
     }
 
-    if (window.V) {
+    if (typeof V !== 'undefined') {
       originalPlayerView=V.player;
       V.player=function() {
         const html=originalPlayerView?originalPlayerView():'';
@@ -713,9 +726,10 @@
       V.inbox=inboxView;
       V.talk=chatView;
       V.lineup=lineupView;
-      V.manager=managerView;
+      V.profile=managerView;
       if (!NAV.some(n=>n[0]==='talk')) NAV.push(['talk','Discussions','☏']);
       if (!NAV.some(n=>n[0]==='lineup')) NAV.splice(3,0,['lineup','Composition','♟']);
+      if (!NAV.some(n=>n[0]==='profile')) NAV.push(['profile','Profil manager','☺']);
     }
     if (typeof render==='function') {
       originalRender=render;
