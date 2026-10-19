@@ -41,7 +41,7 @@ function roster(nation){
  while(result.length<23){
   const p=mkP(POS[result.length]||POS[idx%POS.length],meta.level,700000+NATIONS.findIndex(n=>n.name===nation)*100+idx);
   p.iid=nation+'-generated-'+idx;p.nat=iso;p.club='Sélection '+nation;
-  p.age=clamp(p.age||25,17,35);p.ovr=clamp(p.ovr||meta.level,48,96);p.pot=clamp(p.pot||p.ovr,p.ovr,98);
+  p.age=cl(p.age||25,17,35);p.ovr=cl(p.ovr||meta.level,48,96);p.pot=cl(p.pot||p.ovr,p.ovr,98);
   p.val=Math.round(p.ovr*p.ovr/60);p.morale=72;p.calledFromClub=false;
   result.push(p);idx++;
  }
@@ -69,8 +69,8 @@ function score(f,t){
  const a=teamRating(f.home),b=teamRating(f.away);
  const same=(f.home===S.international.nation||f.away===S.international.nation);
  const styleBoost=same?({Équilibré:0,Possession:.07,Pressing:.1,Contre:.08,Prudent:-.04}[S.international.style]||0):0;
- const hg=clamp(1.28+(a-b)*.045+styleBoost,.25,2.8);
- const ag=clamp(1.16+(b-a)*.045,.2,2.7);
+ const hg=cl(1.28+(a-b)*.045+styleBoost,.25,2.8);
+ const ag=cl(1.16+(b-a)*.045,.2,2.7);
  f.h=poisson(hg);f.a=poisson(ag);f.played=true;
  if(f.phase!=='group'&&f.h===f.a){
   f.pen=[rnd(3,6),rnd(3,6)];
@@ -112,7 +112,7 @@ function startKnockout(t,phase,teams){
  t.phase=phase;t.round=1;
  const ids=Math.max(0,...t.fixtures.map(f=>f.id||0))+1;
  const pairs=[];
- if(phase==='quarter')pairs.push([teams[0],teams[3]],[teams[1],teams[2]],[teams[4],teams[7]],[teams[5],teams[6]]);
+ if(phase==='quarter')pairs.push([teams[0],teams[1]],[teams[2],teams[3]],[teams[4],teams[5]],[teams[6],teams[7]]);
  else if(phase==='semi')pairs.push([teams[0],teams[1]],[teams[2],teams[3]]);
  else pairs.push([teams[0],teams[1]]);
  pairs.forEach((p,i)=>t.fixtures.push({id:ids+i,phase,round:1,home:p[0],away:p[1],played:false}));
