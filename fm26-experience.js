@@ -117,6 +117,39 @@
     const key = Object.keys(lowerLeagues).find(k => k.startsWith(country + '|')) || Object.keys(lowerLeagues)[0];
     return {name:key.split('|')[1], clubs:lowerLeagues[key].slice()};
   }
+  function getCareerPyramid(country) {
+    const pyramids = {
+      'France':['Ligue régionale française','Ligue 3','Ligue 2','Ligue 1'],
+      'Angleterre':['County League anglaise','League Two','League One','Championship','Premier League'],
+      'Espagne':['Liga regional española','Primera Federación – Groupe 1','Segunda División','La Liga'],
+      'Italie':['Campionato regionale italiano','Serie C – Girone A','Serie B','Serie A'],
+      'Allemagne':['Oberliga régionale','3. Liga','2. Bundesliga','Bundesliga'],
+      'Portugal':['Campeonato distrital','Liga Portugal 2','Primeira Liga'],
+      'Pays-Bas':['Regionale klasse','Eerste Divisie','Eredivisie'],
+      'Belgique':['Provinciale afdeling','Challenger Pro League']
+    };
+    return pyramids[country] || [];
+  }
+  function promoteCustomClub(previousLeague) {
+    if(!S || !S.clubCreated)return false;
+    const pyramid=getCareerPyramid(S.clubCountry||'France');
+    const index=pyramid.indexOf(previousLeague);
+    if(index<0 || index>=pyramid.length-1)return false;
+    const nextLeague=pyramid[index+1];
+    if(!LG[nextLeague])return false;
+    if(!LG[nextLeague].includes(S.club))LG[nextLeague]=LG[nextLeague].concat(S.club);
+    S.lg=nextLeague;
+    S.customTierIndex=index+1;
+    S.customLeagueClubs=LG[nextLeague].slice();
+    S.tb={};
+    newTb();
+    S.fx=mkFx();
+    S.cupComps={};
+    S.cupStateVersion=0;
+    mail('Promotion','Ton club monte en division supérieure',S.club+' a remporté '+previousLeague+' et intègre désormais '+nextLeague+'. Le calendrier et le classement ont été reconstruits pour cette nouvelle division.');
+    event('Promotion historique',S.club+' remporte '+previousLeague+' et accède à '+nextLeague+'.');
+    return true;
+  }
   let careerType = 'existing';
   let selectedPortrait = 0;
   let originalXI = null;
@@ -595,7 +628,8 @@
     if(typeof mail==='function')mail('Événement de carrière',title,text);
   }
   function attachCareerMilestone() {
-    const leagueTitles=(S.history||[]).filter(h=>h.position===1).length;
+    const topLeagues=['Premier League','La Liga','Serie A','Bundesliga','Ligue 1','Eredivisie','Primeira Liga','Süper Lig','Women's Super League','Liga F','Super League Greece','Scottish Premiership','Jupiler Pro League'];
+    const leagueTitles=(S.history||[]).filter(h=>h.position===1&&topLeagues.includes(h.league)).length;
     const europeanTitles=Number(S.europeanTitles||0);
     if((leagueTitles>=3 || europeanTitles>=3) && !S.stadiumNamedForManager) {
       S.stadiumNamedForManager=true;
@@ -806,6 +840,20 @@
       };
     }
 
+    if(window.FM26A && typeof window.FM26A.job==='function') {
+      const originalJobAction=window.FM26A.job.bind(window.FM26A);
+      window.FM26A.job=function(i) {
+        const before=S&&S.club;
+        originalJobAction(i);
+        if(S&&S.club!==before) {
+          S.clubCreated=false;
+          S.customLeagueClubs=null;
+          S.customTierIndex=null;
+          try{sv()}catch(e){}
+        }
+      };
+    }
+
     if (typeof startMatch==='function') {
       originalStartMatch=startMatch;
       startMatch=function() {
@@ -868,8 +916,15 @@
     if (typeof newSeason==='function') {
       originalNewSeason=newSeason;
       newSeason=function() {
+        const previousLeague=S&&S.lg;
+        let previousPosition=0;
+        if(S&&S.clubCreated&&typeof tbl==='function') {
+          const priorTable=tbl();
+          previousPosition=priorTable.findIndex(row=>row.c===S.club)+1;
+        }
         originalNewSeason();
         if(!S)return;
+        if(S.clubCreated && previousPosition===1) promoteCustomClub(previousLeague);
         applyCurrentParisFC();
         attachCareerMilestone();
         S.lineup=typeof xi==='function'?xi().map(p=>p.id):S.lineup;
