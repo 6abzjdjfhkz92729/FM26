@@ -18,7 +18,17 @@
       const ps=teamPlayers(side);
       const aliases={pass:'Passing',vision:'Vision',dribble:'Dribbling',finish:'Finishing',pace:'Pace',tackle:'Tackling',position:'Positioning',anticipation:'Anticipation',composure:'Composure',stamina:'Stamina',keeper:'Reflexes'};
       const val=avg(ps,aliases[key]||key);
-      return val||12;
+      const mean=(field,fallback)=>ps.length?ps.reduce((total,p)=>total+(Number(p[field])||fallback),0)/ps.length:fallback;
+      const condition=mean('cond',85);
+      const morale=mean('morale',70);
+      const form=mean('form',7);
+      const stamina=avg(ps,'Stamina')||12;
+      // Low condition, confidence and form reduce the technical execution of the whole selected XI.
+      const readiness=(condition-85)*.045+(morale-70)*.028+(form-7)*.72;
+      // Players with lower stamina lose more precision and intensity in the final stages.
+      const matchLoad=Math.max(0,((Number(M.min)||0)-55)/8)*clamp((15-stamina)/10,0,1);
+      const fatiguePenalty=key==='keeper'?matchLoad*.55:matchLoad;
+      return clamp((val||12)+readiness-fatiguePenalty,4,20);
     }
     const power=safeNum(side===0?M.hp:M.ap,35,100,68);
     return clamp(11+(power-68)*.28+((hash(teamName(side)+key)%7)-3)*.35,6,18);
