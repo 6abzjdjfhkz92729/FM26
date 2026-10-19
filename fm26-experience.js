@@ -6,7 +6,10 @@
 
   const clamp = (n, a, b) => Math.max(a, Math.min(b, Number(n) || 0));
   const txt = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const names = ['Portrait 1','Portrait 2','Portrait 3','Portrait 4','Portrait 5','Portrait 6'];
+  const names = ['Pep Guardiola','Mikel Arteta','Luis Enrique','Carlo Ancelotti','Hansi Flick','Sarina Wiegman'];
+  const managerPhotoSources = [];
+  let selectedPortraitPhoto = null;
+  let selectedPortraitPage = null;
   const palette = [
     ['#c98b62','#342018','#e5b899','#253e6c','#f5c34e'],
     ['#f0c8a4','#5b3325','#d99e76','#384d5b','#e6e8ec'],
@@ -19,6 +22,35 @@
     const p = palette[(Number(i) || 0) % palette.length];
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="160" height="180" viewBox="0 0 160 180"><defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="' + p[3] + '"/><stop offset="1" stop-color="#12162a"/></linearGradient><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop stop-color="' + p[4] + '"/><stop offset="1" stop-color="' + p[3] + '"/></linearGradient></defs><rect width="160" height="180" rx="18" fill="url(#b)"/><circle cx="80" cy="66" r="39" fill="' + p[0] + '"/><path d="M39 66 Q28 20 76 21 Q122 16 121 62 L112 47 Q83 36 60 43 L43 56Z" fill="' + p[1] + '"/><path d="M54 67 Q62 62 69 67 M91 67 Q98 62 106 67" fill="none" stroke="#35231c" stroke-width="4" stroke-linecap="round"/><path d="M70 86 Q80 92 91 86" fill="none" stroke="#743e36" stroke-width="3" stroke-linecap="round"/><path d="M59 101 L101 101 L117 123 L139 180 L21 180 L43 123Z" fill="url(#s)"/><path d="M61 101 L80 126 L99 101" fill="#f1f0ee"/><path d="M69 101 L80 116 L91 101" fill="#1e293b"/><rect x="7" y="7" width="146" height="166" rx="14" fill="none" stroke="#ffffff" stroke-opacity=".22"/></svg>';
     return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+  }
+  function loadManagerPortraits(profile) {
+    names.forEach((name,i)=>{
+      const button=profile.querySelector('[data-portrait="'+i+'"]');
+      if(!button)return;
+      const key='fm26-manager-photo:'+name.toLowerCase();
+      const apply=(url,page)=>{
+        managerPhotoSources[i]={url,page};
+        const img=button.querySelector('img');
+        if(img)img.src=url;
+        button.dataset.photoUrl=url;
+        button.dataset.photoPage=page||'';
+        button.title='Photo de référence : '+name+' — source Wikipédia';
+        if(Number(selectedPortrait)===i){selectedPortraitPhoto=url;selectedPortraitPage=page||null;}
+      };
+      let cached=null;
+      try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
+      if(cached&&cached.url){apply(cached.url,cached.page);return;}
+      if(cached&&cached.missing){return;}
+      fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(name.replace(/ /g,'_')),{headers:{'Accept':'application/json'}})
+      .then(r=>{if(!r.ok)throw new Error('page absente');return r.json()})
+      .then(data=>{
+        if(!data||!data.thumbnail||!data.thumbnail.source)throw new Error('portrait absent');
+        const page=data.content_urls&&data.content_urls.desktop&&data.content_urls.desktop.page||('https://en.wikipedia.org/wiki/'+encodeURIComponent(name));
+        const val={url:data.thumbnail.source,page};
+        try{localStorage.setItem(key,JSON.stringify(val))}catch(e){}
+        apply(val.url,val.page);
+      }).catch(()=>{managerPhotoSources[i]={missing:true};try{localStorage.setItem(key,JSON.stringify({missing:true}))}catch(e){}});
+    });
   }
   function face(name, idx, cls) {
     return '<span class="' + (cls || 'fm26-face') + '"><img alt="" src="' + portraitSvg(idx == null ? (Array.from(String(name || '')).reduce((a,c)=>a+c.charCodeAt(0),0)%6) : idx) + '"></span>';
@@ -106,17 +138,20 @@
       profile.id = 'fm26-profile-select';
       profile.className = 'pn';
       profile.style.margin = '14px 0';
-      let html = '<div class="fm26-section-kicker">Ton identité de manager</div><h3 style="margin:5px 0 0">Choisis ton portrait</h3><p class="mu">Portraits illustrés originaux, enregistrés avec ta carrière.</p><div class="fm26-portraits">';
+      let html = '<div class="fm26-section-kicker">Ton identité de manager</div><h3 style="margin:5px 0 0">Choisis ton portrait</h3><p class="mu">Photos de référence d’entraîneurs lorsqu’elles sont disponibles ; sinon, un portrait illustré est utilisé.</p><div class="fm26-portraits">';
       for (let i = 0; i < 6; i++) {
-        html += '<button type="button" class="fm26-portrait-choice' + (i === selectedPortrait ? ' selected' : '') + '" data-portrait="' + i + '"><img src="' + portraitSvg(i) + '" alt="Portrait de manager ' + (i+1) + '"><small>' + names[i] + '</small></button>';
+        html += '<button type="button" class="fm26-portrait-choice' + (i === selectedPortrait ? ' selected' : '') + '" data-portrait="' + i + '" data-coach-name="' + txt(names[i]) + '"><img src="' + portraitSvg(i) + '" alt="Portrait de ' + txt(names[i]) + '"><small>' + txt(names[i]) + '</small></button>';
       }
       html += '</div>';
       profile.innerHTML = html;
       brand.insertAdjacentElement('afterend', profile);
+      loadManagerPortraits(profile);
       profile.addEventListener('click', e => {
         const b = e.target.closest('[data-portrait]');
         if (!b) return;
         selectedPortrait = Number(b.dataset.portrait) || 0;
+        selectedPortraitPhoto = b.dataset.photoUrl || (managerPhotoSources[selectedPortrait]&&managerPhotoSources[selectedPortrait].url) || null;
+        selectedPortraitPage = b.dataset.photoPage || (managerPhotoSources[selectedPortrait]&&managerPhotoSources[selectedPortrait].page) || null;
         profile.querySelectorAll('[data-portrait]').forEach(el => el.classList.toggle('selected', Number(el.dataset.portrait) === selectedPortrait));
       });
     }
@@ -148,6 +183,10 @@
     if (!Array.isArray(S.sq)) S.sq = [];
     S.managerPortrait = Number.isFinite(Number(S.managerPortrait)) ? Number(S.managerPortrait) : selectedPortrait;
     selectedPortrait = S.managerPortrait;
+    S.managerPhoto = S.managerPhoto || null;
+    S.managerPhotoPage = S.managerPhotoPage || null;
+    selectedPortraitPhoto = S.managerPhoto;
+    selectedPortraitPage = S.managerPhotoPage;
     S.chatThreads = S.chatThreads || {};
     S.activeTalk = S.activeTalk || 'president';
     S.careerEvents = Array.isArray(S.careerEvents) ? S.careerEvents : [];
@@ -537,11 +576,16 @@
     const wins=games.filter(f=>{const z=String(f.score||'0-0').split('-').map(Number);return f.home===S.club?z[0]>z[1]:z[1]>z[0]}).length;
     const draws=games.filter(f=>{const z=String(f.score||'0-0').split('-').map(Number);return z[0]===z[1]}).length;
     const titles=(S.history||[]).filter(h=>h.position===1).length;
-    return '<div class="page-intro"><div><p class="eyebrow">PROFIL DE CARRIÈRE</p><h1>'+txt(S.mg)+'</h1><p>Ton identité, ton bilan et les jalons à venir.</p></div></div><div class="gr" style="grid-template-columns:260px minmax(0,1fr)"><div class="pn" style="text-align:center">'+face(S.mg,p,'fm26-face big')+'<h2>'+txt(S.mg)+'</h2><p class="mu">'+txt(S.managerNation||'FRA')+' · '+txt(S.managerExperience||'Manager')+'</p><button class="chip" onclick="FM26UX.changePortrait()">Changer le portrait</button></div><div class="pn"><h3>Bilan de la carrière</h3><div class="gr g3"><div><div class="big">'+games.length+'</div><small class="mu">Matchs joués</small></div><div><div class="big">'+wins+'</div><small class="mu">Victoires</small></div><div><div class="big">'+draws+'</div><small class="mu">Nuls</small></div></div><p class="mu">Titres de championnat inscrits : '+titles+'</p><h3>Événements marquants</h3>'+(S.careerEvents||[]).slice(0,8).map(e=>'<div class="ar"><span>'+txt(e.title)+'</span><small class="mu">'+txt(e.text)+'</small></div>').join('')+'</div></div>';
+    const mgrFace=S.managerPhoto ? '<span class="fm26-face big"><img alt="Portrait du manager" src="'+txt(S.managerPhoto)+'"></span>'+(S.managerPhotoPage?'<div class="fm26-photo-source"><a href="'+txt(S.managerPhotoPage)+'" target="_blank" rel="noopener">Source de la photo : Wikipédia</a></div>':'') : face(S.mg,p,'fm26-face big');
+    return '<div class="page-intro"><div><p class="eyebrow">PROFIL DE CARRIÈRE</p><h1>'+txt(S.mg)+'</h1><p>Ton identité, ton bilan et les jalons à venir.</p></div></div><div class="gr" style="grid-template-columns:260px minmax(0,1fr)"><div class="pn" style="text-align:center">'+mgrFace+'<h2>'+txt(S.mg)+'</h2><p class="mu">'+txt(S.managerNation||'FRA')+' · '+txt(S.managerExperience||'Manager')+'</p><button class="chip" onclick="FM26UX.changePortrait()">Changer le portrait</button></div><div class="pn"><h3>Bilan de la carrière</h3><div class="gr g3"><div><div class="big">'+games.length+'</div><small class="mu">Matchs joués</small></div><div><div class="big">'+wins+'</div><small class="mu">Victoires</small></div><div><div class="big">'+draws+'</div><small class="mu">Nuls</small></div></div><p class="mu">Titres de championnat inscrits : '+titles+'</p><h3>Événements marquants</h3>'+(S.careerEvents||[]).slice(0,8).map(e=>'<div class="ar"><span>'+txt(e.title)+'</span><small class="mu">'+txt(e.text)+'</small></div>').join('')+'</div></div>';
   }
   function changePortrait() {
     const current=Number(S.managerPortrait)||0;
     S.managerPortrait=(current+1)%6;
+    const photo=managerPhotoSources[S.managerPortrait];
+    S.managerPhoto=photo&&photo.url||null;
+    S.managerPhotoPage=photo&&photo.page||null;
+    selectedPortrait=S.managerPortrait;selectedPortraitPhoto=S.managerPhoto;selectedPortraitPage=S.managerPhotoPage;
     try{sv()}catch(e){};render();
   }
   function event(title,text) {
@@ -635,7 +679,7 @@
     if(header && S.managerPortrait!=null && !header.querySelector('.fm26-header-face')) {
       const faceEl=document.createElement('span');
       faceEl.className='fm26-header-face';
-      faceEl.innerHTML='<img alt="Portrait de '+txt(S.mg)+'" src="'+portraitSvg(S.managerPortrait)+'">';
+      faceEl.innerHTML='<img alt="Portrait de '+txt(S.mg)+'" src="'+(S.managerPhoto?txt(S.managerPhoto):portraitSvg(S.managerPortrait))+'">';
       faceEl.style.cssText='display:inline-flex;width:34px;height:38px;border-radius:7px;overflow:hidden;flex:none;margin-right:4px';
       const first=header.firstElementChild;
       if(first)header.insertBefore(faceEl,first);
@@ -723,6 +767,8 @@
         originalStartCareer();
         if(!S)return;
         S.managerPortrait=selectedPortrait;
+        S.managerPhoto=selectedPortraitPhoto;
+        S.managerPhotoPage=selectedPortraitPage;
         S.managerNation=(document.getElementById('managerNation')||{}).value||'FRA';
         S.managerExperience=(document.getElementById('managerExperience')||{}).value||'debutant';
         S.managerLicense=(document.getElementById('managerLicense')||{}).value||'none';
@@ -866,7 +912,7 @@
           const existing=header.querySelector('.fm26-header-face');
           if(!existing) {
             const faceEl=document.createElement('span');faceEl.className='fm26-header-face';
-            faceEl.innerHTML='<img alt="Portrait de manager" src="'+portraitSvg(S.managerPortrait)+'">';
+            faceEl.innerHTML='<img alt="Portrait de manager" src="'+(S.managerPhoto?txt(S.managerPhoto):portraitSvg(S.managerPortrait))+'">';
             faceEl.style.cssText='display:inline-flex;width:34px;height:38px;border-radius:7px;overflow:hidden;flex:none;margin-right:4px';
             if(header.firstElementChild)header.insertBefore(faceEl,header.firstElementChild);
           }
