@@ -101,10 +101,31 @@ else:
                 errors.append(f"{name}: incorrect first-half fixture count.")
             if len({frozenset(pair) for pair in pairings}) != len(pairings):
                 errors.append(f"{name}: duplicate pairing in first half.")
-        if len(leagues) < 12:
-            errors.append(f"Expected at least 12 playable leagues, found {len(leagues)}.")
+        if len(leagues) < 36:
+            errors.append(f"Expected at least 36 playable divisions, found {len(leagues)}.")
+        total_clubs = sum(len(teams) for teams in leagues.values())
+        if total_clubs < 640:
+            errors.append(f"Expected at least 640 listed club entries, found {total_clubs}.")
     except Exception as exc:
         errors.append(f"League database validation failed: {exc}")
+
+
+experience_path = ROOT / "fm26-experience.js"
+if experience_path.exists():
+    experience_source = experience_path.read_text(encoding="utf-8")
+    for marker in (
+        "function loadManagerPortraits(profile)",
+        "function chatView()",
+        "function inboxView()",
+        "function lineupView()",
+        "function promoteCustomClub(previousLeague)",
+        "function pauseForLineup()",
+        "function resumeMatch()",
+        "querySelectorAll('[data-fm26-player], [data-photo-player]')",
+        "function attachCareerMilestone()",
+    ):
+        if marker not in experience_source:
+            errors.append(f"Experience layer missing expected feature marker: {marker}")
 
 
 intl_path = ROOT / "fm26-international.js"
