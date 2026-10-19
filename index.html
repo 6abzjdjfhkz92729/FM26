@@ -154,6 +154,32 @@ tbody tr:nth-child(even){background:#ffffff03}tr.cp{cursor:pointer}tr.cp:hover{b
 @media(max-width:820px){#app{grid-template-columns:54px minmax(0,1fr)}#hd{gap:8px;padding:0 10px;height:56px;min-height:56px}#hd .cr{width:32px!important;height:32px!important}#hd h2{font-size:12px}#go{height:38px;min-width:88px;padding:0 10px;font-size:9px}.dt2{display:none}#vw{padding:14px 12px 24px}.g3,.gr[style]{grid-template-columns:1fr!important}.page-intro{align-items:flex-start;flex-direction:column}.page-intro h1{font-size:22px}.portal-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.sc{padding:19px}.sc h1{font-size:27px}.setup-mark{width:58px;height:58px}.cl .chip{width:calc(33.333% - 6px);min-width:86px}.mtop{gap:5px;padding:0 7px;min-height:42px}.mtop .tm{padding:7px 6px;font-size:9px}.mtop .clk{padding:7px}.pause{min-height:42px;padding:0 10px}.arena .pitch{margin:8px 2%;aspect-ratio:1.7/1}.mbot{gap:6px;padding:0 6px}.cmt{font-size:10px;padding:6px}.strip>div{min-width:76px}}
 @media(max-width:480px){.setup-brand{align-items:flex-start;gap:12px}.setup-mark{width:50px;height:50px;font-size:20px}.sc h1{font-size:23px}.sc h1 small{font-size:10px}.sc .row>*{min-width:0}.portal-stat-grid{grid-template-columns:1fr}.fixture-team .cr{width:45px!important;height:45px!important}.fixture-teams{gap:6px}.portal-panel{padding:13px}.section-title h1{font-size:19px}.match-shell-title{align-items:flex-start;flex-direction:column}}
 
+
+/* FM26 — finition visuelle de la couche carrière */
+:root{--bg:#070b16;--pn:#111a2c;--ln:#28344d;--ac:#6f68f5;--tx:#edf3ff;--mu:#91a0bd}
+body{background:radial-gradient(ellipse at 76% -14%,#28376975,transparent 45%),radial-gradient(ellipse at 0 30%,#321d5580,transparent 40%),#070b16;color:var(--tx)}
+#side{background:linear-gradient(180deg,#10182a,#090e1b 65%);border-right:1px solid #273550;box-shadow:8px 0 26px #0002}
+#hd{background:linear-gradient(105deg,#10192c,#0b1222);border-bottom:1px solid #2b3851;box-shadow:0 8px 25px #0002}
+#hd h2{font-weight:800;letter-spacing:.01em}#hd small{color:#a8b8d5}
+#go,.btn{background:linear-gradient(115deg,#756df7,#574ce0);box-shadow:0 7px 20px #5a52e733;transition:filter .16s,transform .16s}
+#go:hover,.btn:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.pn{background:linear-gradient(145deg,#141f34,#10192a);border-color:#2a3852;border-radius:10px;box-shadow:0 10px 28px #00000018}
+.pn h3{color:#82cfff;font-size:11px;letter-spacing:.09em}
+.ar{background:#ffffff06;border-bottom:1px solid #ffffff08;padding:6px 9px;border-radius:4px}
+.chip{background:#ffffff06;border-color:#34435e;border-radius:7px;transition:background .14s,border-color .14s,transform .14s}
+.chip:hover{background:#7c72ff16;border-color:#887fff;transform:translateY(-1px)}
+.chip.on{background:linear-gradient(120deg,#6b61ef33,#5f93ff18);border-color:#8d85ff;box-shadow:inset 0 0 0 1px #8d85ff18}
+input,select,textarea{background:#091222!important;border-color:#30405c!important;color:#f1f5ff!important;border-radius:7px!important}
+input:focus,select:focus,textarea:focus{outline:2px solid #7771ff88;outline-offset:1px}
+table{font-variant-numeric:tabular-nums}th{color:#9cafd0;text-transform:uppercase;letter-spacing:.05em}td,th{border-bottom-color:#ffffff0d;padding:8px 9px}tr.cp:hover{background:#7f86ff0d}
+#vw{padding:20px clamp(12px,2.1vw,30px)}
+#globalSearchWrap{border-color:#36415e;background:linear-gradient(105deg,#17233a,#111a2b)}#globalSearch{margin:3px 0 10px}#globalSearchResults .ar{display:flex;gap:12px}
+.pitch{box-shadow:inset 0 0 30px #001d1240;border-color:#ffffff70}
+.mcard{border-color:#5d64bd;background:#10182a}.band{background:linear-gradient(90deg,#5c53d7,#8a68f5);letter-spacing:.04em}
+.b{font-variant-numeric:tabular-nums}.b.h{background:#087f70}.b.m{background:#6151c9}.b.l{background:#3c4357}
+@media(max-width:900px){#vw{padding:12px}.pn{padding:12px}.gr.g3{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))!important}#hd{gap:7px;padding-left:8px}#go{padding:0 14px;font-size:12px}.row>*{min-width:180px}}
+@media(max-width:560px){#app{grid-template-columns:48px minmax(0,1fr)}.si{font-size:18px;margin-left:3px!important;margin-right:3px!important;width:calc(100% - 6px)!important}#hd .cr{display:none}#hd h2{font-size:14px}#go{height:48px;padding:0 10px}.dt2{padding:4px 8px;min-width:52px}#vw{padding:8px}.pn{padding:10px}table{font-size:11px}td,th{padding:6px 5px}.row>*{min-width:100%}}
+html.reduce-motion *,html.reduce-motion *::before,html.reduce-motion *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 </style></head><body>
 <div id="setup"><div class="sc"><div class="setup-brand"><span class="setup-mark">FM</span><div><p class="setup-kicker">TON CLUB. TES CHOIX. TON HISTOIRE.</p><h1>FM26 <small class="mu">MANAGER</small></h1><p class="mu">Configure ton profil, choisis ton défi et prends les commandes.</p></div></div>
 <div class="row"><div><label>Prénom</label><input id="fn" placeholder="Côme"><label>Nom</label><input id="ln" placeholder="Dupont"><label>Mode de jeu</label><div class="wr" id="md"></div><label>Formation</label><select id="fo"><option>4-3-3</option><option>4-2-3-1</option><option>4-4-2</option></select></div>
