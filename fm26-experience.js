@@ -111,7 +111,8 @@
     'Pays-Bas|Regionale klasse': ['SV Noorddam','FC Waterland','VV Oosthaven','SC Veldwijk','Racing Westerdam','Sporting Duin','VV Groeneveld','FC Zuidpoort','AVC Meerdijk','SV Laren','VV Zonnedijk','FC Buitenhof','SC Rivier','VV Dorpzicht','Union Noordzee','Club à créer'],
     'Belgique|Provinciale afdeling': ['FC Rivieren','KSC Groenveld','Royal Noord','Sporting Ardenne','Union Meuse','VV Kempen','AC Bruxelles Nord','RFC du Centre','KFC Lumière','Olympique Sambre','Sporting Dyle','FC Campine','Union du Hainaut','Racing Condroz','AS Borinage','Club à créer'],
     'Écosse|Regional League écossaise': ['Caledonia Thistle','East Firth FC','West Loch United','Highland Rovers','North Brae Athletic','Dunmuir FC','Clyde Valley','Southmoor Albion','Forthbridge','Glenhaven Town','Stirling Vale','Kirkton United','Lochside FC','Redcastle Athletic','Seaview Rovers','Club à créer'],
-    'Turquie|Bölgesel lig': ['Anadolu Gücü','Mavişehir FK','Kuzey Yıldızı','Akdeniz Spor','Yeni Ufuk','Altınova SK','Kıyıspor','Doğu Anadolu FK','Yıldırım Belediye','Güneşli Gençlik','Boğaz United','Karadeniz 1967','Marmara Atletik','Eskişehir Birlik','Toros FK','Club à créer']
+    'Turquie|Bölgesel lig': ['Anadolu Gücü','Mavişehir FK','Kuzey Yıldızı','Akdeniz Spor','Yeni Ufuk','Altınova SK','Kıyıspor','Doğu Anadolu FK','Yıldırım Belediye','Güneşli Gençlik','Boğaz United','Karadeniz 1967','Marmara Atletik','Eskişehir Birlik','Toros FK','Club à créer'],
+    'Grèce|Ligue régionale grecque': ['Athina United','Thessaloniki FC','Piraeus Athletic','Patras Sporting','Kriti FC','Larissa Olympique','Volos City','Rhodes Athletic','Ioannina FC','Kalamata Union','Serres Rovers','Chania Sporting','Trikala United','Drama FC','Corfu Athletic','Club à créer']
   };
   function getLowerLeague(country) {
     const key = Object.keys(lowerLeagues).find(k => k.startsWith(country + '|')) || Object.keys(lowerLeagues)[0];
@@ -125,8 +126,11 @@
       'Italie':['Campionato regionale italiano','Serie C – Girone A','Serie B','Serie A'],
       'Allemagne':['Oberliga régionale','3. Liga','2. Bundesliga','Bundesliga'],
       'Portugal':['Campeonato distrital','Liga Portugal 2','Primeira Liga'],
-      'Pays-Bas':['Regionale klasse','Eerste Divisie','Eredivisie'],
-      'Belgique':['Provinciale afdeling','Challenger Pro League','Jupiler Pro League']
+      'Pays-Bas':['Regionale klasse','Tweede Divisie','Eerste Divisie','Eredivisie'],
+      'Belgique':['Provinciale afdeling','Challenger Pro League','Jupiler Pro League'],
+      'Écosse':['Regional League écossaise','Scottish League Two','Scottish League One','Scottish Championship','Scottish Premiership'],
+      'Grèce':['Ligue régionale grecque','Super League 2','Super League Greece'],
+      'Turquie':['Bölgesel lig','TFF 1. Lig','Süper Lig']
     };
     return pyramids[country] || [];
   }
