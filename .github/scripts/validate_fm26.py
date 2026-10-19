@@ -83,7 +83,18 @@ else:
                         errors.append(f"{name}: club scheduled twice in round {r + 1}.")
                     used.add(home); used.add(away)
                     pairings.append((home, away))
-                if used != set(teams):
+                bye_club = None
+                if bye in ring:
+                    for i in range(n // 2):
+                        left, right = ring[i], ring[n - 1 - i]
+                        if left == bye:
+                            bye_club = right
+                            break
+                        if right == bye:
+                            bye_club = left
+                            break
+                expected_round_clubs = set(teams) - ({bye_club} if bye_club is not None else set())
+                if used != expected_round_clubs:
                     errors.append(f"{name}: a club is missing or scheduled twice in round {r + 1}.")
                 ring = [ring[0], ring[-1], *ring[1:-1]]
             if len(pairings) != expected_count:
