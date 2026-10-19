@@ -319,5 +319,96 @@ FM26A.sub=function(outId,inId){
  if(M&&!M.done){const delta=(inn.ovr||60)-(out.ovr||60);if(M.f.home===S.club)M.hp=clamp(M.hp+delta*.18,35,100);else M.ap=clamp(M.ap+delta*.18,35,100);sv();render()}
 };
 
+
+/* Transfers received and player conversations: choices now alter the career state. */
+const initLifeSystems=()=>{
+ if(!S)return;
+ S.transferOffers=Array.isArray(S.transferOffers)?S.transferOffers:[];
+ S.conversations=Array.isArray(S.conversations)?S.conversations:[];
+ S.promises=Array.isArray(S.promises)?S.promises:[];
+};
+const previousStartForLife=startCareer;
+startCareer=function(){previousStartForLife();if(S){initLifeSystems();sv();render()}};
+if(S)initLifeSystems();
+
+V.offers=function(){
+ initLifeSystems();
+ const pending=S.transferOffers.filter(o=>o.status==='pending');
+ const history=S.transferOffers.filter(o=>o.status!=='pending').slice(-10).reverse();
+ return `<div class="gr" style="grid-template-columns:minmax(0,1.4fr) minmax(260px,1fr)"><div class="pn"><h3>Offres reçues · ${pending.length} en attente</h3>${pending.map(o=>{const p=S.sq.find(x=>x.id===o.playerId);return `<div class="pn" style="margin:10px 0"><div class="ph"><div><h3>${esc(o.club)} propose une offre</h3><b>${esc(o.playerName)}</b><p class="mu">${p?esc(p.pos)+' · '+p.age+' ans · Note '+p.ovr:'Joueur de ton effectif'}</p></div><div class="shirt"><small>OFFRE</small><b>${o.offer.toFixed(1)} M€</b></div></div><p class="mu">Date : ${esc(o.date||S.date)} · Valeur estimée : ${p?(p.val||0)+' M€':'—'}</p><div class="wr"><button class="chip" onclick="FM26A.offerDecision(${o.id},'accept')">Accepter</button><button class="chip" onclick="FM26A.offerDecision(${o.id},'counter')">Contre-proposer</button><button class="chip" onclick="FM26A.offerDecision(${o.id},'reject')">Refuser</button></div></div>`}).join('')||'<p class="mu">Aucune offre en attente. Les clubs rivaux pourront bientôt faire des propositions pour tes joueurs.</p>'}</div><div class="pn"><h3>Historique des négociations</h3>${history.map(o=>`<div class="ar"><span><b>${esc(o.playerName)}</b><br><small class="mu">${esc(o.club)} · ${esc(o.status)}</small></span><b>${o.finalFee?o.finalFee.toFixed(1):o.offer.toFixed(1)} M€</b></div>`).join('')||'<p class="mu">Les propositions acceptées et refusées apparaîtront ici.</p>'}</div></div>`;
+};
+NAV.push(['offers','Offres reçues','€']);
+const previousPlayer=V.player;
+V.player=function(){
+ const base=previousPlayer();
+ const p=S.sq.find(x=>x.id===S.pid)||S.sq[0];if(!p)return base;
+ initLifeSystems();
+ const recent=S.conversations.filter(c=>c.playerId===p.id).slice(-4).reverse();
+ const promised=S.promises.filter(c=>c.playerId===p.id&&c.status==='active');
+ return base+`<div class="pn" style="margin-top:12px"><h3>Entretien individuel</h3><p class="mu">Le dialogue influence le moral du joueur, ses attentes et la confiance envers le manager.</p><div class="wr"><button class="chip" onclick="FM26A.playerTalk(${p.id},'support')">Encourager</button><button class="chip" onclick="FM26A.playerTalk(${p.id},'challenge')">Exiger davantage</button><button class="chip" onclick="FM26A.playerTalk(${p.id},'promise')">Promettre du temps de jeu</button><button class="chip" onclick="FM26A.playerTalk(${p.id},'warn')">Recadrer</button></div><div class="ar"><span>Moral individuel</span><b>${p.morale??70}/100</b></div><div class="ar"><span>Statut dans l’équipe</span><b>${esc(p.status||'Rotation')}</b></div><div class="ar"><span>Promesses actives</span><b>${promised.length}</b></div>${recent.map(c=>`<div class="ml"><b>${esc(c.topic)}</b><p class="mu">${esc(c.text)}</p></div>`).join('')||'<p class="mu">Aucune discussion récente avec ce joueur.</p>'}</div>`;
+};
+FM26A.playerTalk=function(id,topic){
+ initLifeSystems();const p=S.sq.find(x=>x.id===Number(id));if(!p)return;
+ const today=String(S.date||'').slice(0,10);
+ if(p.lastTalkDate===today)return alert('Tu as déjà parlé à ce joueur aujourd’hui.');
+ let text='',delta=0;
+ if(topic==='support'){text='Tu lui as apporté ton soutien et rappelé son importance dans le projet.';delta=p.morale<45?9:5}
+ if(topic==='challenge'){const strong=(p.a?.Determination||10)>=14||p.personality==='Professionnel'||p.personality==='Compétiteur';text=strong?'Tu lui as demandé d’élever ses exigences. Il semble prêt à relever le défi.':'Tu lui as demandé davantage et il l’a mal pris.';delta=strong?2:-5}
+ if(topic==='warn'){text='Tu lui as demandé de respecter les exigences collectives.';delta=p.morale<35?-6:-2}
+ if(topic==='promise'){
+  const promise=prompt('Quelle promesse de temps de jeu veux-tu lui faire ?','Lui donner une chance lors des trois prochains matchs');
+  if(!promise)return;
+  S.promises.push({id:Date.now(),playerId:p.id,playerName:p.name,text:promise,startApps:p.ap||0,matchesLeft:3,status:'active'});
+  text='Tu lui as promis : '+promise;delta=8;
+ }
+ p.morale=clamp((p.morale??70)+delta,0,100);p.lastTalkDate=today;
+ S.conversations.push({id:Date.now(),playerId:p.id,playerName:p.name,topic:topic==='support'?'Encouragement':topic==='challenge'?'Exigences':topic==='promise'?'Promesse':'Recadrage',text,date:today});
+ S.conversations=S.conversations.slice(-100);S.mor=clamp(S.mor+(delta>0?1:0),0,100);
+ mail('Vestiaire','Discussion avec '+p.name,text);sv();render();
+};
+FM26A.offerDecision=function(id,action){
+ initLifeSystems();const o=S.transferOffers.find(x=>x.id===Number(id)&&x.status==='pending');if(!o)return;
+ const p=S.sq.find(x=>x.id===o.playerId);if(!p){o.status='annulée';sv();return render()}
+ if(action==='reject'){o.status='refusée';p.morale=clamp((p.morale||70)+(p.morale<35?-2:1),0,100);mail('Mercato','Offre refusée pour '+p.name,'Tu as refusé la proposition de '+o.club+'.');sv();return render()}
+ if(action==='counter'){
+  const ask=Number(prompt('Contre-proposition en millions d’euros :',String(Math.round(o.offer*1.2*10)/10)));
+  if(!Number.isFinite(ask)||ask<=o.offer)return alert('La contre-proposition doit être supérieure à l’offre initiale.');
+  if(ask<=o.offer*1.35&&Math.random()<.72){o.finalFee=Math.round(ask*10)/10;o.status='contre-offre acceptée'}
+  else{o.status='contre-offre refusée';mail('Mercato','Contre-offre refusée',o.club+' ne souhaite pas dépasser son offre initiale pour '+p.name+'.')}
+  if(o.status==='contre-offre acceptée')mail('Mercato','Accord trouvé pour '+p.name,o.club+' accepte une indemnité de '+o.finalFee.toFixed(1)+' M€.');
+  sv();return render();
+ }
+ if(action==='accept'){
+  if(S.sq.length<=16)return alert('Tu dois conserver au moins 16 joueurs dans l’effectif.');
+  if(p.pos==='GK'&&S.sq.filter(x=>x.pos==='GK').length<2)return alert('Tu dois conserver au moins deux gardiens avant de vendre celui-ci.');
+  o.status='acceptée';o.finalFee=o.offer;S.bud=Math.round((S.bud+o.offer)*10)/10;S.sq=S.sq.filter(x=>x.id!==p.id);S.lineup=(S.lineup||[]).filter(x=>x!==p.id);S.managerRep=clamp((S.managerRep||20)+1,0,100);
+  mail('Mercato',p.name+' vendu à '+o.club,'Accord final : '+o.offer.toFixed(1)+' M€. Le budget de transfert a été crédité.');sv();return render();
+ }
+};
+const previousEndForLife=endMatch;
+endMatch=function(){
+ previousEndForLife();
+ if(!S)return;initLifeSystems();
+ S.promises.forEach(pr=>{
+  if(pr.status!=='active')return;
+  pr.matchesLeft--;
+  const p=S.sq.find(x=>x.id===pr.playerId);
+  if(!p){pr.status='annulée';return}
+  if((p.ap||0)>pr.startApps){pr.status='tenue';mail('Vestiaire','Promesse tenue envers '+p.name,'Tu as donné du temps de jeu à '+p.name+'. Sa confiance augmente.');p.morale=clamp((p.morale||70)+3,0,100)}
+  else if(pr.matchesLeft<=0){pr.status='non tenue';p.morale=clamp((p.morale||70)-10,0,100);S.board=clamp(S.board-1,0,100);mail('Vestiaire','Promesse non tenue envers '+p.name,'Tu n’as pas pu respecter ta promesse : '+pr.text+'.');}
+ });
+ const userGames=S.fx.filter(f=>f.played&&(f.home===S.club||f.away===S.club));
+ if(userGames.length&&userGames.length%4===0&&Math.random()<.72){
+  const candidates=S.sq.filter(p=>p.age>=22&&!p.inj&&!(S.transferOffers||[]).some(o=>o.playerId===p.id&&o.status==='pending'));
+  if(candidates.length){
+   const p=pick(candidates),all=Object.entries(LG).flatMap(([league,clubs])=>clubs.map(club=>({league,club}))).filter(x=>x.club!==S.club),buyer=pick(all);
+   const offer=Math.max(.5,Math.round((p.val||1)*(.85+Math.random()*.65)*10)/10);
+   const entry={id:Date.now()+rnd(1,9999),playerId:p.id,playerName:p.name,club:buyer.club,league:buyer.league,offer,status:'pending',date:S.date};
+   S.transferOffers.push(entry);S.transferOffers=S.transferOffers.slice(-40);mail('Mercato',buyer.club+' fait une offre pour '+p.name,'Proposition : '+offer.toFixed(1)+' M€. Consulte le menu Offres reçues pour accepter, refuser ou contre-proposer.');
+  }
+ }
+ sv();
+};
+
 initCareer();if(S){sv();render()}
 })();
