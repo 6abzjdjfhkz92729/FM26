@@ -174,16 +174,18 @@ const K="fm26_v2",V={};let S=null,M=null,T=null,sel={lg:"Premier League",cl:"Ars
 const $=i=>document.getElementById(i),rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[rnd(0,a.length-1)],cl=(v,a,b)=>Math.max(a,Math.min(b,v));
 const hash=s=>[...s].reduce((a,c)=>(a*31+c.charCodeAt(0))>>>0,7),sv=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
 const fd=d=>new Date(d).toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short",year:"numeric"}),bc=v=>v>=16?"h":v>=13?"m":v<=8?"l":"";
-const st=o=>{const n=cl(Math.round((o-55)/7),1,5);return"★".repeat(n)+"☆".repeat(5-n)},nxt=()=>S.fx.find(f=>!f.played);
+const st=o=>{const n=cl(Math.round((o-55)/7),1,5);return"★".repeat(n)+"☆".repeat(5-n)},nxt=()=>S.fx.find(f=>!f.played&&(f.home===S.club||f.away===S.club));
 const res=f=>{const[h,a]=f.score.split("-").map(Number),m=f.home===S.club?h-a:a-h;return m>0?"W":m<0?"L":"D"};
 const mail=(s,t,b)=>{S.ib.unshift({s,t,b,d:S.date,r:false});S.ib=S.ib.slice(0,40)};
 function mkP(pos,lvl,i){const ovr=cl(lvl+rnd(-9,7),52,90),a={};for(const g in AT)for(const k of AT[g])a[k]=cl(Math.round(ovr/5.2+rnd(-4,4)),2,20);return{id:i,no:i+1,name:pick(FN)+" "+pick(LN),age:rnd(18,34),pos,ovr,pot:cl(ovr+rnd(0,10),ovr,95),nat:pick(NAT),a,form:+(6+Math.random()*1.6).toFixed(2),cond:rnd(88,100),g:0,ap:0,val:Math.round(ovr*ovr/60*rnd(5,10)/10)+1,sal:Math.round(ovr*1.4)*1000,end:2027+rnd(0,3)}}
 function xi(){const u=new Set(),r=[];for(const s of FM[S.tc.f]){const c=S.sq.filter(p=>!u.has(p.id)),b=(f)=>c.filter(f).sort((a,b)=>b.ovr-a.ovr)[0],p=b(x=>x.pos===s[2])||b(x=>GRP[x.pos]===GRP[s[2]])||b(x=>1);u.add(p.id);r.push(p)}return r}
 const pw=c=>c===S.club?Math.round(xi().reduce((s,p)=>s+p.ovr,0)/11+(S.mor-75)/8):62+hash(c)%12+(BIG.includes(c)?9:0);
-function mkFx(){const o=LG[S.lg].filter(c=>c!==S.club);let d=new Date(S.date);return[...o,...o].map((x,i)=>{d=new Date(d.getTime()+7*864e5);const h=i%2===0;return{id:i,date:d.toISOString(),home:h?S.club:x,away:h?x:S.club,played:false,score:""}})}
+function mkFx(){const teams=LG[S.lg].slice(),n=teams.length,rounds=n-1,half=n/2;let ring=teams.slice(),first=[],id=0;for(let r=0;r<rounds;r++){const d=new Date(S.date);d.setDate(d.getDate()+7*(r+1));d.setHours(12,0,0,0);for(let i=0;i<half;i++){let home=ring[i],away=ring[n-1-i];if((r+i)%2){const q=home;home=away;away=q}first.push({id:id++,date:d.toISOString(),home,away,played:false,score:"",round:r+1,comp:S.lg});}ring=[ring[0],ring[n-1],...ring.slice(1,n-1)];}const back=first.map(f=>{const d=new Date(f.date);d.setDate(d.getDate()+7*rounds);return{id:id++,date:d.toISOString(),home:f.away,away:f.home,played:false,score:"",round:f.round+rounds,comp:S.lg}});return first.concat(back).sort((a,b)=>new Date(a.date)-new Date(b.date)||a.id-b.id)}
 const newTb=()=>{S.tb={};LG[S.lg].forEach(c=>S.tb[c]={p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0})};
 const tbl=()=>Object.entries(S.tb).map(([c,t])=>({c,...t,gd:t.gf-t.ga})).sort((a,b)=>b.pts-a.pts||b.gd-a.gd||b.gf-a.gf);
 const upd=(h,a,gh,ga)=>[[h,gh,ga],[a,ga,gh]].forEach(([c,f,g])=>{const t=S.tb[c];t.p++;t.gf+=f;t.ga+=g;if(f>g){t.w++;t.pts+=3}else if(f===g){t.d++;t.pts++}else t.l++});
+function simLeagueScore(home,away){const ph=pw(home),pa=pw(away),pois=l=>{let p=1,k=0,L=Math.exp(-l);do{k++;p*=Math.random()}while(p>L&&k<9);return k-1};const xh=cl(1.28+(ph-68)*.035+(ph-pa)*.022+.18,.18,3.1),xa=cl(1.12+(pa-68)*.035-(ph-pa)*.02,.15,2.8);return[pois(xh),pois(xa)]}
+
 
 function setup(){const l=$("lg"),c=$("cl");l.innerHTML=Object.keys(LG).map(n=>`<div class="chip${n===sel.lg?" on":""}" data-l="${n}">${n}</div>`).join("");
 l.onclick=e=>{const n=e.target.closest("[data-l]");if(n){sel={lg:n.dataset.l,cl:LG[n.dataset.l][0]};setup()}};
@@ -213,8 +215,7 @@ else{if(Math.random()<.1){const s=Math.random()<ph/(ph+pa)?0:1;M.sh[s]++;ev("◉
 M.bx=cl(M.bx+rnd(-14,14)+(M.ps-50)*.25,5,95);M.by=cl(M.by+rnd(-12,12),8,92);if(M.gt<=0&&Math.random()<.6)M.cm=pick(["{n} avec une passe au sol sur la gauche","{n} remonte le ballon dans l'axe","{n} temporise et cherche ses partenaires","{n} tente une longue transversale","Beau tacle de {n} !","{n} gagne le duel dans les airs"]).replace("{n}",pick(xi()).name.split(" ").pop());draw();if(M.min>=90)endMatch()}
 function endMatch(){clearInterval(T);M.done=true;const f=M.f,me=f.home===S.club,mg=me?M.h:M.a,og=me?M.a:M.h,w=mg>og?1:mg<og?-1:0;
 f.played=true;f.score=M.h+"-"+M.a;upd(f.home,f.away,M.h,M.a);
-const rest=LG[S.lg].filter(c=>c!==f.home&&c!==f.away).sort(()=>Math.random()-.5),g=c=>{let n=0;for(let k=0;k<6;k++)if(Math.random()<(pw(c)/70)**3*.2)n++;return n};
-for(let i=0;i+1<rest.length;i+=2)upd(rest[i],rest[i+1],g(rest[i]),g(rest[i+1]));
+f.stats=M.stats?JSON.parse(JSON.stringify(M.stats)):null;const sameDay=S.fx.filter(x=>!x.played&&x.id!==f.id&&x.date.slice(0,10)===f.date.slice(0,10));sameDay.forEach(x=>{const z=simLeagueScore(x.home,x.away);x.played=true;x.score=z[0]+"-"+z[1];upd(x.home,x.away,z[0],z[1]);});
 if(S.ch==="Les Invincibles"&&w<0){S.board=cl(S.board-12,0,100);mail("Direction","Défi échoué","Ta série d'invincibilité est terminée.");S.ch=""}S.mor=cl(S.mor+w*3,30,100);S.board=cl(S.board+w*2,0,100);S.fans=cl(S.fans+w*3,0,100);
 const X=xi();X.forEach(p=>{p.ap++;p.cond=cl(p.cond-rnd(8,16),50,100);p.form=cl(+(p.form+w*.2+rnd(-2,2)/10).toFixed(2),5,9.5)});
 for(let i=0;i<mg;i++)pick(X.filter(p=>GRP[p.pos]!=="G"&&GRP[p.pos]!=="D")).g++;
@@ -226,7 +227,7 @@ S.season++;S.date=(2025+S.season)+"-08-01";S.sq.forEach(p=>{p.age++;p.ovr=cl(p.o
 function openP(i){S.pid=i;S.view="player";render()}function rd(i){S.ib[i].r=true;S.mi=i;render()}function tc(k,v){S.tc[k]=v;sv();render()}
 
 V.home=()=>{
- const n=nxt(),t=tbl(),me=t.find(x=>x.c===S.club),last=S.fx.filter(f=>f.played).slice(-5).reverse(),rank=t.findIndex(x=>x.c===S.club)+1;
+ const n=nxt(),t=tbl(),me=t.find(x=>x.c===S.club),last=S.fx.filter(f=>f.played&&(f.home===S.club||f.away===S.club)).slice(-5).reverse(),rank=t.findIndex(x=>x.c===S.club)+1;
  const unread=S.ib.filter(m=>!m.r).length;
  const nextOpp=n?(n.home===S.club?n.away:n.home):"—";
  const recent=S.ib.slice(0,4);
@@ -264,7 +265,7 @@ V.tactics=()=>{const x=xi(),F=FM[S.tc.f],h=hash(S.club)%360,bench=S.sq.filter(p=
 return`<div class="gr" style="grid-template-columns:220px minmax(300px,400px) 1fr"><div class="pn"><h3>Tactical style</h3><p><b>Formation</b></p>${op("f",Object.keys(FM))}<p><b>Mentality</b></p>${op("m",Object.keys(MEN))}<p class="mu">Force de l'équipe ${pw(S.club)}</p></div>
 <div class="pitch" style="aspect-ratio:3/4">${F.map((s,i)=>`<div class="tp" style="left:${s[0]}%;top:${s[1]}%"><i style="background:hsl(${h} 65% 42%)">${x[i].no}</i><u>${ROLE[s[2]]}</u><b>${x[i].name.split(" ")[1]}</b></div>`).join("")}</div>
 <div class="pn"><h3>Selection</h3><table><tr><th>Pos</th><th>Role</th><th></th><th>Player</th><th>Av rat</th></tr>${F.map((s,i)=>`<tr class="cp" onclick="openP(${x[i].id})"><td>${s[2]}</td><td>${ROLE[s[2]]}</td><td class="mu">${st(x[i].ovr)}</td><td>${x[i].name}</td><td>${x[i].form.toFixed(1)}</td></tr>`).join("")}${bench.slice(0,7).map((p,i)=>`<tr class="cp mu" onclick="openP(${p.id})"><td>S${i+1}</td><td>${p.pos}</td><td>${st(p.ovr)}</td><td>${p.name}</td><td>${p.form.toFixed(1)}</td></tr>`).join("")}</table></div></div>`};
-V.sched=()=>`<div class="pn"><table><tr><th>Date</th><th>Match</th><th>Result</th></tr>${S.fx.map(f=>`<tr><td>${fd(f.date)}</td><td>${f.home} v ${f.away}</td><td>${f.played?`<span class="b ${{W:"h",D:"m",L:"l"}[res(f)]}">${f.score}</span>`:"—"}</td></tr>`).join("")}</table></div>`;
+V.sched=()=>`<div class="pn"><h3>Calendrier de ${S.club}</h3><table><tr><th>Journée</th><th>Date</th><th>Match</th><th>Résultat</th></tr>${S.fx.filter(f=>f.home===S.club||f.away===S.club).map((f,i)=>`<tr><td>${f.round||i+1}</td><td>${fd(f.date)}</td><td>${f.home} – ${f.away}</td><td>${f.played?`<span class="b ${{W:"h",D:"m",L:"l"}[res(f)]}">${f.score}</span>`:"—"}</td></tr>`).join("")}</table></div>`;
 V.comp=()=>`<div class="pn"><h3>${S.lg}</h3><table><tr><th>#</th><th>Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>${tbl().map((t,i)=>`<tr class="${t.c===S.club?"me":""}"><td>${i+1}</td><td>${t.c}</td><td>${t.p}</td><td>${t.w}</td><td>${t.d}</td><td>${t.l}</td><td>${t.gf}</td><td>${t.ga}</td><td>${t.gd}</td><td><b>${t.pts}</b></td></tr>`).join("")}</table></div>`;
 V.fin=()=>`<div class="gr g3"><div class="pn"><h3>Transfer budget</h3><div class="big">€${S.bud}M</div></div><div class="pn"><h3>Wage bill</h3><div class="big">€${(S.sq.reduce((s,p)=>s+p.sal,0)/1e6).toFixed(2)}M</div><p class="mu">per week</p></div><div class="pn"><h3>Squad value</h3><div class="big">€${S.sq.reduce((s,p)=>s+p.val,0)}M</div></div></div>`;
 
@@ -325,5 +326,4 @@ c.onclick=e=>{const n=e.target.closest("[data-c]");if(n){sel.cl=n.dataset.c;setu
 $("start").onclick=startCareer;
 $("side").onclick=e=>{const b=e.target.closest("[data-v]");if(!b)return;const v=b.dataset.v;if(v==="reset"){if(confirm("Commencer une nouvelle carrière ?")){localStorage.removeItem(K);location.reload()}return}S.view=v;render()};
 setup();try{const raw=JSON.parse(localStorage.getItem(K));if(raw&&raw.sq&&raw.fx&&raw.tb){S=raw;boot()}}catch(e){try{localStorage.removeItem(K)}catch(_e){}}
-</script><script src="./fm26-phase1.js"></script><!-- FM26 Phase 1 integration verified -->
-</body></html>
+</script><script src="./fm26-phase1.js"></script><script src="./fm26-engine.js"></script><!-- FM26 Phase 2 engine connected --></body></html>
