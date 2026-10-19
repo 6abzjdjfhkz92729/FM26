@@ -157,7 +157,7 @@
     if (!S) return;
     S.chatThreads = S.chatThreads || {};
     if (S.chatThreads.seeded) {
-      (S.sq || []).forEach(p => { const k='player-'+p.id; if(!S.chatThreads[k]) S.chatThreads[k]={name:p.name,role:'Joueur · '+p.pos,icon:'J',messages:[{from:'them',text:'Coach, comment vois-tu mon rôle dans l’équipe ?'}]}; });
+      (S.sq || []).forEach(p => { const k='player-'+p.id; if(!S.chatThreads[k]) S.chatThreads[k]={name:p.name,role:'Joueur · '+p.pos,icon:'J',messages:[{from:'them',text:'Coach, comment vois-tu mon rôle dans l’équipe ?'}]}; else { S.chatThreads[k].name=p.name; S.chatThreads[k].role='Joueur · '+p.pos; } });
       return;
     }
     S.chatThreads = {
@@ -693,6 +693,14 @@
         if(S.club==='Paris FC')applyCurrentParisFC();
         if(typeof sv==='function')sv();
         try {render()} catch(e) {}
+      };
+    }
+
+    if (typeof cont==='function') {
+      const originalContinue=cont;
+      cont=function() {
+        if(S && S.view==='lineup' && M && !M.done) { S.view='match'; render(); return; }
+        originalContinue();
       };
     }
 
