@@ -566,7 +566,9 @@
       p.name=r[0];p.pos=r[1];p.ovr=r[2];p.age=r[3];p.realPerson=true;p.photoQuery=r[0];p.club='Paris FC';
       p.nat=p.nat||'FRA';
     });
-    S.realRosterSource='Noms recoupés avec l’effectif publié par le Paris FC pour 2026/27 ; notes et âges jouables estimés pour la simulation.';
+    S.realRosterSource='Effectif de l’équipe première recoupé avec la liste officielle du Paris FC 2026/27 ; notes de jeu estimées pour la simulation.';
+    // Rebuild the starting eleven after mapping the real roster to the positional slots.
+    if(typeof originalXI==='function') S.lineup=originalXI().map(p=>p.id).slice(0,11);
   }
   function maybeUpdatePhotosAfterRender() {
     if (!S) return;
