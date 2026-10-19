@@ -356,8 +356,8 @@ FM26A.playerTalk=function(id,topic){
  if(topic==='challenge'){const strong=(p.a?.Determination||10)>=14||p.personality==='Professionnel'||p.personality==='Compétiteur';text=strong?'Tu lui as demandé d’élever ses exigences. Il semble prêt à relever le défi.':'Tu lui as demandé davantage et il l’a mal pris.';delta=strong?2:-5}
  if(topic==='warn'){text='Tu lui as demandé de respecter les exigences collectives.';delta=p.morale<35?-6:-2}
  if(topic==='promise'){
-  const promise=prompt('Quelle promesse de temps de jeu veux-tu lui faire ?','Lui donner une chance lors des trois prochains matchs');
-  if(!promise)return;
+  const rawPromise=prompt('Quelle promesse de temps de jeu veux-tu lui faire ?','Lui donner une chance lors des trois prochains matchs');
+  if(!rawPromise)return;const promise=esc(rawPromise);
   S.promises.push({id:Date.now(),playerId:p.id,playerName:p.name,text:promise,startApps:p.ap||0,matchesLeft:3,status:'active'});
   text='Tu lui as promis : '+promise;delta=8;
  }
@@ -435,6 +435,7 @@ tick=function(){
 const renderBeforeHalf=render;
 render=function(){
  renderBeforeHalf();
+ if(S?.view==='offers'){const title=document.querySelector('#hd h2');if(title)title.textContent='Offres reçues';}
  if(S?.view==='halftime'){
   const h=document.querySelector('#hd h2');if(h)h.textContent='Mi-temps';
   const go=document.getElementById('go');if(go){go.textContent='REPRENDRE LA SECONDE PÉRIODE';go.onclick=()=>FM26A.halfTalk('calm')}
