@@ -131,9 +131,10 @@
         const panel = document.querySelector('#fm26-create-panel');
         if (panel) panel.classList.toggle('active', careerType === 'create');
         row.style.display = careerType === 'create' ? 'none' : '';
-        const clubLabel = document.querySelector('#setup label[for="cl"]');
+        const clubLabel = Array.from(document.querySelectorAll('#setup label')).find(el => el.textContent.trim() === 'Club');
         const clubBox = document.querySelector('#cl');
-        if (clubBox) clubBox.closest('label')?.classList.toggle('fm26-hide', false);
+        if (clubLabel) clubLabel.style.display = careerType === 'create' ? 'none' : '';
+        if (clubBox) clubBox.style.display = careerType === 'create' ? 'none' : '';
       });
     }
   }
@@ -152,7 +153,12 @@
     seedConversations();
   }
   function seedConversations() {
-    if (!S || S.chatThreads.seeded) return;
+    if (!S) return;
+    S.chatThreads = S.chatThreads || {};
+    if (S.chatThreads.seeded) {
+      (S.sq || []).forEach(p => { const k='player-'+p.id; if(!S.chatThreads[k]) S.chatThreads[k]={name:p.name,role:'Joueur · '+p.pos,icon:'J',messages:[{from:'them',text:'Coach, comment vois-tu mon rôle dans l’équipe ?'}]}; });
+      return;
+    }
     S.chatThreads = {
       seeded: true,
       president: {name:'Président', role:'Direction du club', icon:'P', messages:[{from:'them',text:'Bienvenue. J’aimerais comprendre ton projet sportif. Quelle identité veux-tu donner à l’équipe ?'}]},
