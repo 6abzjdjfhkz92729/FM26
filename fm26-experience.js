@@ -521,15 +521,17 @@
     if(typeof mail==='function')mail('Événement de carrière',title,text);
   }
   function attachCareerMilestone() {
-    const champ=(S.history||[]).filter(h=>h.position===1).length;
-    if(champ>=3 && !S.stadiumNamedForManager) {
+    const leagueTitles=(S.history||[]).filter(h=>h.position===1).length;
+    const europeanTitles=Number(S.europeanTitles||0);
+    if((leagueTitles>=3 || europeanTitles>=3) && !S.stadiumNamedForManager) {
       S.stadiumNamedForManager=true;
       S.clubObj=S.clubObj||{};
       const family=String(S.mg||'Manager').trim().split(/\s+/).slice(-1)[0]||'Manager';
       S.clubObj.stadium='Stade '+family;
       S.clubObj.capacity=Math.round((S.clubObj.capacity||25000)*1.15);
       S.board=cl((S.board||70)+8,0,100);S.fans=cl((S.fans||70)+10,0,100);
-      event('Un stade porte ton nom','Après trois titres de championnat, la direction et les supporters annoncent un stade agrandi baptisé « Stade '+family+' ».');
+      const reason=europeanTitles>=3?'Après trois sacres européens, la direction et les supporters annoncent un stade agrandi baptisé « Stade '+family+' ».':'Après trois titres de championnat, la direction et les supporters annoncent un stade agrandi baptisé « Stade '+family+' ».';
+      event('Un stade porte ton nom',reason);
     }
   }
   function recoveryAndMorale() {
@@ -748,6 +750,20 @@
         originalEndMatch();
         if(!S || !M)return;
         const f=M.f, clubHome=f.home===S.club, own=clubHome?M.h:M.a, opp=clubHome?M.a:M.h;
+        // Record continental trophies once per career season, after the cup bracket has resolved.
+        if(f && f.cupKey==='continental' && S.cupComps && S.cupComps.continental &&
+           S.cupComps.continental.done && S.cupComps.continental.champion===S.club) {
+          const seasonTag=String(S.season||1);
+          S.europeanTitleSeasons=Array.isArray(S.europeanTitleSeasons)?S.europeanTitleSeasons:[];
+          if(!S.europeanTitleSeasons.includes(seasonTag)) {
+            S.europeanTitleSeasons.push(seasonTag);
+            S.europeanTitles=(Number(S.europeanTitles)||0)+1;
+            S.trophyHistory=Array.isArray(S.trophyHistory)?S.trophyHistory:[];
+            S.trophyHistory.unshift({season:S.season,competition:S.cupComps.continental.name,club:S.club});
+            event('Champion d’Europe',S.club+' remporte '+S.cupComps.continental.name+'. Total en carrière : '+S.europeanTitles+' titre(s) européen(s).');
+            attachCareerMilestone();
+          }
+        }
         const outcome=own>opp?'Victoire':own<opp?'Défaite':'Match nul';
         if(own>opp) {
           S.winStreak=(S.winStreak||0)+1;
