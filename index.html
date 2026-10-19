@@ -240,8 +240,8 @@ else if(Math.random()<pa){M.a++;M.sh[1]++;ev("⚽",f.away+" marque ! "+M.h+"-"+M
 else{if(Math.random()<.1){const s=Math.random()<ph/(ph+pa)?0:1;M.sh[s]++;ev("◉","Tir de "+(s?f.away:f.home)+", arrêté.")}if(Math.random()<.025)ev("🟨","Carton jaune — "+(Math.random()<.5?f.home:f.away))}
 M.bx=cl(M.bx+rnd(-14,14)+(M.ps-50)*.25,5,95);M.by=cl(M.by+rnd(-12,12),8,92);if(M.gt<=0&&Math.random()<.6)M.cm=pick(["{n} avec une passe au sol sur la gauche","{n} remonte le ballon dans l'axe","{n} temporise et cherche ses partenaires","{n} tente une longue transversale","Beau tacle de {n} !","{n} gagne le duel dans les airs"]).replace("{n}",pick(xi()).name.split(" ").pop());draw();if(M.min>=90)endMatch()}
 function endMatch(){clearInterval(T);M.done=true;const f=M.f,me=f.home===S.club,mg=me?M.h:M.a,og=me?M.a:M.h,w=mg>og?1:mg<og?-1:0;
-f.played=true;f.score=M.h+"-"+M.a;upd(f.home,f.away,M.h,M.a);
-f.stats=M.stats?JSON.parse(JSON.stringify(M.stats)):null;const sameDay=S.fx.filter(x=>!x.played&&x.id!==f.id&&x.date.slice(0,10)===f.date.slice(0,10));sameDay.forEach(x=>{const z=simLeagueScore(x.home,x.away);x.played=true;x.score=z[0]+"-"+z[1];upd(x.home,x.away,z[0],z[1]);});
+f.played=true;f.score=M.h+"-"+M.a;if(!f.comp||f.comp===S.lg)upd(f.home,f.away,M.h,M.a);
+f.stats=M.stats?JSON.parse(JSON.stringify(M.stats)):null;const sameDay=S.fx.filter(x=>!x.played&&x.id!==f.id&&x.date.slice(0,10)===f.date.slice(0,10)&&(!x.comp||x.comp===S.lg));sameDay.forEach(x=>{const z=simLeagueScore(x.home,x.away);x.played=true;x.score=z[0]+"-"+z[1];upd(x.home,x.away,z[0],z[1]);});
 if(S.ch==="Les Invincibles"&&w<0){S.board=cl(S.board-12,0,100);mail("Direction","Défi échoué","Ta série d'invincibilité est terminée.");S.ch=""}S.mor=cl(S.mor+w*3,30,100);S.board=cl(S.board+w*2,0,100);S.fans=cl(S.fans+w*3,0,100);
 const X=xi();X.forEach(p=>{p.ap++;p.cond=cl(p.cond-rnd(8,16),50,100);p.form=cl(+(p.form+w*.2+rnd(-2,2)/10).toFixed(2),5,9.5)});
 for(let i=0;i<mg;i++)pick(X.filter(p=>GRP[p.pos]!=="G"&&GRP[p.pos]!=="D")).g++;
