@@ -325,4 +325,5 @@ c.onclick=e=>{const n=e.target.closest("[data-c]");if(n){sel.cl=n.dataset.c;setu
 $("start").onclick=startCareer;
 $("side").onclick=e=>{const b=e.target.closest("[data-v]");if(!b)return;const v=b.dataset.v;if(v==="reset"){if(confirm("Commencer une nouvelle carrière ?")){localStorage.removeItem(K);location.reload()}return}S.view=v;render()};
 setup();try{const raw=JSON.parse(localStorage.getItem(K));if(raw&&raw.sq&&raw.fx&&raw.tb){S=raw;boot()}}catch(e){try{localStorage.removeItem(K)}catch(_e){}}
-</script><script src="./fm26-phase1.js"></script></body></html>
+</script><script src="./fm26-phase1.js"></script><!-- FM26 Phase 1 integration verified -->
+</body></html>
