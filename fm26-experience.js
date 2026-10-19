@@ -149,6 +149,7 @@
     S.lineup = Array.isArray(S.lineup) ? S.lineup : [];
     S.clubCreated = !!S.clubCreated;
     S.clubCode = S.clubCode || '';
+    if (S.clubCreated && S.lg && Array.isArray(S.customLeagueClubs) && S.customLeagueClubs.length) LG[S.lg] = S.customLeagueClubs.slice();
     if (!S.lineup.length && typeof xi === 'function') S.lineup = xi().map(p => p.id);
     seedConversations();
   }
@@ -641,6 +642,8 @@
         S.managerName=String(fn+' '+ln).trim();
         S.clubCreated=careerType==='create';
         if(S.clubCreated) {
+          S.clubCountry=nation;
+          S.customLeagueClubs=(LG[S.lg]||[]).slice();
           S.clubCode=((document.getElementById('fm26-club-short')||{}).value||customName.slice(0,3)).trim().toUpperCase().slice(0,5);
           S.clubObj=S.clubObj||{};
           S.clubObj.name=S.club;
@@ -769,7 +772,7 @@
     const extra=document.createElement('style');
     extra.textContent='.fm26-photo-box{position:relative;overflow:hidden;border-radius:12px!important;width:92px!important;height:102px!important;background:#211d3d!important}.fm26-photo-box img{width:100%;height:100%;object-fit:cover}.fm26-photo-box.has-photo{width:100px!important;height:112px!important}.fm26-photo-source{display:block;position:absolute;left:2px;right:2px;bottom:1px;background:#080816de;font-size:8px;text-align:center}.fm26-photo-source a{color:#e5d8ff}.fm26-hide{display:none!important}';
     document.head.appendChild(extra);
-    if(typeof S!=='undefined' && S){setupSeed();if(S.club==='Paris FC')applyCurrentParisFC();try{render()}catch(e){}}
+    if(typeof S!=='undefined' && S){setupSeed();if(S.club==='Paris FC'){applyCurrentParisFC();try{sv()}catch(e){}}try{render()}catch(e){}}
     insertSetupWidgets();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
