@@ -46,10 +46,10 @@ for name, source in scripts_to_check:
     if result.returncode:
         errors.append(f"JavaScript syntax error in {name}:\n{result.stderr.strip()}")
 
-required = ["fm26-phase1.js", "fm26-engine.js", "fm26-advanced.js", "fm26-world.js"]
+required = ["fm26-phase1.js", "fm26-engine.js", "fm26-advanced.js", "fm26-world.js", "fm26-experience.js", "fm26-international.js"]
 positions = [html.find(f'src="./{name}"') for name in required]
 if not all(pos >= 0 for pos in positions):
-    errors.append("index.html must load all FM26 modules: phase1, engine, advanced and world.")
+    errors.append("index.html must load all FM26 modules in order: phase1, engine, advanced, world, experience and international.")
 elif positions != sorted(positions):
     errors.append("FM26 modules are not loaded in the expected order.")
 
@@ -91,6 +91,14 @@ else:
             errors.append(f"Expected at least 12 playable leagues, found {len(leagues)}.")
     except Exception as exc:
         errors.append(f"League database validation failed: {exc}")
+
+
+intl_path = ROOT / "fm26-international.js"
+if intl_path.exists():
+    intl_source = intl_path.read_text(encoding="utf-8")
+    for marker in ("V.international=function", "window.FM26I=", "function standings", "function createTournament"):
+        if marker not in intl_source:
+            errors.append(f"International management module is missing expected feature marker: {marker}")
 
 if errors:
     print("FM26 validation failed:")
