@@ -410,5 +410,36 @@ endMatch=function(){
  sv();
 };
 
+
+/* Half-time decisions pause the live match and resume its second half only after a manager choice. */
+V.halftime=function(){
+ if(!M)return '<div class="pn">Aucun match en cours.</div>';
+ const h=M.h,a=M.a,user=M.f.home===S.club?h:a,opp=M.f.home===S.club?a:h,stats=M.stats||{};
+ const possession=stats.possession||[0,0],total=Math.max(1,possession[0]+possession[1]);
+ return `<div class="pn hero"><h3>Mi-temps · ${esc(M.f.home)} contre ${esc(M.f.away)}</h3><div class="mh"><span>${esc(M.f.home)}</span><b class="big">${h} – ${a}</b><span>${esc(M.f.away)}</span></div><p class="mu" style="text-align:center">Analyse du staff · ${user>opp?'Tu mènes au score':user<opp?'Tu es mené':'Les équipes sont à égalité'}.</p></div><div class="gr g3" style="margin-top:12px"><div class="pn"><h3>Possession</h3><div class="big">${Math.round(possession[0]/total*100)}%</div><p class="mu">${Math.round(possession[1]/total*100)}% pour l’adversaire</p></div><div class="pn"><h3>Tirs</h3><div class="big">${M.sh?.[0]||0} – ${M.sh?.[1]||0}</div><p class="mu">Tentatives des deux équipes</p></div><div class="pn"><h3>Buts attendus</h3><div class="big">${(stats.xg?.[0]||0).toFixed(2)} – ${(stats.xg?.[1]||0).toFixed(2)}</div><p class="mu">Qualité des occasions</p></div></div><div class="pn" style="margin-top:12px"><h3>Causerie de mi-temps</h3><p class="mu">Choisis une intervention : elle influence le moral et les paramètres tactiques de la seconde période.</p><div class="gr" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))"><button class="chip" onclick="FM26A.halfTalk('motivate')"><b>Remobiliser le groupe</b><br><small>Renforcer le moral si l’équipe est en difficulté.</small></button><button class="chip" onclick="FM26A.halfTalk('press')"><b>Intensifier le pressing</b><br><small>Augmenter la pression, au prix d’un effort physique accru.</small></button><button class="chip" onclick="FM26A.halfTalk('defend')"><b>Resserer le bloc</b><br><small>Réduire le risque défensif lorsque le score est favorable.</small></button><button class="chip" onclick="FM26A.halfTalk('calm')"><b>Garder son calme</b><br><small>Conserver la structure et stabiliser la performance.</small></button></div></div>`;
+};
+FM26A.halfTalk=function(choice){
+ if(!M||M.done||S.view!=='halftime')return;
+ const side=M.f.home===S.club?0:1,userScore=side===0?M.h:M.a,oppScore=side===0?M.a:M.h;
+ if(choice==='motivate'){S.mor=clamp(S.mor+(userScore<=oppScore?6:2),0,100);if(userScore<oppScore){if(side===0)M.hp=clamp(M.hp+2,35,100);else M.ap=clamp(M.ap+2,35,100)}M.cm='Le manager a remobilisé le groupe.'}
+ if(choice==='press'){S.tc.press=clamp((S.tc.press||50)+12,0,100);if(side===0)M.hp=clamp(M.hp+1.6,35,100);else M.ap=clamp(M.ap+1.6,35,100);S.mor=clamp(S.mor-1,0,100);M.cm='Le pressing est renforcé pour la seconde période.'}
+ if(choice==='defend'){S.tc.line=clamp((S.tc.line||50)-12,0,100);if(side===0)M.hp=clamp(M.hp+1,35,100);else M.ap=clamp(M.ap+1,35,100);M.cm='Le bloc défensif est resserré.'}
+ if(choice==='calm'){S.mor=clamp(S.mor+2,0,100);M.cm='Le manager demande de conserver la structure.'}
+ M.halfTimeDone=true;S.view='match';sv();render();clearInterval(T);T=setInterval(tick,M.sp||170);
+};
+const tickBeforeHalf=tick;
+tick=function(){
+ if(M&&!M.done&&!M.halfTimeDone&&M.min>=45){clearInterval(T);S.view='halftime';render();return;}
+ tickBeforeHalf();
+};
+const renderBeforeHalf=render;
+render=function(){
+ renderBeforeHalf();
+ if(S?.view==='halftime'){
+  const h=document.querySelector('#hd h2');if(h)h.textContent='Mi-temps';
+  const go=document.getElementById('go');if(go){go.textContent='REPRENDRE LA SECONDE PÉRIODE';go.onclick=()=>FM26A.halfTalk('calm')}
+ }
+};
+
 initCareer();if(S){sv();render()}
 })();
