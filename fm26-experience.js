@@ -544,21 +544,25 @@
     if(!S || S.club!=='Paris FC' || !Array.isArray(S.sq))return;
     const roster=[
       ['Kevin Trapp','GK',83,36],['Obed Nkambadio','GK',72,23],
-      ['Hamari Traoré','DR',79,34],['Otávio','DC',77,24],['Moustapha Mbow','DC',73,26],
-      ['Diego Coppola','DC',76,22],['Thibault De Smet','DL',72,28],['Nhoa Sangui','DL',70,20],
-      ['Patrick Zabi','DM',70,20],['Pierre Lees-Melou','DM',75,33],
-      ['Maxime Lopez','MC',75,28],['Vincent Marchetti','MC',70,29],
-      ['Moses Simon','AMR',78,31],['Jonathan Ikoné','AMR',73,28],
-      ['Luca Koleosho','AML',75,22],['Pablo Pagis','AML',72,23],
-      ['Jean-Philippe Krasso','ST',76,29],['Lassine Sinayoko','ST',75,26],
-      ['Ilan Kebbal','AMC',78,28],['Samir Chergui','DC',73,27]
+      ['Thibault De Smet','DL',72,28],['Otávio Ataíde da Silva','DC',77,24],['Nhoa Sangui','DL',70,20],
+      ['Moustapha Mbow','DC',73,26],['Yoan Koré','DC',70,21],['Samir Chergui','DC',73,27],
+      ['Hamari Traoré','DR',79,34],['Diego Coppola','DC',76,22],['Emmanuel Mbemba','DL',67,18],
+      ['Vincent Marchetti','MC',70,29],['Adama Camara','DM',70,30],['Pierre Lees-Melou','DM',75,33],
+      ['Maxime Lopez','MC',75,28],['Ilan Kebbal','AMC',78,28],['Rudy Matondo','MC',67,18],
+      ['Patrick Zabi','DM',70,20],['Jean-Philippe Krasso','ST',76,29],['Omar Sissoko','ST',68,22],
+      ['Jonathan Ikoné','AMR',73,28],['Moses Simon','AML',78,31],['Luca Koleosho','AML',75,22],
+      ['Lassine Sinayoko','ST',75,26],['Pablo Pagis','AMR',72,23]
     ];
+    while(S.sq.length < roster.length) {
+      const index = S.sq.length;
+      S.sq.push(mkP(roster[index][1], 68, index));
+    }
     roster.forEach((r,i)=>{
       const p=S.sq[i];if(!p)return;
       p.name=r[0];p.pos=r[1];p.ovr=r[2];p.age=r[3];p.realPerson=true;p.photoQuery=r[0];p.club='Paris FC';
       p.nat=p.nat||'FRA';
     });
-    S.realRosterSource='Paris FC officiel — effectif 2026/27';
+    S.realRosterSource='Noms recoupés avec l’effectif publié par le Paris FC pour 2026/27 ; notes et âges jouables estimés pour la simulation.';
   }
   function maybeUpdatePhotosAfterRender() {
     if (!S) return;
