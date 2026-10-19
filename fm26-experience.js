@@ -495,7 +495,7 @@
   function squadView() {
     let html='<div class="page-intro"><div><p class="eyebrow">EFFECTIF PROFESSIONNEL</p><h1>'+txt(S.club)+'</h1><p>Portraits de secours disponibles pour chaque joueur ; les photos réelles sont cherchées sur Wikipédia lorsqu’une identité réelle est connue.</p></div><button class="chip" onclick="S.view=\'lineup\';render()">Préparer la composition →</button></div><div class="pn"><table><thead><tr><th>Joueur</th><th>Poste</th><th>Âge</th><th>Niveau</th><th>Forme</th><th>Condition</th><th>Moral</th><th>Matchs</th><th>Buts</th></tr></thead><tbody>';
     (S.sq||[]).forEach(p=>{
-      html+='<tr class="cp" onclick="openP('+p.id+')"><td><span class="fm26-face"><img alt="" src="'+portraitSvg((Number(p.id)||0)%6)+'"></span> <b>'+txt(p.name)+'</b>'+(p.realPerson?' <small title="Nom réel importé">●</small>':'')+'</td><td>'+txt(p.pos)+'</td><td>'+txt(p.age)+'</td><td>'+txt(p.ovr)+'</td><td>'+Number(p.form||7).toFixed(1)+'</td><td>'+txt(p.cond==null?90:p.cond)+'%</td><td>'+txt(p.morale==null?70:p.morale)+'</td><td>'+txt(p.ap||0)+'</td><td>'+txt(p.g||0)+'</td></tr>';
+      html+='<tr class="cp" onclick="openP('+p.id+')"><td><span class="fm26-face" data-photo-player="'+p.id+'"><img alt="Portrait de '+txt(p.name)+'" src="'+portraitSvg((Number(p.id)||0)%6)+'"></span> <b>'+txt(p.name)+'</b>'+(p.realPerson?' <small title="Nom réel importé">●</small>':'')+'</td><td>'+txt(p.pos)+'</td><td>'+txt(p.age)+'</td><td>'+txt(p.ovr)+'</td><td>'+Number(p.form||7).toFixed(1)+'</td><td>'+txt(p.cond==null?90:p.cond)+'%</td><td>'+txt(p.morale==null?70:p.morale)+'</td><td>'+txt(p.ap||0)+'</td><td>'+txt(p.g||0)+'</td></tr>';
     });
     html+='</tbody></table></div>';
     return html;
@@ -568,6 +568,37 @@
   function maybeUpdatePhotosAfterRender() {
     if (!S) return;
     if (S.view==='player') attachPlayerPhoto();
+    if (S.view==='squad') {
+      (S.sq||[]).filter(p=>p.realPerson && p.name).forEach(p=>{
+        const holder=document.querySelector('[data-photo-player="'+String(p.id)+'"]');
+        if(!holder || holder.dataset.photoStatus) return;
+        holder.dataset.photoStatus='loading';
+        const key='fm26-photo:'+p.name.toLowerCase();
+        let cached=null;
+        try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
+        const apply=(url,page)=>{
+          const img=holder.querySelector('img');
+          if(!img || !url)return;
+          img.src=url;
+          img.alt='Photo de '+p.name;
+          holder.title='Photo de '+p.name+' — Wikipédia';
+          holder.dataset.photoStatus='loaded';
+          holder.style.cursor='pointer';
+          holder.onclick=(event)=>{event.stopPropagation();if(page)window.open(page,'_blank','noopener')};
+        };
+        if(cached&&cached.url){apply(cached.url,cached.page);return;}
+        if(cached&&cached.missing){holder.dataset.photoStatus='fallback';return;}
+        fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(p.name.replace(/ /g,'_')),{headers:{'Accept':'application/json'}})
+        .then(r=>{if(!r.ok)throw new Error('no page');return r.json()})
+        .then(data=>{
+          if(!data||!data.thumbnail||!data.thumbnail.source)throw new Error('no thumbnail');
+          const url=data.thumbnail.source;
+          const page=data.content_urls&&data.content_urls.desktop&&data.content_urls.desktop.page||('https://en.wikipedia.org/wiki/'+encodeURIComponent(p.name));
+          try{localStorage.setItem(key,JSON.stringify({url,page}))}catch(e){}
+          apply(url,page);
+        }).catch(()=>{holder.dataset.photoStatus='fallback';try{localStorage.setItem(key,JSON.stringify({missing:true}))}catch(e){}});
+      });
+    }
     const header=document.querySelector('#hd');
     if(header && S.managerPortrait!=null && !header.querySelector('.fm26-header-face')) {
       const faceEl=document.createElement('span');
