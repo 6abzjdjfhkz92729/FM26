@@ -780,6 +780,9 @@
       render=function() {
         setupSeed();
         originalRender();
+        const titleMap={talk:'Discussions',lineup:'Composition d’équipe',profile:'Profil manager',staff:'Équipe technique',academy:'Centre de formation',data:'Centre de données',contracts:'Contrats',scouting:'Recrutement',club:'Club & installations',press:'Conférence de presse',history:'Historique',settings:'Options & diagnostic'};
+        const titleNode=document.querySelector('#hd h2');
+        if(titleNode && S && titleMap[S.view]) titleNode.textContent=titleMap[S.view];
         const header=document.querySelector('#hd');
         if(header && S && S.managerPortrait!=null) {
           const existing=header.querySelector('.fm26-header-face');
@@ -791,6 +794,21 @@
           }
         }
         maybeUpdatePhotosAfterRender();
+        if(S && ['staff','academy','scouting','contracts'].includes(S.view)) {
+          document.querySelectorAll('#vw table tbody tr, #vw table tr').forEach((tr, index) => {
+            if(index===0)return;
+            const cell=tr.querySelector('td');
+            if(!cell || cell.querySelector('.fm26-face'))return;
+            const nameNode=cell.querySelector('b') || cell;
+            const name=(nameNode.textContent||'').trim();
+            if(!name || name.length>80)return;
+            const avatar=document.createElement('span');
+            avatar.className='fm26-face';
+            avatar.innerHTML='<img alt="" src="'+portraitSvg(name.split('').reduce((a,ch)=>a+ch.charCodeAt(0),0)%6)+'">';
+            avatar.style.marginRight='7px';
+            cell.insertBefore(avatar,cell.firstChild);
+          });
+        }
         if(S && S.view==='match') {
           const vw=document.getElementById('vw');
           if(vw && !vw.querySelector('#fm26-live-controls')) {
