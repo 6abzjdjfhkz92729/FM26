@@ -35,7 +35,7 @@
         button.dataset.photoUrl=url;
         button.dataset.photoPage=page||'';
         button.title='Photo de référence : '+name+' — source Wikipédia';
-        if(Number(selectedPortrait)===i){selectedPortraitPhoto=url;selectedPortraitPage=page||null;}
+        if(Number(selectedPortrait)===i){selectedPortraitPhoto=url;selectedPortraitPage=page||null;if(typeof S!=='undefined'&&S&&Number(S.managerPortrait)===i&&!S.managerPhoto){S.managerPhoto=url;S.managerPhotoPage=page||null;try{sv()}catch(e){};if(typeof render==='function')render();}}
       };
       let cached=null;
       try{cached=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
