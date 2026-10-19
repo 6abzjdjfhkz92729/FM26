@@ -83,6 +83,7 @@
   }
   let careerType = 'existing';
   let selectedPortrait = 0;
+  let originalXI = null;
   let originalStartCareer = null;
   let originalStartMatch = null;
   let originalEndMatch = null;
@@ -406,7 +407,7 @@
   function formation(value) {
     if (!FM[value]) return;
     S.tc=S.tc||{};S.tc.f=value;
-    const now=typeof xi==='function'?xi():[];
+    const now=typeof originalXI==='function'?originalXI():(typeof xi==='function'?xi():[]);
     S.lineup=now.map(p=>p.id).slice(0,11);
     try{sv()}catch(e){};render();
   }
@@ -648,6 +649,30 @@
 
   function install() {
     insertSetupWidgets();
+
+    // Make the user-selected eleven the actual match engine eleven, not just a visual lineup.
+    if (typeof xi === 'function') {
+      originalXI = xi;
+      xi = function() {
+        if (!S || !Array.isArray(S.lineup) || S.lineup.length !== 11) return originalXI();
+        const seen = new Set();
+        const chosen = [];
+        S.lineup.forEach(id => {
+          const p = (S.sq || []).find(q => Number(q.id) === Number(id));
+          if (p && !(p.inj > 0) && !(p.susp > 0) && !seen.has(p.id)) {
+            seen.add(p.id); chosen.push(p);
+          }
+        });
+        const pool = [];
+        try { pool.push(...originalXI()); } catch (e) {}
+        (S.sq || []).filter(p => !(p.inj > 0) && !(p.susp > 0)).sort((a,b) => (b.ovr||0)-(a.ovr||0)).forEach(p => pool.push(p));
+        for (const p of pool) {
+          if (chosen.length >= 11) break;
+          if (p && !seen.has(p.id) && !(p.inj > 0) && !(p.susp > 0)) { seen.add(p.id); chosen.push(p); }
+        }
+        return chosen.length === 11 ? chosen : originalXI();
+      };
+    }
 
     if (typeof startCareer==='function') {
       originalStartCareer=startCareer;
