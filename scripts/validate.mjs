@@ -32,7 +32,7 @@ function blockEnd(source, openAt) {
 }
 
 const scriptFiles = [...html.matchAll(/<script\b[^>]*\bsrc=["']\.\/([^"']+)["'][^>]*>\s*<\/script>/gi)].map(m => m[1]);
-const requiredScripts = ['fm26-phase1.js','fm26-engine.js','fm26-advanced.js','fm26-world.js','fm26-experience.js','fm26-international.js'];
+const requiredScripts = ['fm26-europe.js','fm26-phase1.js','fm26-engine.js','fm26-advanced.js','fm26-world.js','fm26-experience.js','fm26-international.js'];
 for (const file of requiredScripts) assert.ok(scriptFiles.includes(file), 'index.html must load ' + file);
 for (const file of scriptFiles) assert.ok(existsSync(resolve(root, file)), 'missing script: ' + file);
 assert.deepEqual(scriptFiles.filter(x => requiredScripts.includes(x)), requiredScripts, 'modules are in the wrong dependency order');
@@ -66,7 +66,18 @@ assert.ok(lgAt >= 0, 'league data is missing');
 const lgOpen = html.indexOf('{', lgAt);
 const lgEnd = blockEnd(html, lgOpen);
 const LG = runInNewContext('(' + html.slice(lgOpen, lgEnd) + ')', {}, { timeout: 1000 });
-assert.ok(Object.keys(LG).length >= 30, 'expected at least 30 divisions');
+const europeScript = readFileSync(resolve(root, 'fm26-europe.js'), 'utf8');
+const extraAt = europeScript.indexOf('const FM26_EUROPE_EXTRA_DATA =');
+assert.ok(extraAt >= 0, 'additional European league data is missing');
+const extraOpen = europeScript.indexOf('{', extraAt);
+const extraEnd = blockEnd(europeScript, extraOpen);
+const extraLeagues = runInNewContext('(' + europeScript.slice(extraOpen, extraEnd) + ')', {}, { timeout: 1000 });
+for (const [league, clubs] of Object.entries(extraLeagues)) {
+  assert.ok(!LG[league], 'additional league unexpectedly overwrites an existing league: ' + league);
+  assert.ok(Array.isArray(clubs) && clubs.length >= 10, league + ' has too few clubs');
+  LG[league] = clubs;
+}
+assert.ok(Object.keys(LG).length >= 39, 'expected at least 39 divisions after European expansion');
 const clubEntries = Object.values(LG).reduce((sum, clubs) => sum + clubs.length, 0);
 assert.ok(clubEntries >= 500, 'too few club entries');
 
