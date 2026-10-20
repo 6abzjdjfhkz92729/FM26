@@ -212,7 +212,7 @@ function mkFx(){
  const n=teams.length,rounds=n-1,half=n/2;
  let ring=teams.slice(),first=[],id=0;
  for(let r=0;r<rounds;r++){
-  const d=new Date(S.date);d.setDate(d.getDate()+7*(r+1));d.setHours(12,0,0,0);
+  const d=new Date(S.date);d.setUTCDate(d.getUTCDate()+7*(r+1));d.setUTCHours(12,0,0,0);
   for(let i=0;i<half;i++){
    let home=ring[i],away=ring[n-1-i];
    if(home===bye||away===bye)continue;
@@ -221,7 +221,7 @@ function mkFx(){
   }
   ring=[ring[0],ring[n-1],...ring.slice(1,n-1)];
  }
- const back=first.map(f=>{const d=new Date(f.date);d.setDate(d.getDate()+7*rounds);return{id:id++,date:d.toISOString(),home:f.away,away:f.home,played:false,score:"",round:f.round+rounds,comp:S.lg}});
+ const back=first.map(f=>{const d=new Date(f.date);d.setUTCDate(d.getUTCDate()+7*rounds);return{id:id++,date:d.toISOString(),home:f.away,away:f.home,played:false,score:"",round:f.round+rounds,comp:S.lg}});
  return first.concat(back).sort((a,b)=>new Date(a.date)-new Date(b.date)||a.id-b.id)
 }
 const newTb=()=>{S.tb={};LG[S.lg].forEach(c=>S.tb[c]={p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0})};
