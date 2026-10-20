@@ -185,30 +185,43 @@ const cupTeamPool=()=>Object.entries(LG).flatMap(([league,clubs])=>clubs.map(clu
 function initCups(){
  if(!S||!S.fx||!LG[S.lg])return;
  const existing=S.fx.filter(f=>f.cupKey);
- if(S.cupComps&&S.cupComps.domestic&&S.cupComps.continental&&existing.length)return;
+ if(S.cupComps&&S.cupComps.domestic&&S.cupComps.continental&&existing.length){
+   Object.values(S.cupComps).forEach(c=>{c.bracketSize=Number(c.bracketSize)||16;c.byesByRound=c.byesByRound||{};});
+   return;
+ }
  S.cupComps={};
  const addTournament=(key,name,entrants,offset)=>{
-   const teams=[...new Set(entrants)].slice(0,16);
-   if(teams.length<16)return;
-   const nextId=Math.max(-1,...S.fx.map(f=>Number(f.id)||0))+1;
+   const teams=[...new Set(entrants.filter(c=>typeof c==='string'&&c.trim()))].slice(0,16);
+   if(teams.length<2)return;
+   const bracketSize=2**Math.ceil(Math.log2(teams.length));
+   const byeCount=bracketSize-teams.length,byes=teams.slice(0,byeCount),playing=teams.slice(byeCount);
+   const matchCount=playing.length/2,nextId=Math.max(-1,...S.fx.map(f=>Number(f.id)||0))+1;
    const base=new Date((S.date||'2026-08-01')+'T12:00:00Z');base.setUTCDate(base.getUTCDate()+offset);
    const games=[];
-   for(let i=0;i<8;i++){
-     const home=teams[i],away=teams[15-i],d=new Date(base);d.setUTCDate(d.getUTCDate()+Math.floor(i/4)*1);
-     games.push({id:nextId+i,date:d.toISOString(),home,away,played:false,score:'',round:key+'-R16',comp:name,cupKey:key,cupRound:1});
+   for(let i=0;i<matchCount;i++){
+     const home=playing[i],away=playing[playing.length-1-i],d=new Date(base);d.setUTCDate(d.getUTCDate()+Math.floor(i/4));
+     games.push({id:nextId+i,date:d.toISOString(),home,away,played:false,score:'',round:key+'-'+(bracketSize===16?'R16':bracketSize===8?'QF':bracketSize===4?'SF':'F'),comp:name,cupKey:key,cupRound:1});
    }
-   S.fx.push(...games);S.cupComps[key]={key,name,round:1,done:false,champion:'',history:[]};
+   S.fx.push(...games);
+   S.cupComps[key]={key,name,round:1,done:false,champion:'',history:[],bracketSize,byesByRound:byes.length?{1:byes}:{}};
  };
  const domestic=LG[S.lg].slice().filter(c=>c!==S.club).sort(()=>Math.random()-.5).slice(0,15);
  addTournament('domestic','Coupe nationale',[S.club,...domestic],10);
  const womensLeague = /women|liga f|féminin/i.test(String(S.lg||''));
- const pool=cupTeamPool()
+ const pool=[...new Set(cupTeamPool()
    .filter(x=>x.club!==S.club && (/women|liga f|féminin/i.test(String(x.league||''))===womensLeague))
-   .sort(()=>Math.random()-.5).slice(0,15).map(x=>x.club);
+   .map(x=>x.club))].sort(()=>Math.random()-.5).slice(0,15);
  const europeanCupName = womensLeague ? 'Ligue des championnes européenne (format simplifié)' : 'Ligue des champions européenne (format simplifié)';
  addTournament('continental',europeanCupName,[S.club,...pool],13);
  S.fx.sort((a,b)=>new Date(a.date)-new Date(b.date)||Number(a.id)-Number(b.id));
- S.cupStateVersion=1;
+ S.cupStateVersion=2;
+}
+function cupStageLabel(state,round){
+ const size=Math.max(2,Number(state?.bracketSize)||16)/Math.pow(2,Math.max(0,Number(round||1)-1));
+ if(size>=16)return 'Huitièmes de finale';
+ if(size>=8)return 'Quarts de finale';
+ if(size>=4)return 'Demi-finales';
+ return 'Finale';
 }
 function advanceCup(playedFixture){
  if(!S||!playedFixture||!playedFixture.cupKey)return;
@@ -223,20 +236,20 @@ function advanceCup(playedFixture){
  const completed=S.fx.filter(f=>f.cupKey===key&&f.cupRound===round&&f.played);
  const winners=completed.map(f=>{
    const [h,a]=String(f.score).split('-').map(Number);
-   if(h===a)return pick([f.home,f.away]); // Cup tie decider, represented as extra-time/penalty advancement.
+   if(h===a)return pick([f.home,f.away]); // Match nul départagé par une séance simulée.
    return h>a?f.home:f.away;
- });
- state.history.push({round,name:round===1?'Huitièmes':round===2?'Quarts':round===3?'Demi-finales':'Finale',matches:completed.length});
+ }).concat(state.byesByRound?.[round]||[]);
+ if(state.byesByRound)delete state.byesByRound[round];
+ state.history.push({round,name:cupStageLabel(state,round),matches:completed.length});
  if(winners.length===1){
    state.done=true;state.champion=winners[0];
    mail('Compétitions',state.name+' : champion',state.champion+' remporte '+state.name+'.');
  }else{
    const nextRound=round+1,dates=completed.map(f=>new Date(f.date).getTime()).filter(Number.isFinite),base=new Date((dates.length?Math.max(...dates):Date.now())+21*864e5);
-   const startId=Math.max(-1,...S.fx.map(f=>Number(f.id)||0))+1;
+   const startId=Math.max(-1,...S.fx.map(f=>Number(f.id)||0))+1,turn=cupStageLabel(state,nextRound);
    for(let i=0;i<winners.length;i+=2){
      const home=winners[i],away=winners[i+1];if(!away)continue;
-     const id=startId+i/2,turn=nextRound===2?'Quarts':nextRound===3?'Demi-finales':'Finale';
-     const roundLabel=key==='domestic'?'CN':'CC';
+     const id=startId+i/2,roundLabel=key==='domestic'?'CN':'CC';
      S.fx.push({id,date:new Date(base.getTime()+Math.floor(i/2)*3600e3).toISOString(),home,away,played:false,score:'',round:roundLabel+'-'+nextRound,comp:state.name,cupKey:key,cupRound:nextRound});
    }
    state.round=nextRound;
@@ -255,8 +268,9 @@ function simulateRemainingCup(key){
   const fixtures=S.fx.filter(f=>f.cupKey===key&&f.cupRound===round);
   if(!fixtures.length)break;
   fixtures.forEach(f=>{if(!f.played){const z=simLeagueScore(f.home,f.away);f.played=true;f.score=z[0]+'-'+z[1]}});
-  const winners=fixtures.map(f=>{const [h,a]=String(f.score).split('-').map(Number);return h===a?pick([f.home,f.away]):h>a?f.home:f.away});
-  state.history.push({round,name:round===1?'Huitièmes':round===2?'Quarts':round===3?'Demi-finales':'Finale',matches:fixtures.length});
+  const winners=fixtures.map(f=>{const [h,a]=String(f.score).split('-').map(Number);return h===a?pick([f.home,f.away]):h>a?f.home:f.away}).concat(state.byesByRound?.[round]||[]);
+  if(state.byesByRound)delete state.byesByRound[round];
+  state.history.push({round,name:cupStageLabel(state,round),matches:fixtures.length});
   if(winners.length===1){state.done=true;state.champion=winners[0];mail('Compétitions',state.name+' : champion',state.champion+' remporte '+state.name+'.');break;}
   const nextRound=round+1,base=new Date(Math.max(...fixtures.map(f=>new Date(f.date).getTime()).filter(Number.isFinite))+21*864e5),startId=Math.max(-1,...S.fx.map(f=>Number(f.id)||0))+1,roundLabel=key==='domestic'?'CN':'CC';
   for(let i=0;i<winners.length;i+=2){if(!winners[i+1])continue;S.fx.push({id:startId+i/2,date:new Date(base.getTime()+Math.floor(i/2)*3600e3).toISOString(),home:winners[i],away:winners[i+1],played:false,score:'',round:roundLabel+'-'+nextRound,comp:state.name,cupKey:key,cupRound:nextRound});}
@@ -282,7 +296,7 @@ V.comp=function(){
  const status=(key)=>{
    const s=S.cupComps?.[key];if(!s)return 'Pas commencé';
    if(s.done)return 'Champion : '+esc(s.champion);
-   return s.round===1?'Huitièmes de finale':s.round===2?'Quarts de finale':s.round===3?'Demi-finales':'Finale';
+   return cupStageLabel(s,s.round);
  };
  const cupCard=(key)=>{
    const s=S.cupComps?.[key];if(!s)return '';
