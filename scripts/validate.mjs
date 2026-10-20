@@ -58,7 +58,7 @@ for (const id of ['setup','app','side','hd','vw','go']) {
 const allSource = [html, ...scriptFiles.map(file => readFileSync(resolve(root, file), 'utf8'))].join('\n');
 const requiredViews = ['home','inbox','squad','player','tactics','sched','comp','fin','mgr','train','xfer','save','data','academy','staff','contracts','scouting','club','press','history','settings','offers','talk','lineup','profile','international'];
 for (const view of requiredViews) assert.ok(new RegExp('\\bV\\.' + view + '\\s*=').test(allSource), 'missing view renderer: ' + view);
-for (const token of ['function mkFx()', 'function upd(', 'function tbl(', 'function startMatch(', 'function tick(', 'function endMatch(']) assert.ok(html.includes(token), 'missing core function ' + token);
+for (const token of ['function mkFx()', 'const upd=', 'const tbl=', 'function startMatch(', 'function tick(', 'function endMatch(']) assert.ok(html.includes(token), 'missing core function ' + token);
 for (const api of ['window.FMX','window.FM26A','window.FM26UX','window.FM26I','window.XF']) assert.ok(allSource.includes(api), 'missing module API ' + api);
 
 const lgAt = html.indexOf('const LG=');
