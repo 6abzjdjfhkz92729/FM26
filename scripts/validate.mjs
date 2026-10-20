@@ -108,6 +108,67 @@ assert.match(advanced, /function cupStageLabel\(state,round\)/, 'cup rounds must
 assert.match(advanced, /byesByRound/, 'smaller cups must track teams receiving a bye');
 assert.match(advanced, /turn=cupStageLabel\(state,nextRound\)/, 'cup progression must calculate the next stage outside the fixture loop');
 assert.match(advanced, /const pool=\[\.\.\.new Set\(cupTeamPool\(\)/, 'continental cup entrants must be unique');
+
+const builderAt = advanced.indexOf('const addTournament=');
+assert.ok(builderAt >= 0, 'cup bracket builder is missing');
+const builderOpen = advanced.indexOf('{', builderAt);
+const builderEnd = blockEnd(advanced, builderOpen);
+const builderBody = advanced.slice(builderOpen, builderEnd);
+const builder = runInNewContext('(function addTournament(key,name,entrants,offset)' + builderBody + ')', {
+  S: { fx: [], date: '2026-08-01', cupComps: {} }
+}, { timeout: 1000 });
+const entrants12 = ['Bye A','Bye B','Bye C','Bye D','Manager FC','Club 6','Club 7','Club 8','Club 9','Club 10','Club 11','Club 12'];
+const cupState = { fx: [], date: '2026-08-01', cupComps: {}, club: 'Manager FC' };
+const addCup = runInNewContext('(function addTournament(key,name,entrants,offset)' + builderBody + ')', { S: cupState }, { timeout: 1000 });
+addCup('domestic', 'Test Cup', entrants12, 10);
+assert.equal(cupState.fx.length, 4, 'a 12-team cup must create four opening ties');
+assert.equal(cupState.cupComps.domestic.bracketSize, 16, 'a 12-team cup must use a 16-slot bracket');
+assert.equal(cupState.cupComps.domestic.byesByRound[1].length, 4, 'four teams must receive first-round byes');
+
+const stageAt = advanced.indexOf('function cupStageLabel');
+assert.ok(stageAt >= 0, 'cup stage label helper is missing');
+const stageOpen = advanced.indexOf('{', stageAt);
+const stageEnd = blockEnd(advanced, stageOpen);
+const stageLabel = runInNewContext('(' + advanced.slice(stageAt, stageEnd) + ')', {}, { timeout: 1000 });
+assert.equal(stageLabel({ bracketSize: 16 }, 1), 'Huitièmes de finale');
+assert.equal(stageLabel({ bracketSize: 16 }, 4), 'Finale');
+assert.equal(stageLabel({ bracketSize: 8 }, 1), 'Quarts de finale');
+
+const advanceAt = advanced.indexOf('function advanceCup(');
+assert.ok(advanceAt >= 0, 'cup progression function is missing');
+const advanceOpen = advanced.indexOf('{', advanceAt);
+const advanceEnd = blockEnd(advanced, advanceOpen);
+const advanceSource = advanced.slice(advanceAt, advanceEnd);
+const firstTie = cupState.fx.find(f => f.home === 'Manager FC');
+assert.ok(firstTie, 'manager club must have an opening cup tie in the fixture test');
+firstTie.played = true;
+firstTie.score = '1-0';
+const cupSandbox = {
+  S: cupState,
+  simLeagueScore: () => [1, 0],
+  pick: values => values[0],
+  cupStageLabel: stageLabel,
+  mail: () => {},
+  sv: () => {},
+  simulateRemainingCup: () => {}
+};
+const advanceCup = runInNewContext('(' + advanceSource + ')', cupSandbox, { timeout: 1000 });
+for (let round = 1; round <= 4; round++) {
+  if (round > 1) {
+    const tie = cupState.fx.find(f => f.cupKey === 'domestic' && f.cupRound === round && !f.played && (f.home === cupState.club || f.away === cupState.club));
+    assert.ok(tie, 'manager should have a fixture at cup round ' + round);
+    tie.played = true;
+    tie.score = tie.home === cupState.club ? '2-0' : '0-2';
+  }
+  const tie = cupState.fx.find(f => f.cupKey === 'domestic' && f.cupRound === round && f.played && (f.home === cupState.club || f.away === cupState.club));
+  advanceCup(tie);
+  if (round < 4) {
+    assert.equal(cupState.cupComps.domestic.round, round + 1, 'cup should advance from round ' + round);
+  } else {
+    assert.equal(cupState.cupComps.domestic.done, true, 'winning the final must finish the cup');
+    assert.equal(cupState.cupComps.domestic.champion, cupState.club, 'the manager club must win the test cup');
+  }
+}
 console.log('FM26 validation OK');
 console.log('JS files checked: ' + scriptFiles.length + ' modules + ' + inlineScripts.length + ' inline scripts');
 console.log('Divisions: ' + Object.keys(LG).length + ' | club entries: ' + clubEntries + ' | fixture schedules: ' + fixturesChecked);
