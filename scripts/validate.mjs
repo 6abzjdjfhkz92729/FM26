@@ -102,6 +102,12 @@ for (const [league, clubs] of Object.entries(LG)) {
 const engine = readFileSync(resolve(root, 'fm26-engine.js'), 'utf8');
 assert.match(engine, /shots:\[0,0\]/, 'total shots must be tracked separately from shots on target');
 assert.match(engine, /oldLeague=S\.fx\.filter/, 'calendar migration must ignore cup fixtures when counting league fixtures');
+assert.match(engine, /row\('Tirs',shots\)/, 'data centre must display total shots');
+const advanced = readFileSync(resolve(root, 'fm26-advanced.js'), 'utf8');
+assert.match(advanced, /function cupStageLabel\(state,round\)/, 'cup rounds must use a bracket-aware stage label');
+assert.match(advanced, /byesByRound/, 'smaller cups must track teams receiving a bye');
+assert.match(advanced, /turn=cupStageLabel\(state,nextRound\)/, 'cup progression must calculate the next stage outside the fixture loop');
+assert.match(advanced, /const pool=\[\.\.\.new Set\(cupTeamPool\(\)/, 'continental cup entrants must be unique');
 console.log('FM26 validation OK');
 console.log('JS files checked: ' + scriptFiles.length + ' modules + ' + inlineScripts.length + ' inline scripts');
 console.log('Divisions: ' + Object.keys(LG).length + ' | club entries: ' + clubEntries + ' | fixture schedules: ' + fixturesChecked);
