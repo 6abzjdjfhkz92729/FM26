@@ -59,7 +59,7 @@
     'Physique':['Acceleration','Agility','Balance','Jumping Reach','Natural Fitness','Pace','Stamina','Strength'],
     'Défense':['Marking','Tackling','Heading','Positioning','Anticipation','Concentration','Strength','Jumping Reach'],
     'Attaque':['Finishing','Dribbling','Off The Ball','Vision','Crossing','Composure','Acceleration','First Touch'],
-    'Gardiens':['Anticipation','Decisions','Concentration','Positioning','Passing','Composure','First Touch']
+    'Gardiens':['Reflexes','One On Ones','Handling','Aerial Reach','Command of Area','Kicking','Throwing']
   };
 
   function ensureState() {
@@ -74,6 +74,10 @@
     S.proTrainingHistory = Array.isArray(S.proTrainingHistory) ? S.proTrainingHistory : [];
     S.proMatchHistory = Array.isArray(S.proMatchHistory) ? S.proMatchHistory : [];
     S.sq.forEach(p => {
+      p.a = p.a && typeof p.a === 'object' ? p.a : {};
+      if (p.pos === 'GK') ['Reflexes','One On Ones','Handling','Aerial Reach','Command of Area','Kicking','Throwing','Communication'].forEach(key => {
+        if (p.a[key] == null) p.a[key] = clampPro(Math.round((Number(p.ovr)||65)/5.2 + ((typeof hash === 'function' ? hash(String(p.id)+key) : 2) % 5) - 2), 2, 20);
+      });
       p.ast = Number.isFinite(Number(p.ast)) ? Number(p.ast) : (Number(p.assists) || 0);
       p.assists = p.ast;
       p.ratingTotal = Number.isFinite(Number(p.ratingTotal)) ? Number(p.ratingTotal) : 0;
@@ -216,7 +220,7 @@
     const playerSet = S.sq.concat(session === 'Développement jeunes' ? (S.youth || []) : []);
     let gains = 0, rested = 0, injuries = 0, moraleChange = 0;
     playerSet.forEach(p => {
-      if (!p || (session === 'Développement jeunes' && Number(p.age) > 21)) return;
+      if (!p || (session === 'Développement jeunes' && Number(p.age) > 21) || (S.tc.trainingFocus === 'Gardiens' && p.pos !== 'GK')) return;
       const load = intensity.load;
       const baseCondition = Number(p.cond == null ? 85 : p.cond);
       p.cond = clampPro(baseCondition + plan.condition * load * (session === 'Récupération' ? medical : 1), 20, 100);
