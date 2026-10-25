@@ -481,10 +481,13 @@
     const goals = [];
     for (let i=0;i<countH;i++) goals.push(M.f.home);
     for (let i=0;i<countA;i++) goals.push(M.f.away);
+    const userGoalsThisTick = S.club === M.f.home ? countH : countA;
+    const userScorerIds = userGoalsThisTick > 0 && Array.isArray(M.scr) ? M.scr.slice(-userGoalsThisTick) : [];
+    let userScorerIndex = 0;
     goals.forEach(team => {
       if (team !== S.club) return;
       const lineup = xiNow();
-      const scorerId = Array.isArray(M.scr) && M.scr.length ? M.scr[M.scr.length-1] : null;
+      const scorerId = userScorerIds[userScorerIndex++];
       const scorer = scorerId != null ? S.sq.find(p=>Number(p.id)===Number(scorerId)) : S.sq.find(p=>p.name===M.lastScorer);
       if (Math.random() < .80) {
         const options = lineup.filter(p=>p && p.pos!=='GK' && (!scorer || p.id!==scorer.id));
@@ -514,11 +517,16 @@
     const userGoals = home ? Number(M.h)||0 : Number(M.a)||0;
     const oppGoals = home ? Number(M.a)||0 : Number(M.h)||0;
     const result = userGoals>oppGoals ? 1 : userGoals<oppGoals ? -1 : 0;
-    const players = xiNow();
+    const currentLineup = xiNow();
     const form = formationNow();
+    const ids = Array.from(new Set([].concat(M.proXIIds || [], currentLineup.map(p=>p&&p.id).filter(id=>id!=null))));
+    const players = ids.map(id=>S.sq.find(p=>Number(p.id)===Number(id))).filter(Boolean);
     const ratings = [];
-    players.forEach((p,i) => {
+    players.forEach(p => {
       if (!p) return;
+      const currentIndex = currentLineup.findIndex(x=>x && Number(x.id)===Number(p.id));
+      const startIndex = (M.proXIIds || []).findIndex(id=>Number(id)===Number(p.id));
+      const i = currentIndex >= 0 ? currentIndex : Math.max(0,startIndex);
       const role = roleForSlot(i,(form[i]&&form[i][2])||p.pos);
       const start = (M.proStartPlayerStats && M.proStartPlayerStats[p.id]) || {g:0,ast:0,yellow:0};
       const goals = Math.max(0,(Number(p.g)||0)-start.g);
@@ -580,6 +588,18 @@
         applyRoleModifiers();
       }
       return r;
+    };
+  }
+
+  if (window.XE && typeof window.XE.sub === 'function') {
+    const priorSub = window.XE.sub;
+    window.XE.sub = function () {
+      const result = priorSub.apply(this, arguments);
+      if (M && !M.done) {
+        M.proRoleMetrics = teamRoleMetrics(xiNow());
+        applyRoleModifiers();
+      }
+      return result;
     };
   }
 
