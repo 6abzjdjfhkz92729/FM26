@@ -12,7 +12,7 @@
     '.fm26-dnd-filter{border:1px solid #555865;background:#373943;color:#e7e7ed;padding:5px 10px;font:600 15px Barlow Condensed,Arial,sans-serif;cursor:pointer}',
     '.fm26-dnd-filter.active{background:#a04be8;border-color:#d0a0ff;color:#fff}',
     '.fm26-dnd-hint{padding:8px 12px 9px;font-size:16px;color:#d1d2da;background:#252730;border-bottom:1px solid #41434c}',
-    '.fm26-dnd-roster{position:absolute;top:139px;bottom:0;left:0;right:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#777 #292b32}',
+    '.fm26-dnd-roster{position:absolute;top:139px;bottom:32px;left:0;right:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#777 #292b32}',
     '.fm26-dnd-roster-row{display:grid;grid-template-columns:43px minmax(0,1fr) 50px;gap:9px;align-items:center;min-height:62px;padding:7px 12px;border-bottom:1px solid #ffffff12;background:linear-gradient(90deg,#30323a,#292b32);cursor:grab;box-sizing:border-box;transition:background .13s,border-color .13s,transform .13s}',
     '.fm26-dnd-roster-row:nth-child(even){background:linear-gradient(90deg,#2b2d35,#25272e)}',
     '.fm26-dnd-roster-row:hover{background:#3b3d48}',
@@ -25,12 +25,12 @@
     '.fm26-dnd-player-meta{margin-top:4px;font-size:15px;color:#c5c7d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
     '.fm26-dnd-player-state{font-size:13px;font-weight:800;text-align:right;color:#9fdfa5}',
     '.fm26-dnd-player-state.bench{color:#d8d9e0}.fm26-dnd-player-state.unavailable-text{color:#ff9da6}',
-    '.fm26-dnd-count{font-size:14px;color:#d8d9e0;padding:8px 12px;background:#1e2027;border-top:1px solid #484a54}',
+    '.fm26-dnd-count{font-size:14px;color:#d8d9e0;padding:8px 12px;background:#1e2027;border-top:1px solid #484a54}.fm26-dnd-roster-footer{position:absolute;left:0;right:0;bottom:0;height:32px;z-index:3;box-sizing:border-box;padding:7px 12px}',
     '.fm26-dnd-controls{position:absolute;left:0;right:0;top:57px;height:49px;display:flex;align-items:center;gap:7px;padding:0 13px;background:#2a2c34;border-bottom:1px solid #4e5059;box-sizing:border-box}',
     '.fm26-dnd-chip{border:1px solid #535662;background:#393b45;color:#eee;padding:6px 12px;font:700 16px Barlow Condensed,Arial,sans-serif;cursor:pointer;border-radius:2px}',
     '.fm26-dnd-chip:hover{filter:brightness(1.15)}.fm26-dnd-chip.active{background:linear-gradient(100deg,#ff3d86,#a744e8);border-color:#ed9bff}',
     '.fm26-dnd-status{margin-left:auto;font-size:16px;color:#d4d5dd;white-space:nowrap}',
-    '.fm26-dnd-tactical-layout{position:absolute;left:0;right:0;top:106px;bottom:0;display:grid;grid-template-columns:570px minmax(0,1fr);gap:13px;padding:14px;box-sizing:border-box}',
+    '.fm26-dnd-tactical-layout{position:absolute;left:0;right:0;top:106px;bottom:36px;display:grid;grid-template-columns:570px minmax(0,1fr);gap:13px;padding:14px;box-sizing:border-box}',
     '.fm26-dnd-pitch{position:relative;height:100%;min-height:0;overflow:hidden;border:2px solid #d7efd066;box-shadow:inset 0 0 75px #0004,0 8px 22px #0005;background:repeating-linear-gradient(90deg,#29723d 0 7.14%,#2d7d43 7.14% 14.28%)}',
     '.fm26-dnd-pitch:before{content:"";position:absolute;inset:3%;border:2px solid #d9f0dc99;pointer-events:none}',
     '.fm26-dnd-pitch:after{content:"";position:absolute;left:3%;right:3%;top:50%;border-top:2px solid #d9f0dc99;pointer-events:none}',
@@ -63,7 +63,7 @@
     '.fm26-dnd-tips{font-size:15px;color:#d4d5dd;line-height:1.35}',
     '.fm26-dnd-swatches{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}',
     '.fm26-dnd-swatches i{width:12px;height:12px;display:inline-block;border-radius:50%;margin-right:4px}',
-    '.fm26-dnd-bottom{padding:10px 13px;background:#272931;border-top:1px solid #444650;font-size:14px;color:#d4d5dd}',
+    '.fm26-dnd-bottom{position:absolute;left:0;right:0;bottom:0;height:36px;box-sizing:border-box;padding:8px 13px;background:#272931;border-top:1px solid #444650;font-size:14px;color:#d4d5dd}',
     '@media(prefers-reduced-motion:reduce){.fm26-dnd-panel,.fm26-dnd-marker,.fm26-dnd-roster-row{animation:none;transition:none}}'
   ].join('\n');
   if (!document.getElementById('fm26-dnd-style')) {
@@ -218,7 +218,7 @@
         '</div>' +
         '<div class="fm26-dnd-hint">' + help + '</div>' +
         '<div class="fm26-dnd-roster">' + (rosterRows || '<div class="fm26-dnd-count">Aucun joueur dans cette sélection.</div>') + '</div>' +
-        '<div class="fm26-dnd-count">Composition enregistrée automatiquement · ' + lineup.filter(Boolean).length + '/11 titulaires</div>' +
+        '<div class="fm26-dnd-count fm26-dnd-roster-footer">Composition enregistrée automatiquement · ' + lineup.filter(Boolean).length + '/11 titulaires</div>' +
       '</section>' +
       '<section class="fm26-dnd-panel" style="left:570px;width:1202px">' +
         '<div class="fm26-dnd-panel-head"><span>TACTIQUE · ' + club + '</span><small>Glisser-déposer actif</small></div>' +
