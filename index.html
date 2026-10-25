@@ -243,6 +243,84 @@ td,th{border-bottom-color:#ffffff12}
 .fm26-home-empty{padding:16px;color:#c5c7d2}
 @media(max-width:1050px){.fm26-classic-home{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:560px){.fm26-home-match-body{padding:12px}.fm26-home-teams{gap:4px;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)}.fm26-home-team{font-size:14px}.fm26-home-team .cr{width:42px!important;height:42px!important}.fm26-home-kpi{padding:9px}.fm26-home-kpi b{font-size:20px}.fm26-home-fixture{grid-template-columns:52px minmax(0,1fr) 56px;gap:6px;padding:8px}.fm26-home-fixture-name{font-size:14px}}
+
+/* FM26 — style inspiré de la maquette fournie, avec navigation et données de carrière conservées */
+:root{--bg:#141519;--pn:#24262e;--ln:#42444d;--ac:#a97af8;--tx:#f3f3f5;--mu:#b6b7c0;--panel2:#2c2d33}
+html,body{font-family:'Barlow Condensed','Arial Narrow','Segoe UI',sans-serif;background:#141519;color:var(--tx);font-size:15px}
+body{background:radial-gradient(ellipse 900px 500px at 70% 25%,#34353b 0%,transparent 70%),linear-gradient(135deg,#1b1c21,#111216 72%)}
+#app{grid-template-columns:174px minmax(0,1fr);min-height:0}
+#side{display:flex;flex-direction:column;gap:5px;padding:13px 10px;background:#1c1f2e;border-right:1px solid #303449;overflow:auto}
+.si{display:flex;align-items:center;justify-content:flex-start;gap:12px;min-height:55px;width:100%;padding:10px 11px;border:0;border-radius:4px;background:transparent;color:#e0e1e9;text-align:left;font-size:16px}
+.si:hover{background:#ffffff12}
+.si .nav-icon{display:inline-grid;place-items:center;width:30px;height:30px;flex:0 0 30px}
+.si .nav-icon svg{display:block;width:27px;height:27px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.si em{display:block;font-style:normal;font-size:15px;font-weight:600;line-height:1.15;white-space:normal}
+.si.on{background:linear-gradient(95deg,#ff3d86,#d42fe6);color:#fff;margin:0;width:100%;font-weight:800;box-shadow:0 4px 15px #d42fe633}
+#side button[data-v="reset"]{margin-top:auto;border-top:1px solid #34374b;border-radius:0;padding-top:17px}
+#main{min-width:0;background:transparent}
+#hd{min-height:70px;height:auto;display:flex;gap:12px;padding:7px 0 7px 16px;background:#2b2c32;border-bottom:1px solid #4a4b53}
+#hd h2{font-size:25px;line-height:1.05;letter-spacing:.01em;font-weight:700;color:#fff}
+#hd small{display:block;margin-top:4px;color:#d0d0d7;font-size:14px}
+#hd>.cr{width:48px!important;height:48px!important}
+.dt2{min-width:145px;height:70px;padding:7px 12px;background:#35363d;color:#e3e3e8;font-size:13px;text-transform:uppercase}
+.dt2 b{font-size:21px;color:#fff}
+#go{height:70px;align-self:stretch;background:#a97af8;color:#fff;border-radius:0;padding:0 27px;font-size:21px;font-family:inherit;font-weight:700;letter-spacing:.03em}
+#go:hover{filter:brightness(1.1)}
+#vw{padding:18px 20px 26px;min-width:0}
+.pn,.portal-panel,.fm26-home-match{background:rgba(55,56,63,.8);border:1px solid #4b4c54;border-radius:4px;box-shadow:0 8px 24px #0001}
+.pn h3{background:#5b5c61;color:#fff;margin:-14px -14px 13px;padding:10px 12px;min-height:42px;font-size:17px;font-weight:700;letter-spacing:.035em}
+.portal-panel{padding:0;overflow:hidden}
+.portal-panel>.panel-top{padding:12px 14px;background:#5b5c61;margin:0}
+.portal-panel>.panel-top h2{font-size:19px;font-weight:700;color:#fff}
+.portal-panel>.panel-top+.fixture-meta,.portal-panel>.fixture-meta{padding-left:14px}
+.fm26-home-match{overflow:hidden;background:#292b32}
+.fm26-home-match-head{background:#5b5c61}
+.fm26-home-match-body{padding:16px}
+.fm26-home-section-title{background:#5b5c61;color:#fff;font-size:17px;letter-spacing:.045em}
+.fm26-home-stat,.fm26-home-fixture{background:rgba(44,45,51,.95);border-radius:2px;border:1px solid #3d3e46}
+.fm26-home-stat-icon{background:#41434b;color:#fff}
+.fm26-home-kpi{background:#2e3037;border:1px solid #45464f;border-radius:3px}
+.fm26-home-kpi small{color:#d0d0d7}
+.fm26-home-kpi b{font-size:27px}
+.fm26-home-fixture-date{color:#d1c1f5}
+.fm26-home-fixture-meta{color:#c1c2ca}
+#vw table{font-size:15px}
+#vw th{color:#c1c2ca;font-size:13px}
+#vw td,#vw th{padding:9px 10px;border-bottom-color:#ffffff17}
+#vw tr.cp:hover{background:#ffffff12}
+#vw tr.me{background:#a97af82b}
+.chip{background:#ffffff0b;border-color:#4a4b55;border-radius:3px}
+.chip.on{background:#a97af83b;border-color:#bd9bff}
+.btn,.fixture-cta{background:#a97af8;color:#fff;border-radius:3px}
+.b.h{background:#526c58}.b.m{background:#77787f}.b.l{background:#51434c;color:#fff}
+.bar{background:#17181d;border-radius:0}.bar i{background:linear-gradient(90deg,#e83d90,#a97af8)}
+input,select{background:#171920;border-color:#464852;border-radius:3px}
+@media(max-width:820px){
+ #app{grid-template-columns:62px minmax(0,1fr)}
+ #side{padding:8px 5px;gap:5px}
+ .si{justify-content:center;min-height:50px;padding:9px 0;gap:0}
+ .si .nav-icon{width:29px;flex-basis:29px}
+ .si em{display:none}
+ .si.on{margin:0;width:100%}
+ #hd{gap:7px;padding-left:8px;min-height:58px}
+ #hd h2{font-size:19px}
+ #hd small{display:none}
+ #hd>.cr{width:36px!important;height:36px!important}
+ .dt2{min-width:83px;height:58px;padding:5px 6px;font-size:10px}
+ .dt2 b{font-size:16px}
+ #go{height:58px;padding:0 10px;font-size:15px}
+ #vw{padding:10px}
+}
+@media(max-width:440px){
+ #app{grid-template-columns:50px minmax(0,1fr)}
+ #side{padding:6px 3px}
+ .si{min-height:46px}
+ #hd h2{font-size:16px}
+ .dt2{min-width:70px;font-size:9px}
+ .dt2 b{font-size:14px}
+ #go{font-size:13px;padding:0 7px}
+}
+
 </style></head><body>
 <div id="setup"><div class="sc"><div class="setup-brand"><span class="setup-mark">FM</span><div><p class="setup-kicker">TON CLUB. TES CHOIX. TON HISTOIRE.</p><h1>FM26 <small class="mu">MANAGER</small></h1><p class="mu">Configure ton profil, choisis ton défi et prends les commandes.</p></div></div>
 <div class="row"><div><label>Prénom</label><input id="fn" placeholder="Côme"><label>Nom</label><input id="ln" placeholder="Dupont"><label>Nationalité du manager</label><select id="managerNation"><option value="FRA">France</option><option value="ENG">Angleterre</option><option value="ESP">Espagne</option><option value="ITA">Italie</option><option value="GER">Allemagne</option><option value="POR">Portugal</option><option value="NED">Pays-Bas</option><option value="BRA">Brésil</option><option value="ARG">Argentine</option></select><label>Parcours</label><select id="managerExperience"><option value="debutant">Premier poste d’entraîneur</option><option value="ancien-joueur">Ancien joueur professionnel</option><option value="confirme">Manager confirmé</option></select><label>Diplôme d’entraîneur</label><select id="managerLicense"><option value="none">Aucun diplôme</option><option value="C">Licence C</option><option value="B">Licence B</option><option value="A">Licence A</option><option value="pro">Licence Pro</option></select><label>Mode de jeu</label><div class="wr" id="md"></div><label>Formation</label><select id="fo"><option>4-3-3</option><option>4-2-3-1</option><option>4-4-2</option></select></div>
@@ -258,6 +336,17 @@ const POS=["GK","DR","DC","DC","DL","DM","MC","MC","AMR","AML","ST","GK","DC","D
 const ROLE={GK:"SK - De",DR:"WB - Su",DL:"WB - Su",DC:"CD - De",DM:"BWM - De",MC:"BBM - Su",AMC:"AM - At",AMR:"IF - Su",AML:"IF - At",ST:"AF - At"};
 const FM={"4-3-3":[[50,92,"GK"],[86,72,"DR"],[62,77,"DC"],[38,77,"DC"],[14,72,"DL"],[50,56,"DM"],[72,42,"MC"],[28,42,"MC"],[84,20,"AMR"],[16,20,"AML"],[50,13,"ST"]],"4-2-3-1":[[50,92,"GK"],[86,72,"DR"],[62,77,"DC"],[38,77,"DC"],[14,72,"DL"],[62,58,"DM"],[38,58,"DM"],[50,36,"AMC"],[84,30,"AMR"],[16,30,"AML"],[50,13,"ST"]],"4-4-2":[[50,92,"GK"],[86,72,"DR"],[62,77,"DC"],[38,77,"DC"],[14,72,"DL"],[86,45,"AMR"],[62,48,"MC"],[38,48,"MC"],[14,45,"AML"],[62,16,"ST"],[38,16,"ST"]]};
 const MEN={Cautious:[.8,.8],Balanced:[1,1],Positive:[1.12,1.1],Attacking:[1.3,1.25]};
+const NAVICON={
+ home:"<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M3 11.5 12 4l9 7.5'/><path d='M5.5 10v10h13V10M9.5 20v-6h5v6'/></svg>",
+ inbox:"<svg viewBox='0 0 24 24' aria-hidden='true'><rect x='3' y='5' width='18' height='14' rx='1'/><path d='m4 7 8 6 8-6'/></svg>",
+ squad:"<svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='9' cy='8' r='3'/><path d='M3 20v-2a6 6 0 0 1 12 0v2'/><path d='M16 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 4v2'/></svg>",
+ tactics:"<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 20 10 14M4 14l6 6M14 4h6v6M20 4l-8 8'/><circle cx='17' cy='17' r='3'/></svg>",
+ sched:"<svg viewBox='0 0 24 24' aria-hidden='true'><rect x='3' y='5' width='18' height='16' rx='2'/><path d='M7 3v4M17 3v4M3 10h18M7 14h3M14 14h3M7 17h3'/></svg>",
+ comp:"<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M7 4h10v5a5 5 0 0 1-10 0zM7 6H3v2a5 5 0 0 0 5 5M17 6h4v2a5 5 0 0 1-5 5M12 14v5M8 21h8'/></svg>",
+ fin:"<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 20V4M4 20h17M7 16l4-5 3 2 6-7'/></svg>",
+ mgr:"<svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='7' r='4'/><path d='M4 21a8 8 0 0 1 16 0M9 12l3 4 3-4'/></svg>",
+ reset:"<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M4 10a8 8 0 1 1 1 7M4 4v6h6'/></svg>"
+};
 const NAV=[["home","Accueil","⌂"],["inbox","Messagerie","✉"],["squad","Effectif","♟"],["tactics","Tactiques","◈"],["sched","Calendrier","▦"],["comp","Compétitions","♛"],["fin","Finances","€"],["mgr","Manager","☺"]];
 const K="fm26_v2",V={};let S=null,M=null,T=null,sel={lg:"Premier League",cl:"Arsenal"};
 const $=i=>document.getElementById(i),rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[rnd(0,a.length-1)],cl=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -304,7 +393,7 @@ mail("Entraîneur adjoint","Bilan de préparation","Le groupe est prêt. Passe p
 function boot(){$("setup").classList.add("hid");$("app").classList.remove("hid");if(["match","post","pre"].includes(S.view))S.view="home";render()}
 function render(){document.documentElement.style.setProperty("--hc","hsl("+hash(S.club)%360+" 55% 26%)");
 const un=S.ib.filter(m=>!m.r).length;
-$("side").innerHTML=NAV.map(n=>`<button class="si${S.view===n[0]?" on":""}" data-v="${n[0]}" title="${n[1]}"><span>${n[2]}</span><em>${n[1]}${n[0]==="inbox"&&un?" ("+un+")":""}</em></button>`).join("")+`<button class="si" data-v="reset"><span>↻</span><em>Nouvelle carrière</em></button>`;
+$("side").innerHTML=NAV.map(n=>`<button class="si${S.view===n[0]?" on":""}" data-v="${n[0]}" title="${n[1]}"><span class="nav-icon">${NAVICON[n[0]]||NAVICON.home}</span><em>${n[1]}${n[0]==="inbox"&&un?" ("+un+")":""}</em></button>`).join("")+`<button class="si" data-v="reset"><span>↻</span><em>Nouvelle carrière</em></button>`;
 const ti={home:"Accueil",inbox:"Messagerie",squad:"Effectif",player:"Fiche joueur",tactics:"Tactiques",sched:"Calendrier",comp:"Compétitions",fin:"Finances",match:"Match",news:"Flash info",pre:"Avant-match",post:"Bilan du match",mgr:"Manager"}[S.view];
 $("hd").innerHTML=crest(S.club,46)+`<div><h2>${ti}</h2><small>${S.club} · ${S.lg} · ${fd(S.date)} · Manager ${S.mg}</small></div><div class="dt2">${new Date(S.date).toLocaleDateString("fr-FR",{weekday:"long"}).toUpperCase()}<b>${new Date(S.date).getDate()} ${new Date(S.date).toLocaleDateString("fr-FR",{month:"short"}).toUpperCase()}</b>${new Date(S.date).getFullYear()}</div><button id="go">${S.view==="match"?(M&&M.done?"CONTINUER":"PASSER ▶▶"):nxt()?"CONTINUER":"NOUVELLE SAISON"}</button>`;
 $("go").onclick=cont;$("vw").innerHTML=V[S.view]();if(S.view==="match")draw()}
