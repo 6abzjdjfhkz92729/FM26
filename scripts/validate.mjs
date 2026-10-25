@@ -32,7 +32,7 @@ function blockEnd(source, openAt) {
 }
 
 const scriptFiles = [...html.matchAll(/<script\b[^>]*\bsrc=["']\.\/([^"']+)["'][^>]*>\s*<\/script>/gi)].map(m => m[1]);
-const requiredScripts = ['fm26-europe.js','fm26-phase1.js','fm26-engine.js','fm26-advanced.js','fm26-world.js','fm26-experience.js','fm26-international.js','fm26-phase2-3.js'];
+const requiredScripts = ['fm26-europe.js','fm26-phase1.js','fm26-engine.js','fm26-advanced.js','fm26-world.js','fm26-experience.js','fm26-international.js','fm26-phase2-3.js','fm26-reference-ui.js','fm26-tactics-dnd.js','fm26-pro-career.js'];
 for (const file of requiredScripts) assert.ok(scriptFiles.includes(file), 'index.html must load ' + file);
 for (const file of scriptFiles) assert.ok(existsSync(resolve(root, file)), 'missing script: ' + file);
 assert.deepEqual(scriptFiles.filter(x => requiredScripts.includes(x)), requiredScripts, 'modules are in the wrong dependency order');
