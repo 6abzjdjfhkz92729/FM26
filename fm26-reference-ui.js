@@ -3,7 +3,7 @@
   'use strict';
 
   const css = [
-    'html,body{overflow:hidden}',
+    'body.fm26-ref-active{overflow:hidden}',
     '#app:not(.hid){position:fixed!important;left:50%!important;top:50%!important;width:2000px!important;height:924px!important;min-height:924px!important;grid-template-columns:208px 1792px!important;transform-origin:center center;z-index:2;background:radial-gradient(ellipse 900px 500px at 70% 30%,#34353b 0%,transparent 70%),radial-gradient(ellipse 700px 400px at 30% 80%,#2a2b31 0%,transparent 70%),radial-gradient(ellipse at 50% 50%,#202126 0%,#141519 100%);}',
     '#side{position:relative!important;width:208px!important;height:924px!important;overflow:hidden!important;display:block!important;padding:0!important;background:#1c1f2e!important;border-right:0!important;z-index:32}',
     '#main{position:relative!important;width:1792px!important;height:924px!important;min-width:1792px!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;background:transparent!important}',
@@ -72,6 +72,7 @@
     '.fm26-ref-pitch-line{position:absolute;left:50%;top:65%;width:136px;height:136px;border:2px solid #888;border-radius:50%;transform:translate(-50%,-50%)}',
     '.fm26-ref-position{position:absolute;transform:translate(-50%,-50%);background:#3a3b40;border:1px solid #777;font-size:16px;padding:2px 6px;color:#fff}',
     '.fm26-ref-small-panel-title{font-size:32px;font-weight:800;text-align:center}',
+    '.fm26-ref-pre .fm26-ref-form{gap:6px}.fm26-ref-pre .fm26-ref-formbox{width:27px;height:27px;font-size:18px}',
     '.fm26-ref-pre-quote{position:absolute;left:917px;top:619px;width:855px;height:188px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:28px;line-height:1.35;padding:0 15px;box-sizing:border-box}',
     '@media(max-width:820px){#app:not(.hid){grid-template-columns:208px 1792px!important;width:2000px!important;height:924px!important}#side{width:208px!important;display:block!important;padding:0!important}#main{width:1792px!important;min-width:1792px!important}#hd{display:block!important;height:91px!important;min-height:91px!important}#vw{padding:0!important;height:833px!important;max-height:833px!important}#hd small{display:block!important}}'
   ].join('\n');
@@ -182,6 +183,7 @@
         try { localStorage.removeItem('fm26_v2'); } catch (e) {}
         $('setup').classList.remove('hid');
         $('app').classList.add('hid');
+        document.body.classList.remove('fm26-ref-active');
         S = null;
       }
       renderShell();
@@ -242,7 +244,7 @@
     const next = currentMatch();
     const opp = opponent(next) || 'PROCHAIN MATCH';
     const short = opp.toUpperCase().replace(/[^A-ZÀ-Ÿ ]/g, '').trim().slice(0, 3) || 'MAT';
-    const dots = '<i id="fm26-dot0" class="fm26-ref-dot' + (!isPre ? ' active' : '') + '" style="left:927px"></i><i class="fm26-ref-dot' + (isPre ? ' active' : '') + '" style="left:962px"></i><i class="fm26-ref-dot" style="left:995px"></i>';
+    const dots = isInbox ? '' : '<i id="fm26-dot0" class="fm26-ref-dot' + (!isPre ? ' active' : '') + '" style="left:927px"></i><i class="fm26-ref-dot' + (isPre ? ' active' : '') + '" style="left:962px"></i><i class="fm26-ref-dot" style="left:995px"></i>';
     const infoLeft = isInbox ? 1164 : 1032;
     const info = '<button type="button" id="fm26-ref-info" class="fm26-ref-toolbar fm26-ref-info" style="left:' + infoLeft + 'px" aria-label="Informations">' + svgIcon.info + '</button>';
     const hamburger = isInbox ? '' : '<button type="button" id="fm26-ref-menu-btn" class="fm26-ref-toolbar fm26-ref-menu-button" aria-label="Ouvrir le menu">' + svgIcon.menu + '</button>';
@@ -275,7 +277,8 @@
   }
   function fitStage() {
     const app = $('app');
-    if (!app || app.classList.contains('hid')) return;
+    if (!app || app.classList.contains('hid')) { document.body.classList.remove('fm26-ref-active'); return; }
+    document.body.classList.add('fm26-ref-active');
     const scale = Math.min(window.innerWidth / 2000, window.innerHeight / 924);
     app.style.transform = 'translate(-50%,-50%) scale(' + Math.max(0.08, scale) + ')';
   }
