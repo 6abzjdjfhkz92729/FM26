@@ -349,6 +349,220 @@
     document.head.appendChild(style);
   }
 
+  /* FM26 MATCH CENTER + PLAYER INSIGHTS — connected to the live career data. */
+  const FM26_PLAYER_PORTRAITS = [
+    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=240&h=280&fit=crop&crop=faces',
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=240&h=280&fit=crop&crop=faces',
+    'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=240&h=280&fit=crop&crop=faces',
+    'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=240&h=280&fit=crop&crop=faces',
+    'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=240&h=280&fit=crop&crop=faces',
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=240&h=280&fit=crop&crop=faces',
+    'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=240&h=280&fit=crop&crop=faces',
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=240&h=280&fit=crop&crop=faces'
+  ];
+
+  function profilePortraitFor(player) {
+    const key = String(player && (player.id != null ? player.id : player.name) || 'FM26');
+    const seed = typeof hash === 'function' ? Math.abs(Number(hash(key)) || 0) : key.length * 17;
+    return FM26_PLAYER_PORTRAITS[seed % FM26_PLAYER_PORTRAITS.length];
+  }
+
+  function averageAttributes(player, keys) {
+    const vals = (keys || []).map(key => Number(player && player.a && player.a[key])).filter(Number.isFinite);
+    return vals.length ? vals.reduce((sum, value) => sum + value, 0) / vals.length : 10;
+  }
+
+  function playerAdvancedPanel(player) {
+    if (!player) return '';
+    const safeName = escPro(player.name || 'Joueur');
+    const currentXI = xiNow();
+    const currentIndex = currentXI.findIndex(p => p && Number(p.id) === Number(player.id));
+    const slotIndex = currentIndex >= 0 ? currentIndex : 0;
+    const slot = currentIndex >= 0
+      ? (formationNow()[currentIndex] || [50, 50, player.pos || 'MC'])
+      : [50, 50, player.pos || 'MC'];
+    const position = slot[2] || player.pos || 'MC';
+    const role = roleForSlot(slotIndex, position);
+    const fit = clampPro(Math.round(roleGrade(player, slot, slotIndex)), 30, 99);
+    const groups = typeof AT === 'object' && AT ? AT : {};
+    const categories = Object.entries(groups).map(([label, keys]) => {
+      const value = averageAttributes(player, keys);
+      return '<div class="fm26-player-metric"><div><span>' + escPro(label) + '</span><b>' + value.toFixed(1) + '/20</b></div><div class="fm26-player-bar"><i style="width:' + clampPro(value * 5, 0, 100) + '%"></i></div></div>';
+    }).join('');
+    const attrs = Object.entries(player.a || {})
+      .map(([key, value]) => ({key, value:Number(value)}))
+      .filter(item => Number.isFinite(item.value))
+      .sort((a,b) => b.value - a.value)
+      .slice(0, 5);
+    const topSkills = attrs.map(item =>
+      '<div class="fm26-player-skill"><span>' + escPro(item.key) + '</span><div class="fm26-player-bar"><i style="width:' + clampPro(item.value * 5, 0, 100) + '%"></i></div><b>' + item.value + '</b></div>'
+    ).join('') || '<p class="mu">Attributs indisponibles.</p>';
+    const rating = Number(player.lastRating);
+    const averageRating = Number(player.averageRating);
+    const ratingLabel = Number.isFinite(rating) ? rating.toFixed(1) : (Number.isFinite(averageRating) && averageRating > 0 ? averageRating.toFixed(1) : '—');
+    const condition = clampPro(player.cond, 0, 100);
+    const roleText = currentIndex >= 0 ? role : role + ' · rôle conseillé';
+    return '<section class="fm26-player-advanced">' +
+      '<div class="fm26-player-advanced-head"><div><span class="fm26-visual-kicker">RAPPORT DU STAFF</span><h3>Analyse individuelle</h3><p>' + safeName + ' · ' + escPro(player.pos || '—') + ' · données de la carrière</p></div><div class="fm26-player-fit"><b>' + fit + '<small>/100</small></b><span>Adéquation au rôle</span></div></div>' +
+      '<div class="fm26-player-insight-grid"><div class="fm26-player-insight-card"><span>NOTE DERNIER MATCH</span><b>' + ratingLabel + '</b><small>' + (Number.isFinite(averageRating) && averageRating > 0 ? 'Moyenne carrière ' + averageRating.toFixed(2) : 'La moyenne sera calculée après les matchs') + '</small></div>' +
+      '<div class="fm26-player-insight-card"><span>CONDITION</span><b>' + Math.round(condition) + '%</b><div class="fm26-player-bar"><i style="width:' + condition + '%"></i></div></div>' +
+      '<div class="fm26-player-insight-card"><span>BUTS · PASSES DÉCISIVES</span><b>' + (Number(player.g)||0) + ' · ' + (Number(player.ast)||Number(player.assists)||0) + '</b><small>' + (Number(player.ap)||0) + ' apparition(s)</small></div>' +
+      '<div class="fm26-player-insight-card"><span>RÔLE</span><b class="fm26-role-label">' + escPro(roleText) + '</b><small>' + (currentIndex >= 0 ? 'Dans le onze actuel' : 'Suggestion selon son poste') + '</small></div></div>' +
+      '<div class="fm26-player-analysis-columns"><div class="fm26-player-analysis-box"><h4>Équilibre des attributs</h4>' + categories + '</div><div class="fm26-player-analysis-box"><h4>Points forts techniques</h4>' + topSkills + '<p class="fm26-illustrative-note">Les portraits affichés sont illustratifs et ne représentent pas nécessairement le joueur réel.</p></div></div>' +
+      '</section>';
+  }
+
+  const fm26ExperienceStyle = [
+    '.fm26-player-profile-avatar{width:90px!important;height:90px!important;min-width:90px;flex:0 0 90px;overflow:hidden;border-radius:12px!important;background:#252d40;border:1px solid #ffffff22}',
+    '.fm26-player-profile-avatar img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 28%}',
+    '.fm26-player-advanced{margin-top:14px;padding:18px;border:1px solid #3a3c49;border-radius:8px;background:linear-gradient(145deg,#20212a,#151722 82%);color:#eef1fc}',
+    '.fm26-player-advanced-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:15px}',
+    '.fm26-visual-kicker{font-size:10px;letter-spacing:.16em;font-weight:800;color:#bca3ff}',
+    '.fm26-player-advanced-head h3{font-size:20px;margin:5px 0;color:#fff}',
+    '.fm26-player-advanced-head p{margin:0;color:#9ca6bf;font-size:12px}',
+    '.fm26-player-fit{min-width:90px;text-align:center;border:1px solid #665197;background:#302448;border-radius:10px;padding:9px}',
+    '.fm26-player-fit>b{display:block;font-size:24px;color:#d4b8ff}.fm26-player-fit small{font-size:11px;color:#bca3d9}.fm26-player-fit span{display:block;font-size:10px;color:#c6bddc}',
+    '.fm26-player-insight-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-bottom:12px}',
+    '.fm26-player-insight-card{padding:12px;background:#171923;border:1px solid #333644;border-radius:7px;min-width:0}',
+    '.fm26-player-insight-card>span{display:block;font-size:9px;letter-spacing:.08em;color:#9ea7be;font-weight:800}',
+    '.fm26-player-insight-card>b{display:block;font-size:23px;line-height:1.25;margin-top:5px;color:#f5f3ff;overflow-wrap:anywhere}',
+    '.fm26-player-insight-card>small{display:block;margin-top:5px;color:#939bb0;font-size:10px;line-height:1.35}',
+    '.fm26-player-insight-card .fm26-role-label{font-size:14px}',
+    '.fm26-player-analysis-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px}',
+    '.fm26-player-analysis-box{padding:14px;border:1px solid #303340;border-radius:7px;background:#171923}',
+    '.fm26-player-analysis-box h4{margin:0 0 13px;font-size:13px;color:#e8e7fa}',
+    '.fm26-player-metric{margin:10px 0}.fm26-player-metric>div:first-child{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#c3c8d8}.fm26-player-metric b{color:#fff}',
+    '.fm26-player-bar{height:5px;margin-top:6px;background:#343544;border-radius:8px;overflow:hidden}.fm26-player-bar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#7f68ea,#d24cba)}',
+    '.fm26-player-skill{display:grid;grid-template-columns:minmax(75px,1fr) minmax(60px,1.3fr) 22px;gap:8px;align-items:center;margin:9px 0;font-size:11px;color:#c8ccda}.fm26-player-skill .fm26-player-bar{margin:0}.fm26-player-skill>b{text-align:right;color:#fff}',
+    '.fm26-illustrative-note{font-size:9px;color:#858da3;line-height:1.4;margin:13px 0 0}',
+    '.fm26-live-match-center{margin:13px 0;padding:15px;border:1px solid #434354;border-radius:8px;background:linear-gradient(140deg,#20212b,#151721);color:#eef1fb}',
+    '.fm26-live-match-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}',
+    '.fm26-live-match-head h3{margin:0;font-size:14px;color:#fff;letter-spacing:.05em}.fm26-live-match-head p{margin:4px 0 0;color:#929db5;font-size:11px}',
+    '.fm26-live-state{border:1px solid #47445f;background:#2a2540;color:#d8c8ff;padding:5px 9px;border-radius:20px;font-size:10px;font-weight:800}',
+    '.fm26-live-stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}',
+    '.fm26-live-stat{background:#171923;border:1px solid #343542;padding:10px;border-radius:6px;min-width:0}',
+    '.fm26-live-stat span{font-size:9px;color:#929cb4;display:block;letter-spacing:.07em;font-weight:800}.fm26-live-stat b{font-size:19px;display:block;color:#fff;margin-top:5px}.fm26-live-stat small{font-size:10px;color:#9ca5ba}',
+    '.fm26-live-xi-title{font-size:11px;font-weight:800;letter-spacing:.07em;color:#cfc3ff;margin:6px 0 8px}',
+    '.fm26-live-xi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:7px}',
+    '.fm26-live-xi-player{display:grid;grid-template-columns:27px minmax(0,1fr) 32px;align-items:center;gap:7px;background:#171923;border:1px solid #343542;border-radius:5px;padding:7px;min-width:0}',
+    '.fm26-live-xi-player>i{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;font-size:10px;font-style:normal;background:#36334e;color:#decfff;border:1px solid #5a507d}',
+    '.fm26-live-xi-player>span{min-width:0;font-size:11px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fm26-live-xi-player small{display:block;color:#929cb4;font-size:9px;margin-top:2px}.fm26-live-xi-player>b{font-size:12px;text-align:center;color:#d8c0ff}',
+    '@media(max-width:850px){.fm26-player-insight-grid,.fm26-live-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fm26-player-analysis-columns{grid-template-columns:1fr}.fm26-live-xi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}',
+    '@media(max-width:480px){.fm26-player-advanced{padding:11px}.fm26-player-insight-card{padding:9px}.fm26-live-match-center{padding:10px}.fm26-live-xi-grid{grid-template-columns:1fr 1fr}.fm26-live-xi-player{grid-template-columns:24px minmax(0,1fr) 27px;padding:5px}.fm26-player-profile-avatar{width:64px!important;height:64px!important;min-width:64px;flex-basis:64px}}'
+  ].join('\n');
+  if (!document.getElementById('fm26-match-center-style')) {
+    const visualStyle = document.createElement('style');
+    visualStyle.id = 'fm26-match-center-style';
+    visualStyle.textContent = fm26ExperienceStyle;
+    document.head.appendChild(visualStyle);
+  }
+
+  if (V && typeof V.player === 'function' && !V.player.__fm26InsightsWrapped) {
+    const previousPlayerViewForInsights = V.player;
+    const playerViewWithInsights = function () {
+      const html = String(previousPlayerViewForInsights.apply(this, arguments));
+      const player = S && Array.isArray(S.sq) ? (S.sq.find(p => Number(p.id) === Number(S.pid)) || S.sq[0]) : null;
+      if (!player) return html;
+      const photo = '<div class="av fm26-player-profile-avatar" title="Portrait illustratif"><img src="' + escPro(profilePortraitFor(player)) + '" alt="Portrait illustratif de ' + escPro(player.name) + '" loading="lazy"></div>';
+      return html.replace('<div class="av"></div>', photo) + playerAdvancedPanel(player);
+    };
+    playerViewWithInsights.__fm26InsightsWrapped = true;
+    V.player = playerViewWithInsights;
+  }
+
+  function playerByMatchSide(team, index) {
+    if (team === (S && S.club)) {
+      const own = xiNow();
+      return own[index] || null;
+    }
+    const opponent = typeof oppXI === 'function' ? oppXI(team) : [];
+    return opponent[index] || null;
+  }
+
+  function liveMatchCenterPanel(fixture) {
+    const own = xiNow();
+    const form = formationNow();
+    const averageRoleFit = own.length
+      ? own.reduce((sum, player, index) => sum + roleGrade(player, form[index] || [50,50,player.pos], index), 0) / own.length
+      : 0;
+    const averageCondition = own.length
+      ? own.reduce((sum, player) => sum + clampPro(player && player.cond,0,100), 0) / own.length
+      : 0;
+    const rows = own.map((player, index) => {
+      const pos = (form[index] && form[index][2]) || player.pos || '—';
+      const role = roleForSlot(index, pos);
+      const name = escPro(player.name || 'Joueur');
+      const shortName = (player.name || 'Joueur').split(/\s+/).slice(-1)[0];
+      return '<div class="fm26-live-xi-player" title="' + name + ' · ' + escPro(pos) + ' · ' + escPro(role) + '">' +
+        '<i>' + escPro(player.no != null ? player.no : index + 1) + '</i><span>' + escPro(shortName) +
+        '<small>' + escPro(pos) + ' · ' + escPro(role) + '</small></span><b>' + (Number(player.form)||0).toFixed(1) + '</b></div>';
+    }).join('');
+    const isDone = !!(M && M.done);
+    const homePossession = clampPro(M && M.ps,30,70);
+    const awayPossession = 100 - homePossession;
+    return '<section class="fm26-live-match-center" id="fm26-live-match-center">' +
+      '<div class="fm26-live-match-head"><div><h3>ANALYSE TACTIQUE · ' + escPro(S && S.club || 'Mon club') + '</h3><p>' + escPro(S && S.tc && S.tc.f || '4-3-3') + ' · ' + escPro(S && S.tc && S.tc.m || 'Balanced') + ' · ' + escPro(S && S.tc && S.tc.s || 'Control Possession') + '</p></div><span class="fm26-live-state" id="fm26-live-state">' + (isDone ? 'MATCH TERMINÉ' : 'EN DIRECT') + '</span></div>' +
+      '<div class="fm26-live-stat-grid"><div class="fm26-live-stat"><span>POSSESSION · DOMICILE / EXTÉRIEUR</span><b id="fm26-live-possession">' + Math.round(homePossession) + '% – ' + Math.round(awayPossession) + '%</b><small>mise à jour en direct</small></div>' +
+      '<div class="fm26-live-stat"><span>TIRS</span><b id="fm26-live-shots">' + ((M && M.sh && M.sh[0])||0) + ' – ' + ((M && M.sh && M.sh[1])||0) + '</b><small>domicile – extérieur</small></div>' +
+      '<div class="fm26-live-stat"><span>QUALITÉ DES RÔLES</span><b>' + Math.round(averageRoleFit) + '/100</b><small>onze de ' + escPro(S && S.club || 'mon club') + '</small></div>' +
+      '<div class="fm26-live-stat"><span>CONDITION MOYENNE</span><b id="fm26-live-condition">' + Math.round(averageCondition) + '%</b><small>joueurs du onze</small></div></div>' +
+      '<div class="fm26-live-xi-title">TON ONZE · FORME, POSTE ET RÔLE</div><div class="fm26-live-xi-grid">' + rows + '</div></section>';
+  }
+
+  if (V && typeof V.match === 'function' && !V.match.__fm26MatchCenterWrapped) {
+    const previousMatchViewForCenter = V.match;
+    const matchViewWithCenter = function () {
+      let html = String(previousMatchViewForCenter.apply(this, arguments));
+      const fixture = M && M.f;
+      if (!fixture) return html;
+      const center = liveMatchCenterPanel(fixture);
+      html = html.replace('<div class="match-lower">', center + '<div class="match-lower">');
+      const homeXI = fixture.home === (S && S.club) ? xiNow() : (typeof oppXI === 'function' ? oppXI(fixture.home) : []);
+      const awayXI = fixture.away === (S && S.club) ? xiNow() : (typeof oppXI === 'function' ? oppXI(fixture.away) : []);
+      html = html.replace(/<i class="dt (hm|aw)" data-x="([^"]+)" data-y="([^"]+)" title="([^"]+)">(\d+)<\/i>/g,
+        function (token, side, x, y, oldTitle, oldNo) {
+          const isHome = side === 'hm';
+          const team = isHome ? fixture.home : fixture.away;
+          const squad = isHome ? homeXI : awayXI;
+          const player = squad[Number(oldNo)-1] || null;
+          const pos = player && player.pos || '';
+          const role = team === (S && S.club) && player ? roleForSlot(Number(oldNo)-1, (formationNow()[Number(oldNo)-1] || [0,0,pos])[2] || pos) : '';
+          const title = team + ' · ' + (player && player.name || 'Joueur ' + oldNo) + (pos ? ' · ' + pos : '') + (role ? ' · ' + role : '');
+          const shirt = player && player.no != null ? player.no : oldNo;
+          return '<i class="dt ' + side + '" data-x="' + x + '" data-y="' + y + '" title="' + escPro(title) + '">' + escPro(shirt) + '</i>';
+        });
+      return html;
+    };
+    matchViewWithCenter.__fm26MatchCenterWrapped = true;
+    V.match = matchViewWithCenter;
+  }
+
+  function updateLiveMatchCenter() {
+    const root = document.getElementById('fm26-live-match-center');
+    if (!root || !M || !M.f) return;
+    const homePossession = clampPro(M.ps,30,70);
+    const possession = root.querySelector('#fm26-live-possession');
+    if (possession) possession.textContent = Math.round(homePossession) + '% – ' + Math.round(100-homePossession) + '%';
+    const shots = root.querySelector('#fm26-live-shots');
+    if (shots) shots.textContent = ((M.sh && M.sh[0])||0) + ' – ' + ((M.sh && M.sh[1])||0);
+    const condition = root.querySelector('#fm26-live-condition');
+    const own = xiNow();
+    if (condition && own.length) condition.textContent = Math.round(own.reduce((sum,p)=>sum+clampPro(p && p.cond,0,100),0)/own.length) + '%';
+    const state = root.querySelector('#fm26-live-state');
+    if (state) state.textContent = M.done ? 'MATCH TERMINÉ' : (M.p ? 'PAUSE' : 'EN DIRECT');
+  }
+
+  if (typeof draw === 'function' && !draw.__fm26LiveCenterWrapped) {
+    const previousDrawForCenter = draw;
+    const drawWithLiveCenter = function () {
+      const result = previousDrawForCenter.apply(this, arguments);
+      updateLiveMatchCenter();
+      return result;
+    };
+    drawWithLiveCenter.__fm26LiveCenterWrapped = true;
+    draw = drawWithLiveCenter;
+  }
+
   V.training = renderTraining;
 
   function injectRolePanel() {
