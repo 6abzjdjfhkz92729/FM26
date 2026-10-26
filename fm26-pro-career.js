@@ -438,6 +438,105 @@
     });
   }
 
+  /* FM26 MANAGER PORTRAIT PICKER — generic portraits, stored in the active career. */
+  const FM26_MANAGER_PORTRAITS = [
+    {label:'Portrait 01', url:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=360&h=420&fit=crop&crop=faces'},
+    {label:'Portrait 02', url:'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=360&h=420&fit=crop&crop=faces'},
+    {label:'Portrait 03', url:'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=360&h=420&fit=crop&crop=faces'},
+    {label:'Portrait 04', url:'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=360&h=420&fit=crop&crop=faces'},
+    {label:'Portrait 05', url:'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=360&h=420&fit=crop&crop=faces'},
+    {label:'Portrait 06', url:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=360&h=420&fit=crop&crop=faces'}
+  ];
+  let selectedManagerPortrait = 0;
+
+  function managerPortraitIndex() {
+    const stored = S && S.mgrPortraitIndex != null ? Number(S.mgrPortraitIndex) : selectedManagerPortrait;
+    return intPro(Number.isFinite(stored) ? stored : 0, 0, FM26_MANAGER_PORTRAITS.length - 1);
+  }
+
+  function managerPortraitUrl() {
+    return FM26_MANAGER_PORTRAITS[managerPortraitIndex()].url;
+  }
+
+  function installManagerPortraitPicker() {
+    const setupRoot = $('setup');
+    const brand = setupRoot && setupRoot.querySelector('.setup-brand');
+    if (!brand || document.getElementById('fm26-manager-portrait-picker')) return;
+
+    if (S && S.mgrPortraitIndex != null) selectedManagerPortrait = managerPortraitIndex();
+
+    const css = [
+      '#fm26-manager-portrait-picker{margin:0 0 20px;padding:14px 16px;border:1px solid #343b50;border-radius:13px;background:linear-gradient(145deg,#171d2d,#111725)}',
+      '#fm26-manager-portrait-picker .fm26-portrait-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}',
+      '#fm26-manager-portrait-picker .fm26-portrait-heading strong{font-size:13px;color:#f3f2ff}',
+      '#fm26-manager-portrait-picker .fm26-portrait-heading span{font-size:11px;color:#a7afc8}',
+      '#fm26-manager-portrait-picker .fm26-coach-portraits{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}',
+      '#fm26-manager-portrait-picker .fm26-coach-choice{min-width:0;padding:5px;background:#0d1220;border:2px solid #30384c;border-radius:10px;color:#dbe3f8;text-align:center;transition:border-color .16s,transform .16s,background .16s}',
+      '#fm26-manager-portrait-picker .fm26-coach-choice img{display:block;width:100%;height:92px;object-fit:cover;object-position:center 28%;border-radius:6px;background:#242b3e}',
+      '#fm26-manager-portrait-picker .fm26-coach-choice small{display:block;padding:6px 0 2px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+      '#fm26-manager-portrait-picker .fm26-coach-choice.selected{border-color:#a993ff;background:#30234c;box-shadow:0 0 0 1px #a993ff35}',
+      '#fm26-manager-portrait-picker .fm26-coach-choice:hover{transform:translateY(-2px);border-color:#8f7adb}',
+      '.fm26-manager-avatar{overflow:hidden;background:#20283b}',
+      '.fm26-manager-avatar img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 28%}',
+      '@media(max-width:720px){#fm26-manager-portrait-picker .fm26-coach-portraits{grid-template-columns:repeat(3,minmax(0,1fr))}#fm26-manager-portrait-picker .fm26-coach-choice img{height:106px}}'
+    ].join('\n');
+    if (!document.getElementById('fm26-manager-portrait-style')) {
+      const style = document.createElement('style');
+      style.id = 'fm26-manager-portrait-style';
+      style.textContent = css;
+      document.head.appendChild(style);
+    }
+
+    const section = document.createElement('section');
+    section.id = 'fm26-manager-portrait-picker';
+    section.setAttribute('aria-label', 'Choix du portrait de manager');
+    section.innerHTML =
+      '<div class="fm26-portrait-heading"><strong>PORTRAIT DU MANAGER</strong><span>Choisis ton apparence avant de lancer la carrière</span></div>' +
+      '<div class="fm26-coach-portraits">' +
+      FM26_MANAGER_PORTRAITS.map((p, i) =>
+        '<button type="button" class="fm26-coach-choice' + (i === selectedManagerPortrait ? ' selected' : '') +
+        '" data-fm26-coach-portrait="' + i + '" aria-pressed="' + (i === selectedManagerPortrait ? 'true' : 'false') + '">' +
+        '<img src="' + escPro(p.url) + '" alt="' + escPro(p.label) + '" loading="lazy">' +
+        '<small>' + escPro(p.label) + '</small></button>'
+      ).join('') +
+      '</div>';
+    brand.insertAdjacentElement('afterend', section);
+
+    section.addEventListener('click', function (event) {
+      const button = event.target && event.target.closest('[data-fm26-coach-portrait]');
+      if (!button) return;
+      selectedManagerPortrait = intPro(button.dataset.fm26CoachPortrait, 0, FM26_MANAGER_PORTRAITS.length - 1);
+      section.querySelectorAll('[data-fm26-coach-portrait]').forEach(el => {
+        const active = Number(el.dataset.fm26CoachPortrait) === selectedManagerPortrait;
+        el.classList.toggle('selected', active);
+        el.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+    });
+  }
+
+  /* Save the selected portrait to the same career object as the existing game. */
+  const previousStartCareerForPortrait = startCareer;
+  startCareer = function () {
+    previousStartCareerForPortrait.apply(this, arguments);
+    if (S) {
+      S.mgrPortraitIndex = selectedManagerPortrait;
+      if (typeof sv === 'function') sv();
+    }
+  };
+
+  /* Reuse the existing manager screen and replace only its decorative avatar. */
+  if (V && typeof V.mgr === 'function' && !V.mgr.__fm26PortraitWrapped) {
+    const previousManagerViewForPortrait = V.mgr;
+    const managerViewWithPortrait = function () {
+      const html = previousManagerViewForPortrait.apply(this, arguments);
+      const portrait = '<div class="av fm26-manager-avatar" style="width:100%;height:150px;border-radius:0"><img src="' +
+        escPro(managerPortraitUrl()) + '" alt="Portrait du manager"></div>';
+      return String(html).replace('<div class="av" style="width:100%;height:150px;border-radius:0"></div>', portrait);
+    };
+    managerViewWithPortrait.__fm26PortraitWrapped = true;
+    V.mgr = managerViewWithPortrait;
+  }
+
   const previousStartMatch = startMatch;
   startMatch = function () {
     ensureState();
