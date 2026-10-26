@@ -32,7 +32,7 @@ function blockEnd(source, openAt) {
 }
 
 const scriptFiles = [...html.matchAll(/<script\b[^>]*\bsrc=["']\.\/([^"']+)["'][^>]*>\s*<\/script>/gi)].map(m => m[1]);
-const requiredScripts = ['fm26-europe.js','fm26-phase1.js','fm26-engine.js','fm26-advanced.js','fm26-world.js','fm26-experience.js','fm26-international.js','fm26-phase2-3.js','fm26-reference-ui.js','fm26-tactics-dnd.js','fm26-pro-career.js'];
+const requiredScripts = ['fm26-europe.js','fm26-phase1.js','fm26-engine.js','fm26-advanced.js','fm26-world.js','fm26-experience.js','fm26-international.js','fm26-phase2-3.js','fm26-reference-ui.js','fm26-tactics-dnd.js','fm26-pro-career.js','fm26-stability.js'];
 for (const file of requiredScripts) assert.ok(scriptFiles.includes(file), 'index.html must load ' + file);
 for (const file of scriptFiles) assert.ok(existsSync(resolve(root, file)), 'missing script: ' + file);
 assert.deepEqual(scriptFiles.filter(x => requiredScripts.includes(x)), requiredScripts, 'modules are in the wrong dependency order');
@@ -59,7 +59,7 @@ const allSource = [html, ...scriptFiles.map(file => readFileSync(resolve(root, f
 const requiredViews = ['home','inbox','squad','player','tactics','sched','comp','fin','mgr','train','xfer','save','data','academy','staff','contracts','scouting','club','press','history','settings','offers','talk','lineup','profile','international'];
 for (const view of requiredViews) assert.ok(new RegExp('\\bV\\.' + view + '\\s*=').test(allSource), 'missing view renderer: ' + view);
 for (const token of ['function mkFx()', 'const upd=', 'const tbl=', 'function startMatch(', 'function tick(', 'function endMatch(']) assert.ok(html.includes(token), 'missing core function ' + token);
-for (const api of ['window.FMX','window.FM26A','window.FM26UX','window.FM26I','window.XF','window.XE','window.XF3']) assert.ok(allSource.includes(api), 'missing module API ' + api);
+for (const api of ['window.FMX','window.FM26A','window.FM26UX','window.FM26I','window.FM26Stability','window.XF','window.XE','window.XF3']) assert.ok(allSource.includes(api), 'missing module API ' + api);
 
 const lgAt = html.indexOf('const LG=');
 assert.ok(lgAt >= 0, 'league data is missing');
