@@ -46,10 +46,10 @@ for name, source in scripts_to_check:
     if result.returncode:
         errors.append(f"JavaScript syntax error in {name}:\n{result.stderr.strip()}")
 
-required = ["fm26-phase1.js", "fm26-engine.js", "fm26-advanced.js", "fm26-world.js", "fm26-experience.js", "fm26-international.js"]
+required = ["fm26-europe.js", "fm26-phase1.js", "fm26-engine.js", "fm26-advanced.js", "fm26-world.js", "fm26-experience.js", "fm26-international.js", "fm26-phase2-3.js", "fm26-reference-ui.js", "fm26-tactics-dnd.js", "fm26-pro-career.js", "fm26-stability.js"]
 positions = [html.find(f'src="./{name}"') for name in required]
 if not all(pos >= 0 for pos in positions):
-    errors.append("index.html must load all FM26 modules in order: phase1, engine, advanced, world, experience and international.")
+    errors.append("index.html must load all FM26 modules in order: europe, phase1, engine, advanced, world, experience, international, phase2-3, reference-ui, tactics-dnd, pro-career and stability.")
 elif positions != sorted(positions):
     errors.append("FM26 modules are not loaded in the expected order.")
 
