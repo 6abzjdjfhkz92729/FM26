@@ -737,6 +737,7 @@
     if (S && S.view === 'training') wireTraining();
   };
 
+  installManagerPortraitPicker();
   ensureState();
   injectTrainingRail();
   if (S && S.view === 'training') wireTraining();
