@@ -397,8 +397,8 @@
     const topSkills = attrs.map(item =>
       '<div class="fm26-player-skill"><span>' + escPro(item.key) + '</span><div class="fm26-player-bar"><i style="width:' + clampPro(item.value * 5, 0, 100) + '%"></i></div><b>' + item.value + '</b></div>'
     ).join('') || '<p class="mu">Attributs indisponibles.</p>';
-    const rating = Number(player.lastRating);
-    const averageRating = Number(player.averageRating);
+    const rating = player.lastRating == null || player.lastRating === '' ? NaN : Number(player.lastRating);
+    const averageRating = player.averageRating == null || player.averageRating === '' ? NaN : Number(player.averageRating);
     const ratingLabel = Number.isFinite(rating) ? rating.toFixed(1) : (Number.isFinite(averageRating) && averageRating > 0 ? averageRating.toFixed(1) : '—');
     const condition = clampPro(player.cond, 0, 100);
     const roleText = currentIndex >= 0 ? role : role + ' · rôle conseillé';
