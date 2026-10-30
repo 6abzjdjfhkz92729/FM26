@@ -37,13 +37,13 @@ const item=e.target.closest('[data-pack-view][data-pack-label]');
 if(!item)return;
 const label=item.dataset.packLabel;
 const section=window.FM26ScreenPack&&window.FM26ScreenPack.section;
-const map={'Options de l’entraîneur':'options','Confiance':'confidence','Profil entraîneur':'profile','Historiq. entraîneur':'history','Vitrine des trophées':'trophies','Vacances':'holiday','Requête dirig.':'requests','État de la partie':'state','Emplois':'jobs','Emplois et offres reçues':'jobs','Recherche de staff':'staff','Résultats du recrutement':'recommended','Joueurs recommandés':'recommended','Missions de recrutement':'scouting','Contrats des joueurs':'contracts','Sélection':'recommended','Agence d’obs.':'scouting','Transferts':'transfers'};
+const map={'Options de l’entraîneur':'options','Paramètres':'options','Confiance':'confidence','Profil entraîneur':'profile','Historiq. entraîneur':'history','Vitrine des trophées':'trophies','Vacances':'holiday','Prendre sa retraite':'retire','Requête dirig.':'requests','État de la partie':'state','Emplois':'jobs','Emplois et offres reçues':'jobs','Recherche de staff':'staff','Résultats du recrutement':'recommended','Joueurs recommandés':'recommended','Missions de recrutement':'scouting','Contrats des joueurs':'contracts','Sélection':'recommended','Agence d’obs.':'scouting','Transferts':'transfers'};
 if(section==='world'){
 if(label==='Continental'||label==='International'){e.preventDefault();e.stopImmediatePropagation();S.fm26Country=label==='Continental'?'Continental':'Intercontinental';S.fm26World=true;S.view='comp';render();return;}
 const countries={'France':'France','Angleterre':'Angleterre','Espagne':'Espagne','Italie':'Italie','Allemagne':'Allemagne'};
 if(countries[label]){e.preventDefault();e.stopImmediatePropagation();S.fm26Country=label;S.fm26World=true;S.view='comp';render();return;}
 }
-if(map[label]){e.preventDefault();e.stopImmediatePropagation();if(map[label]==='transfers'){S.fm26Transfers=true;S.view='fin';}else{S.fm26Panel=map[label];S.view='mgr';}save();render();}
+if(map[label]){e.preventDefault();e.stopImmediatePropagation();if(map[label]==='retire'){if(window.FM26CareerActions&&typeof FM26CareerActions.retire==='function')FM26CareerActions.retire();else{S.fm26Panel='options';S.view='mgr';render();}return;}if(map[label]==='transfers'){S.fm26Transfers=true;S.view='fin';}else{S.fm26Panel=map[label];S.view='mgr';}save();render();}
 },true);
 document.addEventListener('click',function(e){
 let tab=e.target.closest('[data-fix-tab]');if(tab){e.preventDefault();e.stopImmediatePropagation();init();S.fm26Panel=tab.dataset.fixTab;S.view='mgr';save();render();return;}
