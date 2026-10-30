@@ -222,7 +222,8 @@
     const scorer = top('g');
     const assists = players.slice().sort((a,b) => (Number(b.ast || b.assists) || 0) - (Number(a.ast || a.assists) || 0))[0];
     const rating = top('form');
-    const cards = players.slice().sort((a,b) => (Number(b.yellow || b.yc || b.cards) || 0) - (Number(a.yellow || a.yc || a.cards) || 0))[0];
+    const hasCardStats = players.some(p => p.yellow != null || p.yc != null || p.cards != null);
+    const cards = hasCardStats ? players.slice().sort((a,b) => (Number(b.yellow || b.yc || b.cards) || 0) - (Number(a.yellow || a.yc || a.cards) || 0))[0] : null;
     const table = typeof tbl === 'function' ? tbl() : [];
     const mine = table.find(x => x.c === S.club) || {pts:0,gd:0};
     const rank = Math.max(1, table.findIndex(x => x.c === S.club) + 1);
