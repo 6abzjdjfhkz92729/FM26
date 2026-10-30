@@ -496,7 +496,7 @@
     if (isInbox) {
       $('fm26-ref-menu')?.classList.remove('show');
       renderRail('inbox');
-      $('vw').innerHTML = messageMarkup();
+      $('vw').innerHTML = (typeof V !== 'undefined' && typeof V.inbox === 'function') ? V.inbox() : messageMarkup();
       wireInbox();
       return;
     }
