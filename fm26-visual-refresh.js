@@ -87,6 +87,34 @@
     #go:active{transform:translateY(0) scale(.985)!important}
 
     #vw{background:linear-gradient(145deg,#0c1829,#0a1423)!important}
+    body.fm26-screenpack-active #side{
+      background:linear-gradient(180deg,#142743 0%,#0e1b30 48%,#0a1423 100%)!important;
+      border-right:1px solid #304360!important;
+    }
+    body.fm26-screenpack-active #hd{
+      background:linear-gradient(100deg,#182c49 0%,#14223a 48%,#101b30 100%)!important;
+      border-bottom:1px solid #354b6a!important;
+    }
+    body.fm26-screenpack-active #main{
+      background:linear-gradient(145deg,#0c1829,#0a1423)!important;
+    }
+    body.fm26-screenpack-active #vw{
+      background:radial-gradient(ellipse at 82% 3%,#5146a91b,transparent 38%),linear-gradient(145deg,#0e1b2e,#0a1423)!important;
+    }
+    body.fm26-screenpack-active #fm26-manager-sidebar{
+      background:linear-gradient(180deg,#172943,#101e33)!important;
+      border-right:1px solid #405777!important;
+      box-shadow:5px 0 24px #02091435!important;
+    }
+    body.fm26-screenpack-active .fm26-manager-link{
+      border-top:1px solid #ffffff0d!important;color:#d8e1f1!important;
+      transition:background .16s,color .16s,border-color .16s!important;
+    }
+    body.fm26-screenpack-active .fm26-manager-link:hover{background:#ffffff0d!important;color:#fff!important}
+    body.fm26-screenpack-active .fm26-manager-link.selected{
+      background:linear-gradient(90deg,#765de63d,#35bdc915)!important;
+      box-shadow:inset 3px 0 #9684ff!important;color:#fff!important;
+    }
     .pn,.portal-panel,.mcard,.fixture-card,.fm26-pack-fixture,.fm26-inbox-panel,
     .fm26-career-card,.fm26-jobs-grid>.pn{
       background:linear-gradient(145deg,#192a42f5,#122037f7)!important;
