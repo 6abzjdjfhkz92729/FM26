@@ -151,7 +151,7 @@
     coach:{title:'ENTRAÎNEUR',items:[['Options de l’entraîneur','mgr','⚙'],['Confiance','mgr','♟'],['Profil entraîneur','mgr','●'],['Historiq. entraîneur','sched','↶'],['Vitrine des trophées','comp','🏆'],['Vacances','sched','♧'],['Requête dirig.','inbox','?'],['État de la partie','mgr','▣']]},
     club:{title:'CLUB',items:[['Équipe première','squad','♟'],['Équipe réserve','squad','♟'],['Tactique','tactics','◈'],['Rapport équipe','mgr','▤'],['Centre de dév.','squad','↗'],['Centre médical','squad','✚'],['Calendrier','sched','▦'],['Finances','fin','€']]},
     world:{title:'COMPÉTITIONS',items:[['Division du club','comp','▤'],['Continental','comp','◉'],['International','comp','◎'],['France','comp','🇫🇷'],['Angleterre','comp','🇬🇧'],['Espagne','comp','🇪🇸'],['Italie','comp','🇮🇹'],['Allemagne','comp','🇩🇪'],['Stand. de la ligue','comp','▣']]},
-    search:{title:'RECRUTEMENT',items:[['Résultats recrut.','squad','♟'],['Rech. de joueur','squad','◉'],['Sélection','squad','▤'],['Recherche de staff','mgr','♙'],['Emplois','jobs','▤'],['Transferts','fin','⟳'],['Trouver Club','comp','⌕'],['Agence d’obs.','squad','♧']]},
+    search:{title:'RECRUTEMENT',items:[['Résultats du recrutement','mgr','♟'],['Recherche de joueur','squad','◉'],['Sélection','squad','▤'],['Recherche de staff','mgr','♙'],['Missions de recrutement','mgr','⌕'],['Joueurs recommandés','mgr','★'],['Contrats des joueurs','mgr','▤'],['Emplois et offres reçues','mgr','▣'],['Transferts','fin','⟳']]},
     opt:{title:'OPTIONS',items:[['Sauvegarder partie','save','▣'],['Paramètres','mgr','⚙'],['Panthéon du foot','comp','★'],['Nouvelle carrière','reset','↻']]}
   };
 
