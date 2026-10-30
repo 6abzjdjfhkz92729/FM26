@@ -125,6 +125,9 @@
     ".fm26-lineup-bottom{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:min(75.5vw,139.0625vh);min-height:44px;padding:5px 10px;background:#05070bdc;border:1px solid #ffffff25;border-radius:5px;z-index:8}",,
     "@media(max-width:1050px){.fm26-lineup-stage{width:94vw;height:62vh;min-height:385px;grid-template-columns:68% 32%}.fm26-lineup-bench{padding-left:23%;padding-right:4%;border-radius:42px 20px 20px 42px}.fm26-lineup-bench-row{font-size:clamp(11px,1.6vw,16px);min-height:clamp(25px,3.5vh,34px)}}",,
     "@media(max-width:650px){.fm26-lineup-page{height:auto;min-height:100%;overflow:auto;padding-bottom:10px}.fm26-lineup-top{position:relative;height:48px;padding:5px 8px}.fm26-lineup-top .club{font-size:11px}.fm26-lineup-top .cr{width:23px!important;height:23px!important}.fm26-lineup-stage{position:relative;left:auto;top:auto;transform:none;margin:12px auto 20px;width:96vw;height:auto;min-height:0;display:flex;flex-direction:column;border-radius:18px;overflow:visible}.fm26-lineup-field{height:390px;min-height:390px;flex:none;border-radius:18px 18px 0 0}.fm26-lineup-bench{min-height:275px;border-radius:0 0 18px 18px;padding:35px 10% 20px 20%}.fm26-lineup-bench h2{font-size:21px}.fm26-lineup-bench-row{min-height:25px;font-size:14px}.fm26-lineup-bottom{position:relative;left:auto;bottom:auto;transform:none;margin:0 auto 10px;width:96vw;flex-wrap:wrap}}"
+,
+    ".fm26-lineup-club-crest{position:absolute;z-index:6;left:70.5%;top:50%;transform:translate(-50%,-50%);width:clamp(78px,8.3vw,172px);height:clamp(78px,8.3vw,172px);display:grid;place-items:center;pointer-events:none;filter:drop-shadow(0 2px 2px #102b4a60)}.fm26-lineup-club-crest .cr{width:100%!important;height:100%!important}",
+    "@media(max-width:650px){.fm26-lineup-club-crest{left:50%;top:390px;width:67px;height:67px}}",
   ].join('\n');
   const style = document.createElement('style');
   style.id = 'fm26-screen-pack-style';
@@ -336,7 +339,7 @@
       '<div style="text-align:center"><b>COMPOSITION D’ÉQUIPE</b><small style="display:block;color:#c4d0dc">' + esc(f.comp || S.lg) + ' · ' + esc(dateOf(f.date)) + '</small></div>' +
       '<div class="club away"><span>' + esc(f.away) + '</span>' + (typeof crest === 'function' ? crest(f.away,44) : '') + '</div></header>' +
       '<section class="fm26-lineup-stage"><div class="fm26-lineup-stadium"></div><div class="fm26-lineup-field"><div class="fm26-lineup-circle"></div><div class="fm26-lineup-box top"></div><div class="fm26-lineup-box bottom"></div>' + pitchPlayers + '</div>' +
-      '<aside class="fm26-lineup-bench"><h2>REMPLAÇANTS</h2>' + (benchRows || '<p>Aucun remplaçant disponible.</p>') + '</aside></section>' +
+      '<div class="fm26-lineup-club-crest">' + (typeof crest === 'function' ? crest(S.club,150) : '') + '</div><aside class="fm26-lineup-bench"><h2>REMPLAÇANTS</h2>' + (benchRows || '<p>Aucun remplaçant disponible.</p>') + '</aside></section>' +
       '<footer class="fm26-lineup-bottom"><div><label for="fm26-pack-formation">Formation</label> <select id="fm26-pack-formation">' + Object.keys(FM).map(k => '<option value="' + esc(k) + '" ' + (S.tc.f === k ? 'selected' : '') + '>' + esc(k) + '</option>').join('') + '</select>' +
       '<span style="margin-left:10px;color:#c6d0db;font-size:12px">' + esc(preSelectedSlot == null ? 'Sélectionne un titulaire puis un remplaçant.' : 'Titulaire sélectionné : ' + (lineup[preSelectedSlot] ? lineup[preSelectedSlot].name : '')) + '</span></div>' +
       '<div class="actions"><button class="fm26-pack-button secondary" type="button" data-pack-lineup="clear">Réinitialiser</button><button class="fm26-pack-button" type="button" data-pack-lineup="start">ALLER AU MATCH →</button></div></footer></main>';
