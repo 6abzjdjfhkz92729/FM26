@@ -377,7 +377,7 @@
 
   function renderPage() {
     if (S.view === 'home') return dashboardMarkup();
-    if (S.view === 'mgr') return managerMarkup();
+    if (S.view === 'mgr') return (typeof V !== 'undefined' && typeof V.mgr === 'function') ? V.mgr() : managerMarkup();
     if (S.view === 'comp') return competitionMarkup();
     if (S.view === 'squad') return squadMarkup();
     if (S.view === 'fin') return financeMarkup();
