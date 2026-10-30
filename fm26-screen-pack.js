@@ -6,6 +6,11 @@
   const $ = id => document.getElementById(id);
   const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const fmt = n => Number(n || 0).toLocaleString('fr-FR');
+  const portraitSrc = (p, index) => {
+    if (p && p.photoUrl) return p.photoUrl;
+    if (window.FM26UX && typeof window.FM26UX.portraitSvg === 'function') return window.FM26UX.portraitSvg(p ? Number(p.id) || 0 : (Number(index) || 0));
+    return '';
+  };
   const dateOf = v => {
     const d = new Date(String(v || S.date || '2026-08-01').slice(0,10) + 'T12:00:00');
     return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'});
@@ -73,7 +78,7 @@
     ".fm26-lineup-field:before{content:'';position:absolute;inset:2.5%;border:2px solid #eef5edb8}.fm26-lineup-field:after{content:'';position:absolute;left:2.5%;right:2.5%;top:50%;border-top:2px solid #eef5edb8}.fm26-lineup-circle{position:absolute;left:50%;top:50%;width:22%;aspect-ratio:1;transform:translate(-50%,-50%);border:2px solid #eef5edb8;border-radius:50%}",
     ".fm26-lineup-box{position:absolute;left:34%;width:32%;height:18%;border:2px solid #eef5edb8}.fm26-lineup-box.top{top:0;border-top:0}.fm26-lineup-box.bottom{bottom:0;border-bottom:0}",
     ".fm26-lineup-player{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);z-index:2;display:grid;justify-items:center;gap:2px;padding:0;border:0;background:transparent;color:white;cursor:pointer;min-width:0}",
-    ".fm26-lineup-player .photo{width:clamp(33px,4.1vw,62px);height:clamp(33px,4.1vw,62px);border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#e3edf4,#47759b 48%,#162d46);border:2px solid #dbe9f0;box-shadow:0 3px 8px #0008;font-weight:900;font-size:clamp(10px,1.1vw,16px);color:#11263a}",
+    ".fm26-lineup-player .photo{width:clamp(33px,4.1vw,62px);height:clamp(33px,4.1vw,62px);border-radius:50%;display:grid;place-items:center;overflow:hidden;background:linear-gradient(135deg,#e3edf4,#47759b 48%,#162d46);border:2px solid #dbe9f0;box-shadow:0 3px 8px #0008;font-weight:900;font-size:clamp(10px,1.1vw,16px);color:#11263a}.fm26-lineup-player .photo img{width:100%;height:100%;object-fit:cover;border-radius:50%}",
     ".fm26-lineup-player.selected .photo{outline:3px solid #c581ff;outline-offset:2px}.fm26-lineup-player b{max-width:clamp(48px,6vw,94px);padding:2px 4px;background:#09101acc;border-radius:3px;font-size:clamp(8px,.82vw,12px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fm26-lineup-player small{font-size:clamp(8px,.7vw,11px);text-shadow:0 1px 4px #000}",
     ".fm26-lineup-bench{position:relative;z-index:2;background:linear-gradient(145deg,#76b1dd,#3d72a2);padding:clamp(13px,2vw,24px);overflow:auto;border-left:1px solid #d2e4f3}.fm26-lineup-bench h2{margin:0 0 12px;text-align:center;font-size:clamp(18px,1.55vw,27px)}",
     ".fm26-lineup-bench-row{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 7px;background:transparent;border:0;border-top:1px solid #ffffff35;color:#fff;text-align:left;cursor:pointer}.fm26-lineup-bench-row:nth-child(even){background:#ffffff18}.fm26-lineup-bench-row.selected{outline:2px solid #fff;background:#315d86}.fm26-lineup-bench-row .num{font-weight:900}.fm26-lineup-bench-row strong{font-size:clamp(11px,1vw,16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fm26-lineup-bench-row small{font-size:clamp(9px,.8vw,12px);white-space:nowrap}",
@@ -303,7 +308,8 @@
       const top = 100 - Math.max(8,Math.min(92,Number(pos[1]) || 50));
       const initials = String(p.name || 'J').split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase();
       const short = String(p.name || 'Joueur').split(' ').slice(-1)[0];
-      return '<button class="fm26-lineup-player ' + (preSelectedSlot === i ? 'selected' : '') + '" type="button" style="--x:' + left + '%;--y:' + top + '%" data-pack-lineup="slot" data-slot="' + i + '" title="Choisir ' + esc(p.name) + '"><span class="photo">' + esc(initials) + '</span><b>' + esc(short) + '</b><small>' + esc(p.pos) + ' · ' + esc(p.no) + '</small></button>';
+      const photo = portraitSrc(p,i);
+      return '<button class="fm26-lineup-player ' + (preSelectedSlot === i ? 'selected' : '') + '" type="button" style="--x:' + left + '%;--y:' + top + '%" data-pack-lineup="slot" data-slot="' + i + '" title="Choisir ' + esc(p.name) + '"><span class="photo">' + (photo ? '<img src="' + esc(photo) + '" alt="Portrait de ' + esc(p.name) + '">' : esc(initials)) + '</span><b>' + esc(short) + '</b><small>' + esc(p.pos) + ' · ' + esc(p.no) + '</small></button>';
     }).join('');
     const benchRows = bench.map(p => '<button class="fm26-lineup-bench-row" type="button" data-pack-lineup="bench" data-player="' + esc(p.id) + '"><span class="num">' + esc(p.no) + '</span><span><strong>' + esc(p.name) + '</strong><small>' + esc(p.pos) + ' · ' + esc(p.ovr) + ' · ' + esc(p.cond) + '%</small></span><small>' + esc(Number(p.form || 0).toFixed(1)) + '</small></button>').join('');
     return '<main class="fm26-lineup-page"><header class="fm26-lineup-top"><div class="club home">' + (typeof crest === 'function' ? crest(f.home,44) : '') + '<span>' + esc(f.home) + '</span></div>' +
@@ -325,8 +331,9 @@
     const role = player ? (player.pos || player.position || 'Joueur') : '';
     const manager = m.s || 'Staff du club';
     const date = dateOf(m.d || S.date);
+    const playerPhoto = player ? portraitSrc(player,player.id) : '';
     const playerCard = player ?
-      '<div class="fm26-inbox-player-area"><article class="fm26-inbox-player-card"><div class="fm26-inbox-card-art"><span class="fm26-inbox-number">' + esc(player.no || '—') + '</span><div class="fm26-inbox-avatar">' + esc(String(player.name).split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase()) + '</div></div><div class="fm26-inbox-player-name">' + esc(player.name) + '</div><div class="fm26-inbox-player-meta">' + esc(role) + '</div><div class="fm26-inbox-player-meta">' + esc(S.club) + '</div></article>' +
+      '<div class="fm26-inbox-player-area"><article class="fm26-inbox-player-card"><div class="fm26-inbox-card-art"><span class="fm26-inbox-number">' + esc(player.no || '—') + '</span><div class="fm26-inbox-avatar">' + (playerPhoto ? '<img src="' + esc(playerPhoto) + '" alt="Portrait de ' + esc(player.name) + '" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">' : esc(String(player.name).split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase())) + '</div></div><div class="fm26-inbox-player-name">' + esc(player.name) + '</div><div class="fm26-inbox-player-meta">' + esc(role) + '</div><div class="fm26-inbox-player-meta">' + esc(S.club) + '</div></article>' +
       '<div class="fm26-inbox-details"><div class="fm26-inbox-detail"><span>Capacité</span><b>' + esc(player.ovr || '—') + '/100</b></div><div class="fm26-inbox-detail"><span>Potentiel</span><b>' + esc(player.pot || '—') + '/100</b></div><div class="fm26-inbox-detail"><span>Âge</span><b>' + esc(player.age || '—') + ' ans</b></div><div class="fm26-inbox-detail"><span>Poste</span><b>' + esc(role) + '</b></div><div class="fm26-inbox-detail"><span>Nationalité</span><b>' + esc(player.nat || '—') + '</b></div></div>' +
       '<div class="fm26-inbox-traits"><div class="fm26-inbox-trait"><span class="fm26-inbox-check">✓</span><span>Profil présent dans l’effectif</span></div><div class="fm26-inbox-trait"><span class="fm26-inbox-check">✓</span><span>Évaluation issue des données de carrière</span></div><div class="fm26-inbox-trait"><span class="fm26-inbox-check">✓</span><span>Condition : ' + esc(player.cond == null ? '—' : player.cond + '%') + '</span></div></div></div>' :
       '<div class="fm26-inbox-player-area"><div class="fm26-inbox-empty">Aucun joueur de ton effectif n’est nommé dans ce message. Les données d’un joueur ne seront pas inventées.</div></div>';
@@ -450,7 +457,7 @@
     const isPre = S.view === 'pre';
     const isInbox = S.view === 'inbox';
     const active = !isMatch && ['home','mgr','comp','squad','fin','jobs','tactics','sched','player','news','post','inbox','pre'].includes(S.view);
-    document.body.classList.toggle('fm26-screenpack-active',active && !isPre && !isInbox);
+    document.body.classList.toggle('fm26-screenpack-active',active && !isPre);
     document.body.classList.toggle('fm26-inbox-active',isInbox);
     document.body.classList.toggle('fm26-lineup-active',isPre);
     const pane = ensurePane();
