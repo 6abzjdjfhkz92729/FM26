@@ -97,11 +97,11 @@
         const match = raw.match(/^bench:(-?\d+)$/);
         if (!match) return; // Les échanges titulaire-titulaire restent gérés par FM26UX.dropSlot().
         event.preventDefault();
-        event.stopPropagation();
+        event.stopImmediatePropagation();
         if (typeof window.FM26UX.assign === 'function') {
           window.FM26UX.assign(index, Number(match[1]));
         }
-      });
+      }, true);
 
       // Sur écran tactile, un premier toucher sélectionne, le second déplace/échange.
       slot.addEventListener('click', event => {
