@@ -101,6 +101,7 @@
       '<div class="fm26-career-shortcut-title">GESTION DE CARRIÈRE</div>' +
       '<button type="button" class="fm26-career-shortcut" data-career-action="jobs"><span class="mi">▤</span><span>Emplois et offres reçues</span></button>' +
       '<button type="button" class="fm26-career-shortcut" data-career-action="scouting"><span class="mi">⌕</span><span>Centre de recrutement</span></button>' +
+      '<button type="button" class="fm26-career-shortcut" data-career-action="recommendation"><span class="mi">★</span><span>Joueur recommandé</span></button>' +
       '<button type="button" class="fm26-career-shortcut" data-career-action="contracts"><span class="mi">▣</span><span>Contrats des joueurs</span></button>' +
       '<button type="button" class="fm26-career-shortcut" data-career-action="vacation"><span class="mi">◷</span><span>Partir en vacances</span></button>' +
       '<button type="button" class="fm26-career-shortcut" data-career-action="retire"><span class="mi">⚑</span><span>Prendre sa retraite</span></button>';
@@ -147,6 +148,25 @@
         '<div class="fm26-career-row"><span>Championnat</span><b>' + esc(summary.league) + '</b></div>' +
         '<div class="fm26-career-row"><span>Saison</span><b>' + esc(summary.season) + '</b></div>' +
         '<div class="fm26-career-row"><span>Date de la partie</span><b>' + esc(summary.date) + '</b></div></aside></div></main>';
+    }
+    if (activeTool === 'recommendation') {
+      const target = (Array.isArray(S.shortlist) ? S.shortlist : []).slice().sort((a,b) => (Number(b.ovr)||0) - (Number(a.ovr)||0))[0] || null;
+      const scout = (Array.isArray(S.staff) ? S.staff : []).find(member => /recruteur/i.test(String(member.role || member.speciality || '')));
+      if (!target) {
+        return '<main class="fm26-career-page"><h1>Joueur recommandé</h1><p class="lead">Aucun rapport de recrutement n’est encore disponible. Lance une mission depuis le Centre de recrutement ; les joueurs observés apparaîtront ici une fois la mission terminée.</p><section class="fm26-career-card" style="max-width:760px"><h2>RAPPORT DE RECRUTEMENT</h2><p>La liste est vide pour le moment. Aucune statistique de joueur n’est inventée.</p><div class="fm26-career-actions"><button class="primary" type="button" data-career-action="scouting">OUVRIR LE CENTRE DE RECRUTEMENT</button><button type="button" data-career-action="close-tool">Retour au club</button></div></section></main>';
+      }
+      const portrait = target.photoUrl || (window.FM26UX && typeof window.FM26UX.portraitSvg === 'function' ? window.FM26UX.portraitSvg(Number(target.id)||0) : '');
+      const stars = value => { const count = Math.max(0,Math.min(5,Math.round((Number(value)||0)/20))); return '★'.repeat(count) + '<span style="color:#858594">' + '★'.repeat(5-count) + '</span>'; };
+      const valueLabel = target.val == null ? 'Non renseignée' : '€' + esc(target.val) + ' M';
+      const wageLabel = target.sal == null ? 'Non renseigné' : '€' + esc(Number(target.sal).toLocaleString('fr-FR')) + ' / semaine';
+      const confidence = target.reportConfidence == null ? 'En cours d’évaluation' : esc(target.reportConfidence) + ' %';
+      return '<main class="fm26-career-page"><h1>Infos · Joueur recommandé</h1><p class="lead">Rapport établi par ' + esc(scout ? scout.name : 'le Centre de recrutement') + ' à partir des observations enregistrées dans ta carrière.</p>' +
+        '<div class="fm26-career-grid"><section class="fm26-career-card"><h2>RECOMMANDATION DU RECRUTEUR</h2><div style="display:grid;grid-template-columns:130px minmax(0,1fr);gap:18px;align-items:center">' +
+        '<div style="border:2px solid #7e10e7;background:#11121d;text-align:center;padding:8px">' + (portrait ? '<img src="' + esc(portrait) + '" alt="" style="width:100%;height:140px;object-fit:cover">' : '<div style="height:140px;display:grid;place-items:center;font-size:34px">⚽</div>') + '<b style="display:block;background:#7605d7;padding:7px 3px">' + esc(target.name) + '</b><small>' + esc(target.pos || 'Poste non précisé') + '</small></div>' +
+        '<div><h2 style="font-size:22px;color:#fff;margin-bottom:8px">' + esc(target.name) + '</h2><p>' + esc(target.club || 'Club inconnu') + ' · ' + esc(target.age == null ? 'Âge inconnu' : target.age + ' ans') + '</p><div class="fm26-career-row"><span>Capacité actuelle</span><b>' + esc(target.ovr == null ? '—' : target.ovr + '/100') + '</b></div><div class="fm26-career-row"><span>Potentiel estimé</span><b>' + esc(target.pot == null ? '—' : target.pot + '/100') + '</b></div><div class="fm26-career-row"><span>Valeur estimée</span><b>' + valueLabel + '</b></div><div class="fm26-career-row"><span>Salaire actuel estimé</span><b>' + wageLabel + '</b></div><div class="fm26-career-row"><span>Fiabilité du rapport</span><b>' + confidence + '</b></div></div></div>' +
+        '<p class="fm26-career-note">Les notes et estimations proviennent de la cible enregistrée dans ta sauvegarde. Le prix final et l’intérêt du joueur restent à négocier.</p></section>' +
+        '<aside class="fm26-career-card"><h2>AFFECTATION DU RECRUTEUR</h2><div class="fm26-career-kpi">' + esc(scout ? scout.name : 'Équipe recrutement') + '</div><div class="fm26-career-row"><span>Rapports enregistrés</span><b>' + esc((S.shortlist || []).length) + '</b></div><div class="fm26-career-row"><span>Missions en cours</span><b>' + esc((S.scoutMissions || []).filter(m => !m.done).length) + '</b></div><div class="fm26-career-row"><span>Progression du rapport</span><b>' + confidence + '</b></div>' +
+        '<div class="fm26-career-actions"><button class="primary" type="button" data-career-action="scouting">GÉRER LE RECRUTEMENT</button><button type="button" data-career-action="jobs">CONSULTER LES EMPLOIS</button><button type="button" data-career-action="close-tool">Retour au club</button></div></aside></div></main>';
     }
     if (activeTool === 'retirement-confirm') {
       return '<main class="fm26-career-page"><h1>Prendre sa retraite</h1>' +
@@ -292,6 +312,7 @@
     if (label.includes('vacance')) { openTool('vacation'); return true; }
     if (label.includes('retraite')) { openTool('retirement-confirm'); return true; }
     if (label.includes('emploi')) { openJobs(); return true; }
+    if (label.includes('résultats recrut') || label.includes('joueur recommandé')) { openTool('recommendation'); return true; }
     if (label.includes('histor') || label.includes('trophée') || label.includes('panthéon')) { activeTool = ''; S.view = 'history'; render(); return true; }
     if (label.includes('recrut') || label.includes('observation') || label.includes('obs.') || label.includes('sélection')) { activeTool = ''; S.view = 'scouting'; render(); return true; }
     if (label.includes('recherche de staff')) { activeTool = ''; S.view = 'staff'; render(); return true; }
@@ -309,6 +330,7 @@
       const action = actionButton.dataset.careerAction;
       if (action === 'jobs') openJobs();
       else if (action === 'scouting') { activeTool = ''; S.view = 'scouting'; render(); }
+      else if (action === 'recommendation') openTool('recommendation');
       else if (action === 'contracts') { activeTool = ''; S.view = 'contracts'; render(); }
       else if (action === 'vacation') openTool('vacation');
       else if (action === 'take-vacation') takeVacation();
@@ -348,7 +370,7 @@
           const view = $('vw');
           if (view) view.innerHTML = renderTool();
           const heading = document.querySelector('#hd h2');
-          if (heading) heading.textContent = activeTool === 'vacation' ? 'Vacances' : activeTool === 'retirement-confirm' ? 'Prendre sa retraite' : 'Fin de carrière';
+          if (heading) heading.textContent = activeTool === 'vacation' ? 'Vacances' : activeTool === 'retirement-confirm' ? 'Prendre sa retraite' : activeTool === 'recommendation' ? 'Joueur recommandé' : 'Fin de carrière';
           const go = $('go');
           if (go) {
             go.textContent = activeTool === 'retired' ? 'RETRAITE' : 'RETOUR AU CLUB';
