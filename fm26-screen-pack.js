@@ -169,6 +169,11 @@
       if (!b) return;
       const view = b.dataset.packView;
       selectedLabel = b.dataset.packLabel;
+      if (section === 'world') {
+        if (selectedLabel === 'Continental' || selectedLabel === 'International') { if (typeof toast === 'function') toast('Cette compétition n’est pas encore simulée dans cette carrière.'); return; }
+        const countryLeagues = {'France':'Ligue 1','Angleterre':'Premier League','Espagne':'La Liga','Italie':'Serie A','Allemagne':'Bundesliga'};
+        if (countryLeagues[selectedLabel] && countryLeagues[selectedLabel] !== S.lg) { if (typeof toast === 'function') toast('La carrière active simule uniquement ' + S.lg + '.'); return; }
+      }
       if (view === 'save') { try { sv(); } catch (_) {} if (typeof toast === 'function') toast('Partie sauvegardée'); render(); return; }
       if (view === 'reset') { if (confirm('Commencer une nouvelle carrière ?')) { try { localStorage.removeItem('fm26_v2'); } catch (_) {} location.reload(); } return; }
       if (view === 'inbox') { mailListMode = false; S.mi = 0; S.view = 'inbox'; render(); return; }
@@ -260,7 +265,7 @@
       '<div class="fm26-pack-minirow">Club actuel : <b>' + esc(S.club) + '</b></div><div class="fm26-pack-minirow">Championnat : <b>' + esc(S.lg) + '</b></div></section>' +
       '<section class="fm26-pack-section"><div class="fm26-pack-section-head">Vitrine des trophées</div><div class="fm26-pack-minirow">Aucun trophée n’est enregistré dans cette carrière pour le moment.</div></section></div>' +
       '<div class="fm26-pack-col"><section class="fm26-pack-section"><div class="fm26-pack-section-head">Profil entraîneur</div><div style="padding:22px;text-align:center">' +
-      '<div style="width:clamp(90px,10vw,155px);height:clamp(90px,10vw,155px);margin:0 auto 15px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(140deg,#596f8a,#1c2738);border:4px solid #9e74e4;font-size:clamp(32px,4vw,58px)">♟</div>' +
+      '<div style="width:clamp(90px,10vw,155px);height:clamp(90px,10vw,155px);margin:0 auto 15px;border-radius:50%;overflow:hidden;border:4px solid #9e74e4;background:#1c2738">' + (S.managerPhoto ? '<img src="' + esc(S.managerPhoto) + '" alt="Portrait du manager" style="width:100%;height:100%;object-fit:cover">' : (portraitSrc({id:Number(S.managerPortrait)||0},0) ? '<img src="' + esc(portraitSrc({id:Number(S.managerPortrait)||0},0)) + '" alt="Portrait du manager" style="width:100%;height:100%;object-fit:cover">' : '<span style="display:grid;place-items:center;height:100%;font-size:48px">♟</span>')) + '</div>' +
       '<div style="font-size:clamp(19px,1.8vw,30px);font-weight:900">' + esc(S.mg) + '</div><p style="color:#c5c5ce">' + esc(S.club) + ' · ' + esc(S.lg) + '</p></div>' +
       '<div class="fm26-pack-minirow">Statut : <b>' + (board >= 65 ? 'En confiance' : board >= 40 ? 'À surveiller' : 'Sous pression') + '</b></div></section></div></div></main>';
   }
