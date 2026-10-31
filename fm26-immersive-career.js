@@ -196,8 +196,13 @@
       const names=f.low.slice(0,4).map(p=>p.name+' ('+p.cond+'%)');
       return 'La condition moyenne du groupe est de '+f.condition+'%. '+(names.length?'Les joueurs les plus bas sont '+names.join(', ')+'.':'Aucun joueur ne passe sous 65% actuellement.')+' Le staff devra équilibrer continuité du onze et fraîcheur pour le prochain rendez-vous.';
     }
-    if(/tactique|formation|433|4 3 3|442|4 4 2|pressing|bloc|attaque|defense/.test(q)){
+    if(/tactique|systeme|schema|formation|433|4 3 3|442|4 4 2|pressing|bloc|attaque|defense|style de jeu/.test(q)){
       return 'Votre équipe évolue en '+String(S.tc&&S.tc.f||'4-3-3')+' avec le ballon et en '+String(S.tc&&(S.tc.offF||S.tc.f)||'4-4-2')+' sans le ballon. Le style est '+String(S.tc&&S.tc.s||'Control Possession')+' et la mentalité '+String(S.tc&&S.tc.m||'Balanced')+'. '+pick(['Nous regarderons surtout les distances entre les lignes.','La protection des transitions et les espaces dans le dos des latéraux seront déterminants.','Le prochain match permettra de vérifier si les rôles valorisent les qualités du groupe.','Le plan devra tenir compte de la forme et de la condition des titulaires.'],choice);
+    }
+    if(/entrainement|seance|entrainer|preparation|physique|technique/.test(q)){
+      const plan=String(S.tr||'non précisé');
+      const facility=cl(Number(S.clubObj&&S.clubObj.training)||2,1,5);
+      return 'Le programme actuellement enregistré est « '+plan+' » et le centre d’entraînement est au niveau '+facility+'/5. '+(plan==='Physique'?'Le travail physique peut soutenir l’intensité, mais il faut surveiller la fatigue.':plan==='Technique'?'Le travail technique vise les gestes, le contrôle et la qualité des passes.':plan==='Tactique'?'Le travail tactique aide les automatismes et la compréhension des déplacements.':plan==='Récupération'?'La récupération est adaptée lorsque le calendrier est chargé.':'Le staff doit choisir entre progression technique, cohésion tactique et fraîcheur physique.')+' La condition moyenne du groupe est de '+f.condition+'%.';
     }
     if(/supporter|public|tribune|direction|president|confiance/.test(q)){
       return 'Les indicateurs actuels sont : supporters '+f.fans+'%, direction '+f.board+'% et moral du vestiaire '+f.morale+'%. '+(f.fans>=65?'Le public reste plutôt favorable.':'Les tribunes attendent des signes de progrès.')+' '+(f.board>=60?'La direction conserve une confiance mesurée.':'Les dirigeants demandent des résultats plus convaincants.')+' Ces indicateurs évolueront avec vos prochains choix.';
@@ -206,12 +211,7 @@
       const best=(S.sq||[]).slice().sort((a,b)=>(Number(b.form)||0)-(Number(a.form)||0))[0];
       return 'Sur la forme actuelle, '+(best?best.name+' affiche '+Number(best.form||0).toFixed(1)+'/10 et '+(best.cond==null?'une condition non renseignée':best.cond+'% de condition')+'.':'les données individuelles sont encore limitées.')+' Le onze doit croiser forme, condition, poste et rôle demandé. '+pick(['Avez-vous un joueur précis en tête ?','Parlez-vous du temps de jeu ou de la performance collective ?','Le banc peut devenir décisif lorsque le rythme baisse.','Un titulaire n’est pas automatiquement le meilleur choix contre chaque adversaire.'],choice);
     }
-    return pick([
-      'Votre déclaration est entendue. Les supporters attendent surtout de voir comment elle se traduira sur le terrain. Le prochain rendez-vous est '+(next?(next.home===S.club?next.away:next.home):'encore inconnu')+'.',
-      'Vous insistez sur le projet sportif. Les journalistes compareront vos paroles, la composition choisie et les résultats : '+record+'.',
-      'Le contexte de '+S.club+' reste marqué par une confiance de la direction à '+f.board+'% et une popularité des supporters à '+f.fans+'%. Quelle décision concrète souhaitez-vous défendre ?',
-      'Notre rédaction retient votre message. Nous suivrons la préparation du prochain match et l’évolution de la condition physique du groupe.'
-    ],choice);
+    return 'Vous demandez : « '+String(raw).slice(0,150)+' ». Pour '+S.club+', les éléments vérifiables aujourd’hui sont une série récente de '+record+', une confiance de la direction à '+f.board+'% et une popularité des supporters à '+f.fans+'%. '+pick(['Je vais suivre la décision concrète qui découlera de votre réponse.','Les journalistes compareront vos paroles aux prochains choix de composition.','Le prochain match sera un premier indicateur pour juger cette orientation.','Notre rédaction reviendra sur ce point à la lumière des prochains résultats.'],choice);
   }
   function pressChatMarkup() {
     if(!S)return '';
