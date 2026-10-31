@@ -24,7 +24,7 @@
     body.fm26-overhead-live #main{display:block!important;width:100%!important;height:100%!important;min-width:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
     body.fm26-overhead-live #vw{display:block!important;position:relative!important;width:100vw!important;height:100dvh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#080b0e!important}
     .oh-match{position:relative;display:grid;grid-template-rows:58px minmax(0,1fr) 72px;width:100%;height:100%;min-height:0;background:#080a0d;color:#f7f9fc;font-family:Inter,Segoe UI,Arial,sans-serif;overflow:hidden}
-    .oh-top{z-index:5;display:grid;grid-template-columns:56px minmax(0,1fr) auto auto;align-items:stretch;min-width:0;background:#050607;border-bottom:2px solid #202a30;box-shadow:0 3px 15px #0008}
+    .oh-top{z-index:5;display:grid;grid-template-columns:56px minmax(0,1fr) auto;align-items:stretch;min-width:0;background:#050607;border-bottom:2px solid #202a30;box-shadow:0 3px 15px #0008}
     .oh-iconbtn{display:grid;place-items:center;min-width:0;border:0;border-radius:0;background:#06080a;color:#fff;font-size:23px;font-weight:900;cursor:pointer}
     .oh-iconbtn:hover,.oh-action:hover{filter:brightness(1.18)}
     .oh-scorebar{display:flex;min-width:0;align-items:stretch;justify-content:center;gap:0}
