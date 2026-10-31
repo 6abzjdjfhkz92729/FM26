@@ -13,6 +13,19 @@
   const teamName=side=>side===0?M.f.home:M.f.away;
   const userHasBall=side=>teamName(side)===S.club;
   const teamPlayers=side=>userHasBall(side)?xi():[];
+  const recentFormAdjustment=club=>{
+    const games=(S.fx||[]).filter(f=>f.played&&(f.home===club||f.away===club)).slice().sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-5);
+    if(!games.length)return 0;
+    let points=0,weight=0;
+    games.forEach((f,i)=>{
+      const score=String(f.score||'0-0').split('-').map(Number),home=f.home===club;
+      const gf=score[home?0:1]||0,ga=score[home?1:0]||0;
+      const p=gf>ga?3:gf===ga?1:0,w=i+1;
+      points+=p*w;weight+=w;
+    });
+    const average=points/Math.max(1,weight);
+    return clamp((average-1.35)*.62,-.85,.95);
+  };
   const ability=(side,key)=>{
     if(userHasBall(side)){
       const ps=teamPlayers(side);
@@ -24,25 +37,35 @@
       const form=mean('form',7);
       const stamina=avg(ps,'Stamina')||12;
       // Low condition, confidence and form reduce the technical execution of the whole selected XI.
-      const readiness=(condition-85)*.045+(morale-70)*.028+(form-7)*.72;
-      // Players with lower stamina lose more precision and intensity in the final stages.
-      const matchLoad=Math.max(0,((Number(M.min)||0)-55)/8)*clamp((15-stamina)/10,0,1);
-      const fatiguePenalty=key==='keeper'?matchLoad*.55:matchLoad;
+      const clubForm=recentFormAdjustment(S.club);
+      const facilityBonus=(clamp(Number(S.clubObj&&S.clubObj.training)||2,1,5)-2)*.08;
+      const readiness=(condition-85)*.062+(morale-70)*.034+(form-7)*.82+clubForm*.72+facilityBonus;
+      // Fatigue now matters more after the hour, especially for players with modest stamina.
+      const matchLoad=Math.max(0,((Number(M.min)||0)-48)/7)*clamp((17-stamina)/10,0,1)*.78;
+      const fatiguePenalty=key==='keeper'?matchLoad*.48:matchLoad;
       return clamp((val||12)+readiness-fatiguePenalty,4,20);
     }
     const power=safeNum(side===0?M.hp:M.ap,35,100,68);
-    return clamp(11+(power-68)*.28+((hash(teamName(side)+key)%7)-3)*.35,6,18);
+    const homeBonus=teamName(side)===M.f.home?.28:0;
+    const formBonus=recentFormAdjustment(teamName(side));
+    return clamp(11+(power-68)*.31+formBonus+homeBonus+((hash(teamName(side)+key)%7)-3)*.3,6,18);
   };
   const style=side=>userHasBall(side)?(S.tc.s||'Control Possession'):(['Control Possession','Counter-Attack','Gegenpress','Wing Play'][hash(teamName(side))%4]);
   const mentality=side=>userHasBall(side)?(S.tc.m||'Balanced'):'Balanced';
   const note=(k,t)=>{M.ev.unshift({m:M.min,k,t});M.ev=M.ev.slice(0,80);M.cm=t;};
   const tickPossession=()=>{const sum=M.possTicks[0]+M.possTicks[1];M.ps=sum?Math.round(100*M.possTicks[0]/sum):50;};
   const finishAction=(side,xg,desc)=>{
-    const other=1-side;M.sh[side]++;M.stats.shots[side]=(M.stats.shots[side]||0)+1;M.stats.xg[side]+=xg;
-    const target=clamp(.36+xg*.9+(ability(side,'finish')-12)*.012, .22,.83);
+    const other=1-side;
+    const ownGoals=side===0?M.h:M.a,opponentGoals=side===0?M.a:M.h;
+    const lead=ownGoals-opponentGoals;
+    // A side protecting a large lead takes fewer risks; a side behind commits more forward.
+    const gameStateFactor=lead>=4?.48:lead>=3?.64:lead>=2?.82:lead<=-2?1.12:1;
+    const adjustedXg=clamp(xg*gameStateFactor,.008,.48);
+    M.sh[side]++;M.stats.shots[side]=(M.stats.shots[side]||0)+1;M.stats.xg[side]+=adjustedXg;
+    const target=clamp(.34+adjustedXg*.92+(ability(side,'finish')-12)*.011,.2,.8);
     const onTarget=Math.random()<target;
     if(onTarget){M.stats.shotsOnTarget[side]++;}
-    if(Math.random()<xg){
+    if(Math.random()<adjustedXg){
       if(side===0)M.h++;else M.a++;
       M.stats.shotsOnTarget[side]=Math.max(1,M.stats.shotsOnTarget[side]);
       const scorer=userHasBall(side)?pick(xi().filter(p=>p.pos!=='GK')):null;
@@ -95,7 +118,7 @@
     if(current===side&&z>=3&&Math.random()<(z===4?.23:.11)){
       shotTaken=true;
       const keeper=ability(other,'keeper'),pressure=ability(other,'position');
-      const base=z===4?.22:z===3?.095:.045;
+      const base=z===4?.18:z===3?.082:.038;
       const xg=clamp(base+(fin-12)*.013+(ability(side,'composure')-12)*.004-(keeper-12)*.008-(pressure-12)*.004+(men==='Attacking'?.025:men==='Cautious'?-.018:0),.015,.62);
       const shooter=userHasBall(side)?pick(xi().filter(p=>p.pos!=='GK')):null;
       finishAction(side,xg,(shooter?.name||teamName(side))+' tente sa chance');
