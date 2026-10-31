@@ -39,7 +39,9 @@
       // Low condition, confidence and form reduce the technical execution of the whole selected XI.
       const clubForm=recentFormAdjustment(S.club);
       const facilityBonus=(clamp(Number(S.clubObj&&S.clubObj.training)||2,1,5)-2)*.08;
-      const readiness=(condition-85)*.062+(morale-70)*.034+(form-7)*.82+clubForm*.72+facilityBonus;
+      const trainingFocus=String(S.tr||'');
+      const focusBonus=trainingFocus==='Technique'&&['pass','dribble','finish'].includes(key)?.22:trainingFocus==='Tactique'&&['pass','vision','position','anticipation'].includes(key)?.18:trainingFocus==='Physique'&&['pace','stamina'].includes(key)?.2:trainingFocus==='Récupération'?.12:0;
+      const readiness=(condition-85)*.062+(morale-70)*.034+(form-7)*.82+clubForm*.72+facilityBonus+focusBonus;
       // Fatigue now matters more after the hour, especially for players with modest stamina.
       const matchLoad=Math.max(0,((Number(M.min)||0)-48)/7)*clamp((17-stamina)/10,0,1)*.78;
       const fatiguePenalty=key==='keeper'?matchLoad*.48:matchLoad;
@@ -60,7 +62,8 @@
     const lead=ownGoals-opponentGoals;
     // A side protecting a large lead takes fewer risks; a side behind commits more forward.
     const gameStateFactor=lead>=4?.48:lead>=3?.64:lead>=2?.82:lead<=-2?1.12:1;
-    const adjustedXg=clamp(xg*gameStateFactor,.008,.48);
+    const totalGoalFactor=ownGoals>=6?.35:ownGoals>=5?.52:1;
+    const adjustedXg=clamp(xg*gameStateFactor*totalGoalFactor,.006,.48);
     M.sh[side]++;M.stats.shots[side]=(M.stats.shots[side]||0)+1;M.stats.xg[side]+=adjustedXg;
     const target=clamp(.34+adjustedXg*.92+(ability(side,'finish')-12)*.011,.2,.8);
     const onTarget=Math.random()<target;
