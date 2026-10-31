@@ -8,7 +8,7 @@
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, Number(n) || 0));
   const state = {
     raf: 0, last: 0, speed: 1, interval: 170, panel: '',
-    ball: { x: 50, y: 50 }, ballTrail: [], players: new Map(),
+    ball: { x: 50, y: 50 }, ballTrail: [], players: new Map(), playerRefs: new Map(), selectedPlayer: null,
     ballImage: null, imageReady: false, lastComment: '', lastEvent: ''
   };
   const speedIntervals = { 1: 170, 2: 85, 4: 42 };
@@ -213,6 +213,12 @@
     if(!state.panel)return '';
     const isStats=state.panel==='stats';
     const fixture=M&&M.f||{};
+    if(state.panel==='player' && state.selectedPlayer){
+      const p=state.selectedPlayer.p, side=state.selectedPlayer.side;
+      const team=side===0?(fixture.home||'Domicile'):(fixture.away||'Extérieur');
+      const rows=[['Poste',p.pos||p.position],['Note générale',p.ovr==null?null:p.ovr],['Note du match',p.rating==null?null:p.rating],['Condition',p.condition==null?null:(p.condition+'%')],['Moral',p.morale],['Âge',p.age],['Nationalité',p.nation||p.nationality]] .filter(r=>r[1]!=null && r[1]!=='');
+      return '<aside class="oh-overlay"><button class="oh-close" data-oh-action="close">×</button><h3>'+esc(p.name||'Joueur')+'</h3><div class="oh-row"><span>Équipe</span><b>'+esc(team)+'</b></div><div class="oh-row"><span>Numéro</span><b>'+esc(p.num||p.number||'—')+'</b></div>'+rows.map(r=>'<div class="oh-row"><span>'+esc(r[0])+'</span><b>'+esc(r[1])+'</b></div>').join('')+'<p style="margin:12px 0 0;color:#aebdca;font-size:11px">Profil issu des données disponibles dans ta partie.</p></aside>';
+    }
     const stats=[
       ['Possession',String(Number(M.ps)||50)+'% – '+(100-(Number(M.ps)||50))+'%'],
       ['Tirs',String((M.sh||[0,0])[0])+' – '+String((M.sh||[0,0])[1])],
@@ -263,6 +269,7 @@
     ctx.clearRect(0,0,w,h);
     const field=drawPitch(ctx,w,h);
     const teams=[currentXI(0),currentXI(1)];
+    state.playerRefs.clear();
     let nearest=null,nearestD=Infinity;
     teams.forEach((players,side)=>{
       const formation=formationFor(side);
@@ -275,6 +282,7 @@
         const x=field.x+field.w*pos.x/100,y=field.y+field.h*pos.y/100;
         const bx=field.x+field.w*state.ball.x/100,by=field.y+field.h*state.ball.y/100;
         const d=(x-bx)*(x-bx)+(y-by)*(y-by);
+        state.playerRefs.set(key,{p,side,index,x,y});
         if(d<nearestD){nearestD=d;nearest={p,x,y,side,index:i};}
         drawPlayer(ctx,p,x,y,clamp(h*.018,10,18),side,i,false);
       });
