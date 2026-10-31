@@ -430,6 +430,11 @@
     '.fm26-trophy-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}',
     '.fm26-trophy-card{display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(145deg,#293b55,#18283e);border:1px solid #7b6e4a;border-radius:12px;color:#fff}',
     '.fm26-trophy-icon{font-size:34px}.fm26-trophy-card small{display:block;color:#c3cfe0;margin-top:4px}',
+    '.fm26-pack-grid{grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr)!important;gap:clamp(14px,1.8vw,30px)!important;align-items:stretch!important}',
+    '.fm26-pack-col{align-content:stretch!important}',
+    '.fm26-pack-fixture{min-height:clamp(300px,42vh,440px)!important;padding:clamp(18px,2.4vw,36px)!important}',
+    '.fm26-pack-page{padding:clamp(14px,1.8vw,30px)!important}',
+    '@media(max-width:1100px){.fm26-pack-grid{grid-template-columns:minmax(0,1fr)!important}.fm26-pack-fixture{min-height:300px!important}}',
     '.fm26-pack-stars{font-size:clamp(20px,2.2vw,34px);letter-spacing:-3px;color:#e6b84c!important;text-shadow:0 2px 8px #0005;margin:7px 0 15px}',
     '.fm26-world-club-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;padding:10px}',
     '.fm26-world-club{display:flex;align-items:center;gap:10px;min-width:0;padding:10px;background:#192b43;border:1px solid #344d6c;border-radius:9px;color:#fff}',
@@ -453,7 +458,16 @@
   function refresh() {
     ensureReopenButton();
     paintStars();
-    if (typeof CID !== 'undefined' && CID) { CID['Leeds United']=CID['Leeds']||'341'; CID['Leeds United FC']=CID['Leeds']||'341'; }
+    if (typeof CID !== 'undefined' && CID) {
+      CID['Leeds United']=CID['Leeds']||'341';
+      CID['Leeds United FC']=CID['Leeds']||'341';
+      document.querySelectorAll('img[data-c="Leeds United"],img[data-c="Leeds United FC"]').forEach(img=>{
+        if(!img.dataset.t && typeof lg==='function'){
+          img.addEventListener('load',()=>img.parentNode&&img.parentNode.classList.remove('fb'),{once:true});
+          try{lg(img)}catch(_){}
+        }
+      });
+    }
   }
 
   function findCurrentQuery() {
