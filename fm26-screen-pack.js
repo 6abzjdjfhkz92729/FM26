@@ -158,10 +158,21 @@
   function renderRail(activeSection) {
     const side = $('side');
     if (!side) return;
-    const items = [['inbox','✉','Messagerie'],['home','⌂','Accueil'],['club','♜','Club'],['coach','♟','Manager'],['world','◎','Monde'],['search','⌕','Recherche'],['opt','⚙','Options']];
-    side.innerHTML = '<button class="fm26-ref-back" type="button" data-pack-section="home" title="Accueil">‹</button>' +
-      items.map(x => '<button type="button" class="fm26-ref-railbtn ' + (activeSection === x[0] ? 'active' : '') + '" data-pack-section="' + x[0] + '" title="' + x[2] + '" aria-label="' + x[2] + '"><span style="font-size:clamp(25px,2.6vw,44px)">' + x[1] + '</span></button>').join('');
+    const icon = (path) => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="'+path+'"/></svg>';
+    const items = [
+      ['inbox',icon('M3 5h18v14H3z M3 7l9 7 9-7'),'Messagerie'],
+      ['home',icon('M3 11.5L12 4l9 7.5 M5.5 10v10h13V10 M9.5 20v-6h5v6'),'Accueil'],
+      ['club','<span class="fm26-rail-crest">'+(typeof crest==='function'?crest(S.club,42):'⚽')+'</span>','Club'],
+      ['coach',icon('M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M4 21a8 8 0 0 1 16 0'),'Manager'],
+      ['world',icon('M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20 M2 12h20 M12 2c5 5 5 15 0 20 M12 2c-5 5-5 15 0 20'),'Monde'],
+      ['search',icon('M10.5 3a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15 M16 16l5 5'),'Recherche'],
+      ['opt',icon('M4 7h16 M4 12h16 M4 17h16 M8 4v6 M15 9v6 M10 14v6'),'Options']
+    ];
+    side.innerHTML = '<button class="fm26-ref-back" type="button" data-pack-collapse title="Masquer les deux panneaux latéraux" aria-label="Masquer les deux panneaux latéraux">‹</button>' +
+      items.map(x => '<button type="button" class="fm26-ref-railbtn ' + (activeSection === x[0] ? 'active' : '') + '" data-pack-section="' + x[0] + '" title="' + x[2] + '" aria-label="' + x[2] + '"><span class="fm26-rail-icon">' + x[1] + '</span></button>').join('');
     side.onclick = e => {
+      const collapse = e.target.closest('[data-pack-collapse]');
+      if (collapse) { if (window.FM26Enhancements) window.FM26Enhancements.toggleRails(); return; }
       const b = e.target.closest('[data-pack-section]');
       if (!b) return;
       const key = b.dataset.packSection;
@@ -378,10 +389,15 @@
   function renderPage() {
     if (S.view === 'home') return dashboardMarkup();
     if (S.view === 'mgr') return (typeof V !== 'undefined' && typeof V.mgr === 'function') ? V.mgr() : managerMarkup();
-    if (S.view === 'comp') return competitionMarkup();
+    if (S.view === 'press' && window.FM26Enhancements) return window.FM26Enhancements.pressMarkup();
+    if (S.view === 'squad' && S.fm26SearchMode && window.FM26Enhancements) return window.FM26Enhancements.playerSearchMarkup();
+    if (S.view === 'squad' && S.fm26Panel === 'scout-results' && window.FM26Enhancements) return window.FM26Enhancements.scoutingResultsMarkup();
+    if (S.view === 'squad' && S.fm26Panel === 'shortlist' && window.FM26Enhancements) return window.FM26Enhancements.shortlistMarkup();
+    if (S.view === 'comp') return (typeof V !== 'undefined' && typeof V.comp === 'function') ? V.comp() : competitionMarkup();
     if (S.view === 'squad') return squadMarkup();
-    if (S.view === 'fin') return financeMarkup();
+    if (S.view === 'fin') return (typeof V !== 'undefined' && typeof V.fin === 'function') ? V.fin() : financeMarkup();
     if (S.view === 'inbox') return messageMarkup();
+    if (S.view === 'jobs' && typeof V !== 'undefined' && typeof V.jobs === 'function') return V.jobs();
     if (S.view === 'pre') return lineupMarkup();
     return '';
   }
@@ -479,7 +495,7 @@
     const isMatch = S.view === 'match';
     const isPre = S.view === 'pre';
     const isInbox = S.view === 'inbox';
-    const active = !isMatch && ['home','mgr','comp','squad','fin','jobs','tactics','sched','player','news','post','inbox','pre'].includes(S.view);
+    const active = !isMatch && ['home','mgr','comp','squad','fin','jobs','tactics','sched','player','news','post','inbox','pre','press'].includes(S.view);
     document.body.classList.toggle('fm26-screenpack-active',active && !isPre);
     document.body.classList.toggle('fm26-inbox-active',isInbox);
     document.body.classList.toggle('fm26-lineup-active',isPre);
@@ -496,7 +512,7 @@
     if (isInbox) {
       $('fm26-ref-menu')?.classList.remove('show');
       renderRail('inbox');
-      $('vw').innerHTML = (typeof V !== 'undefined' && typeof V.inbox === 'function') ? V.inbox() : messageMarkup();
+      $('vw').innerHTML = messageMarkup();
       wireInbox();
       return;
     }
@@ -506,7 +522,7 @@
     $('fm26-ref-menu')?.classList.remove('show');
     renderRail(section);
     renderPane();
-    if (['home','mgr','comp','squad','fin'].includes(S.view)) $('vw').innerHTML = renderPage();
+    if (['home','mgr','comp','squad','fin','jobs','press'].includes(S.view)) $('vw').innerHTML = renderPage();
     wirePage();
   }
 
