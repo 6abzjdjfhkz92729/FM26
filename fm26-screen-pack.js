@@ -133,6 +133,7 @@
   style.id = 'fm26-screen-pack-style';
   style.textContent = css;
   document.head.appendChild(style);
+  const dragCss=document.createElement('style'); dragCss.textContent='.fm26-lineup-player[draggable="true"],.fm26-lineup-bench-row[draggable="true"]{cursor:grab;touch-action:pan-y}.fm26-lineup-dragging{opacity:.38!important}.fm26-lineup-drop-target{outline:3px solid #ffe28a!important;outline-offset:3px!important;filter:brightness(1.15)}'; document.head.appendChild(dragCss);
 
   function ensurePane() {
     const app = $('app'), main = $('main');
@@ -341,9 +342,9 @@
       const left = Math.max(5,Math.min(95,Number(pos[0]) || 50));
       const top = 100 - Math.max(8,Math.min(92,Number(pos[1]) || 50));
       const short = String(p.name || 'Joueur').split(' ').slice(-1)[0];
-      return '<button class="fm26-lineup-player ' + (preSelectedSlot === i ? 'selected' : '') + '" type="button" style="--x:' + left + '%;--y:' + top + '%" data-pack-lineup="slot" data-slot="' + i + '" title="Choisir ' + esc(p.name) + '"><span class="photo"><b>' + esc(p.no || (i+1)) + '</b></span><b>' + esc(short) + '</b><small>' + esc(p.pos) + '</small></button>';
+      return '<button class="fm26-lineup-player ' + (preSelectedSlot === i ? 'selected' : '') + '" type="button" style="--x:' + left + '%;--y:' + top + '%" data-pack-lineup="slot" data-slot="' + i + '" draggable="true" title="Choisir ' + esc(p.name) + '"><span class="photo"><b>' + esc(p.no || (i+1)) + '</b></span><b>' + esc(short) + '</b><small>' + esc(p.pos) + '</small></button>';
     }).join('');
-    const benchRows = bench.map(p => '<button class="fm26-lineup-bench-row" type="button" data-pack-lineup="bench" data-player="' + esc(p.id) + '"><span class="num">' + esc(p.no) + '</span><span><strong>' + esc(p.name) + '</strong><small>' + esc(p.pos) + ' · ' + esc(p.ovr) + ' · ' + esc(p.cond) + '%</small></span><small>' + esc(Number(p.form || 0).toFixed(1)) + '</small></button>').join('');
+    const benchRows = bench.map(p => '<button class="fm26-lineup-bench-row" type="button" data-pack-lineup="bench" data-player="' + esc(p.id) + '" draggable="true"><span class="num">' + esc(p.no) + '</span><span><strong>' + esc(p.name) + '</strong><small>' + esc(p.pos) + ' · ' + esc(p.ovr) + ' · ' + esc(p.cond) + '%</small></span><small>' + esc(Number(p.form || 0).toFixed(1)) + '</small></button>').join('');
     return '<main class="fm26-lineup-page"><header class="fm26-lineup-top"><div class="club home">' + (typeof crest === 'function' ? crest(f.home,44) : '') + '<span>' + esc(f.home) + '</span></div>' +
       '<div style="text-align:center"><b>COMPOSITION D’ÉQUIPE</b><small style="display:block;color:#c4d0dc">' + esc(f.comp || S.lg) + ' · ' + esc(dateOf(f.date)) + '</small></div>' +
       '<div class="club away"><span>' + esc(f.away) + '</span>' + (typeof crest === 'function' ? crest(f.away,44) : '') + '</div></header>' +
@@ -474,6 +475,59 @@
         if (typeof startMatch === 'function') startMatch();
       }
     };
+    view.ondragstart = e => {
+      const b = e.target.closest('[data-pack-lineup="slot"],[data-pack-lineup="bench"]');
+      if (!b || !e.dataTransfer) return;
+      const payload = b.dataset.packLineup === 'slot' ? {kind:'slot',slot:Number(b.dataset.slot)} : {kind:'bench',player:Number(b.dataset.player)};
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain',JSON.stringify(payload));
+      b.classList.add('fm26-lineup-dragging');
+    };
+    view.ondragend = e => {
+      const b = e.target.closest('[data-pack-lineup]');
+      if (b) b.classList.remove('fm26-lineup-dragging');
+      view.querySelectorAll('.fm26-lineup-drop-target').forEach(n=>n.classList.remove('fm26-lineup-drop-target'));
+    };
+    view.ondragover = e => {
+      const target = e.target.closest('[data-pack-lineup="slot"],[data-pack-lineup="bench"]');
+      if (!target) return;
+      e.preventDefault();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      target.classList.add('fm26-lineup-drop-target');
+    };
+    view.ondrop = e => {
+      const target = e.target.closest('[data-pack-lineup="slot"],[data-pack-lineup="bench"]');
+      if (!target || !e.dataTransfer) return;
+      e.preventDefault();
+      let payload;
+      try { payload = JSON.parse(e.dataTransfer.getData('text/plain') || '{}'); } catch (_) { return; }
+      const lineup = window.FM26MatchDay && typeof window.FM26MatchDay.getLineup === 'function' ? window.FM26MatchDay.getLineup().slice() : (typeof xi === 'function' ? xi().slice(0,11) : []);
+      const targetSlot = target.dataset.packLineup === 'slot' ? Number(target.dataset.slot) : null;
+      const targetBench = target.dataset.packLineup === 'bench' ? Number(target.dataset.player) : null;
+      let message = '';
+      if (payload.kind === 'slot' && Number.isInteger(payload.slot) && payload.slot >= 0 && payload.slot < 11) {
+        if (targetSlot != null && payload.slot !== targetSlot) {
+          const from = lineup[payload.slot], to = lineup[targetSlot];
+          lineup[payload.slot] = to; lineup[targetSlot] = from;
+          message = from.name + ' et ' + to.name + ' échangent leurs positions.';
+        } else if (targetBench != null) {
+          const incoming = (S.sq || []).find(p=>Number(p.id)===targetBench);
+          if (!incoming || !lineup[payload.slot]) return;
+          const outgoing = lineup[payload.slot]; lineup[payload.slot] = incoming;
+          message = incoming.name + ' remplace ' + outgoing.name + '.';
+        } else return;
+      } else if (payload.kind === 'bench' && targetSlot != null) {
+        const incoming = (S.sq || []).find(p=>Number(p.id)===Number(payload.player));
+        if (!incoming || !lineup[targetSlot]) return;
+        const outgoing = lineup[targetSlot]; lineup[targetSlot] = incoming;
+        message = incoming.name + ' remplace ' + outgoing.name + '.';
+      } else return;
+      if (lineup.length !== 11 || new Set(lineup.map(p=>p.id)).size !== 11) return;
+      S.lineup = lineup.map(p=>p.id); preSelectedSlot = null;
+      try { sv(); } catch (_) {}
+      if (typeof toast === 'function') toast(message);
+      render();
+    };
     view.onchange = e => {
       if (e.target && e.target.id === 'fm26-pack-formation') {
         S.tc.f = e.target.value;
@@ -493,7 +547,7 @@
     const isMatch = S.view === 'match';
     const isPre = S.view === 'pre';
     const isInbox = S.view === 'inbox';
-    const active = !isMatch && ['home','mgr','comp','squad','fin','jobs','tactics','sched','player','news','post','inbox','pre','press'].includes(S.view);
+    const active = !isMatch && ['home','mgr','comp','squad','fin','jobs','tactics','sched','player','news','post','inbox','pre','press','halftime'].includes(S.view);
     document.body.classList.toggle('fm26-screenpack-active',active && !isPre);
     document.body.classList.toggle('fm26-inbox-active',isInbox);
     document.body.classList.toggle('fm26-lineup-active',isPre);
