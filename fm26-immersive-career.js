@@ -265,10 +265,35 @@
     const oldEnd=endMatch;
     endMatch=function(){const out=oldEnd.apply(this,arguments);if(S&&S.date){ensureIssue(S.date,true);save();}return out;};
   }
+  function simulateWorldFixtures(date) {
+    if(!S || !Array.isArray(S.fx) || typeof simLeagueScore!=='function' || typeof upd!=='function') return 0;
+    const day=String(date||'').slice(0,10);
+    const fixtures=S.fx.filter(f=>!f.played&&String(f.date||'').slice(0,10)===day&&f.home!==S.club&&f.away!==S.club&&(!f.comp||f.comp===S.lg));
+    fixtures.forEach(f=>{
+      const result=simLeagueScore(f.home,f.away);
+      f.played=true;f.score=result[0]+'-'+result[1];
+      upd(f.home,f.away,result[0],result[1]);
+    });
+    return fixtures.length;
+  }
+
   if(typeof cont==='function'){
     const oldCont=cont;
     cont=function(){
-      if(S&&S.view==='home'){const next=nextMatch();if(next&&next.date)archiveBeforeFixture(S.date,String(next.date).slice(0,10));}
+      if(S&&S.view==='home'){
+        const next=nextMatch();
+        const currentDate=String(S.date||'').slice(0,10);
+        const fixtureDate=next?String(next.date||'').slice(0,10):'';
+        if(fixtureDate && currentDate<fixtureDate){
+          const day=shiftDate(currentDate,1);
+          S.date=day;
+          simulateWorldFixtures(day);
+          ensureIssue(day,false);
+          save();
+          render();
+          return;
+        }
+      }
       const wasPress=!!(S&&S.view==='press'),out=oldCont.apply(this,arguments);
       if(wasPress&&S){S.fm26PressDialogue=[];S.fm26PressDialogueDate=String(S.date||'');save();}
       return out;
