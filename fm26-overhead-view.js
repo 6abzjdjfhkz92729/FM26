@@ -8,7 +8,7 @@
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, Number(n) || 0));
   const state = {
     raf: 0, last: 0, speed: 1, interval: 170, panel: '',
-    ball: { x: 50, y: 50 }, ballTrail: [], players: new Map(), playerRefs: new Map(), selectedPlayer: null,
+    ball: { x: 50, y: 50 }, clock: 0, ballTrail: [], players: new Map(), playerRefs: new Map(), selectedPlayer: null,
     ballImage: null, imageReady: false, lastComment: '', lastEvent: ''
   };
   const speedIntervals = { 1: 170, 2: 85, 4: 42 };
@@ -105,24 +105,56 @@
   }
   function formationFor(side) {
     const team = side === 0 ? M.f.home : M.f.away;
-    const selected = team === S.club ? (S.tc && S.tc.f) : '4-3-3';
+    const inPossession = Number(M.possessionSide) === side;
+    const selected = team === S.club
+      ? (inPossession ? (S.tc && S.tc.f) : (S.tc && (S.tc.offF || S.tc.f)))
+      : (inPossession ? '4-3-3' : '4-4-2');
     return (typeof FM !== 'undefined' && (FM[selected] || FM['4-3-3'])) || [];
   }
-  function targetPosition(side,index,spot) {
+  function targetPosition(side,index,spot,player) {
     const team = side === 0 ? M.f.home : M.f.away;
-    const baseX = 4 + (100 - Number(spot && spot[1] || 50)) * .42;
-    const baseY = Number(spot && spot[0] || 50);
     const possession = Number(M.possessionSide) === side;
-    const zone = M.zone && Number(M.zone[side]) || 2;
     const direction = side === 0 ? 1 : -1;
-    const advance = (zone - 2) * 4.3 * direction * (possession ? 1 : .48);
+    const zone = clamp(Number(M.zone && M.zone[side] != null ? M.zone[side] : 2),0,4);
+    const lane = clamp(Number(spot && spot[0] != null ? spot[0] : 50),4,96);
+    const depth = clamp(Number(spot && spot[1] != null ? spot[1] : 50),4,96);
+    const baseX = 4 + (100-depth)*.42;
+    const homeX = side === 0 ? baseX : 100-baseX;
     const ballX = clamp(M.bx == null ? 50 : M.bx,2,98);
     const ballY = clamp(M.by == null ? 50 : M.by,2,98);
-    const pull = possession ? .115 : .065;
-    const phase = Math.sin((Number(M.min)||0)*.25 + index*1.37 + side*2.1) * .8;
-    const x = side === 0 ? baseX + advance + (ballX-baseX)*pull : 100-baseX + advance + (ballX-(100-baseX))*pull;
-    const y = baseY + (ballY-baseY)*pull*.82 + phase;
-    return {x:clamp(x,3,97),y:clamp(y,4,96),team};
+    const position = String(player && (player.pos || player.position) || (spot && spot[2]) || '').toUpperCase();
+    const isKeeper = position === 'GK' || index === 0;
+    const isCentreBack = position === 'DC';
+    const isFullBack = position === 'DL' || position === 'DR';
+    const isWide = position === 'AML' || position === 'AMR' || isFullBack;
+    const isForward = position === 'ST' || position === 'AML' || position === 'AMR' || position === 'AMC';
+    const isMidfielder = position === 'DM' || position === 'MC' || position === 'AMC';
+    const role = String(S.playerRoles && player ? S.playerRoles[player.id] || '' : '').toLowerCase();
+    const clock = Number(state.clock) || 0;
+    const pulse = Math.sin(clock*.00062 + index*1.71 + side*1.2);
+    const runPulse = Math.max(0,Math.sin(clock*.00043 + index*1.31 + side*.7));
+    const zonePush = possession ? (zone-2)*9.2 : 0;
+    const linePush = possession
+      ? (isKeeper ? -2 : isCentreBack ? 3 : isFullBack ? 7 : isMidfielder ? 6 : isForward ? 10 : 2)
+      : (isKeeper ? 0 : isCentreBack ? -2 : isFullBack ? -2 : isMidfielder ? -3 : isForward ? 1 : -1);
+    const rolePush = possession && (role.includes('piston') || role.includes('overlap') || role.includes('avancé'))
+      ? 5.5 : 0;
+    const forwardRun = possession && !isKeeper
+      ? runPulse * (isForward ? 8.5 : isMidfielder ? 4.2 : isFullBack ? 3.4 : 1.2)
+      : 0;
+    const threat = side === 0 ? ballX/100 : (100-ballX)/100;
+    const retreat = !possession && !isKeeper ? Math.max(0,1-threat)*5.5 : 0;
+    const pressStep = !possession && S.tc && S.tc.s === 'Gegenpress' && !isKeeper
+      ? (isForward || isMidfielder ? 4.5 : 1.5) : 0;
+    const movement = possession
+      ? zonePush + linePush + rolePush + forwardRun
+      : -retreat + pressStep + pulse*1.7;
+    const pull = possession ? .22 : .31;
+    const x = homeX + direction*movement + (ballX-homeX)*pull;
+    const width = possession ? (isWide ? 1.08 : .96) : .82;
+    const lateralRun = isWide && possession ? Math.sin(clock*.00034 + index*1.4)*3.2 : 0;
+    const y = 50 + (lane-50)*width + (ballY-lane)*pull + pulse*(possession?2.8:1.8) + lateralRun;
+    return {x:clamp(x,2,98),y:clamp(y,3,97),team};
   }
   function ease(current,target,dt,rate) {
     return current + (target-current) * (1-Math.exp(-Math.max(0,dt)/rate));
@@ -134,7 +166,7 @@
     ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();
   }
   function drawPitch(ctx,w,h) {
-    const x=w*.087,y=h*.025,pw=w*.826,ph=h*.95;
+    const x=w*.038,y=h*.025,pw=w*.924,ph=h*.95;
     ctx.fillStyle='#d0d3d2';ctx.fillRect(0,0,w,h);
     // Tribune bands and tunnel-side rails.
     for(let side=0;side<2;side++){
@@ -274,7 +306,7 @@
     teams.forEach((players,side)=>{
       const formation=formationFor(side);
       players.slice(0,11).forEach((p,i)=>{
-        const target=targetPosition(side,i,formation[i]||[50,50]);
+        const target=targetPosition(side,i,formation[i]||[50,50],players[i]);
         const key=side+':'+i+':'+String(p.id==null?p.name:p.id);
         let pos=state.players.get(key);
         if(!pos){pos={x:target.x,y:target.y};state.players.set(key,pos);}
@@ -326,7 +358,7 @@
   }
   function loop(ts) {
     if(!S || S.view!=='match'){cancelAnimationFrame(state.raf);document.body.classList.remove('fm26-overhead-live');state.raf=0;return;}
-    const dt=state.last?Math.min(50,ts-state.last):16;state.last=ts;
+    const dt=state.last?Math.min(50,ts-state.last):16;state.last=ts;state.clock+=dt;
     const canvas=$('oh-canvas');
     if(canvas){const ctx=canvas.getContext('2d');paint(ctx,canvas,dt);}
     updateHud();
