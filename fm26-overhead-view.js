@@ -314,7 +314,7 @@
         const x=field.x+field.w*pos.x/100,y=field.y+field.h*pos.y/100;
         const bx=field.x+field.w*state.ball.x/100,by=field.y+field.h*state.ball.y/100;
         const d=(x-bx)*(x-bx)+(y-by)*(y-by);
-        state.playerRefs.set(key,{p,side,index,x,y});
+        state.playerRefs.set(key,{p,side,index:i,x,y});
         if(d<nearestD){nearestD=d;nearest={p,x,y,side,index:i};}
         drawPlayer(ctx,p,x,y,clamp(h*.018,10,18),side,i,false);
       });
