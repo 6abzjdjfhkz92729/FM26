@@ -79,12 +79,21 @@
     const add = p => {
       if (!p || !p.name) return;
       const key = norm(p.name);
-      if (!key || seen.has(key)) return;
+      if (!key) return;
+      const existing = list.find(item => norm(item.name) === key);
+      if (existing) {
+        if ((existing.age === '—' || existing.age == null) && p.age != null) existing.age = p.age;
+        if ((existing.level === '—' || existing.level == null) && (p.ovr != null || p.level != null)) existing.level = p.ovr != null ? p.ovr : p.level;
+        if ((!existing.nationality) && (p.nat || p.nationality)) existing.nationality = p.nat || p.nationality;
+        if ((!existing.photo) && (p.photoUrl || p.strThumb || p.strCutout)) existing.photo = p.photoUrl || p.strThumb || p.strCutout;
+        if ((!existing.club || existing.club === 'Club non renseigné') && (p.club || p.team)) existing.club = p.club || p.team;
+        return;
+      }
       seen.add(key);
       list.push({
         name:String(p.name), club:String(p.club || p.team || 'Club non renseigné'),
         pos:String(p.pos || p.position || '—'), age:p.age == null ? '—' : p.age,
-        level:p.ovr == null ? '—' : p.ovr, value:p.val == null ? null : p.val,
+        level:p.ovr == null ? (p.level == null ? '—' : p.level) : p.ovr, value:p.val == null ? null : p.val,
         nationality:p.nat || p.nationality || '', photo:p.photoUrl || p.strThumb || p.strCutout || '',
         source:p.source || 'Effectifs FM26'
       });
@@ -330,6 +339,24 @@
     '.fm26-inbox-page{min-width:0!important;width:100%!important;height:100%!important;min-height:100%!important;box-sizing:border-box!important;color:#f4f7ff!important;background:radial-gradient(ellipse at 65% 12%,#223450 0,#111c2d 56%,#0b1421 100%)!important}',
     '.fm26-inbox-panel{background:linear-gradient(145deg,#182940,#111e30)!important;border:1px solid #3a506e!important;color:#f5f7fc!important}',
     '.fm26-inbox-copy{color:#f4f7ff!important;background:transparent!important;font-size:clamp(16px,1.35vw,24px)!important;line-height:1.55!important}',
+    '.fm26-inbox-split .fm26-inbox-content{grid-template-columns:minmax(220px,310px) minmax(0,1fr)!important;gap:12px!important;min-height:0!important}',
+    '.fm26-inbox-list-panel{padding:12px!important}',
+    '.fm26-inbox-list-panel .fm26-inbox-list{display:grid;gap:7px;align-content:start;overflow:auto;min-height:0}',
+    '.fm26-inbox-list-item{position:relative;width:100%;display:grid;gap:4px;text-align:left;padding:12px 12px 11px!important;background:#1a2d45!important;border:1px solid #3b526f!important;border-radius:9px!important;color:#f4f7ff!important;cursor:pointer}',
+    '.fm26-inbox-list-item.active{background:linear-gradient(115deg,#3b3c70,#1b3d58)!important;border-color:#9b91ff!important}',
+    '.fm26-inbox-list-item small{display:block;color:#aebdd1;font-size:11px}',
+    '.fm26-inbox-list-item .read,.fm26-inbox-list-item .unread{font-size:10px;color:#88d6c9;text-transform:uppercase;font-weight:850}',
+    '.fm26-inbox-list-item .unread{color:#ffd27a}',
+    '.fm26-inbox-message-panel{padding:clamp(16px,2vw,30px)!important}',
+    '.fm26-inbox-message-meta{display:flex;flex-wrap:wrap;gap:12px;color:#aebdd1;font-size:12px;border-bottom:1px solid #ffffff18;padding:10px 0 14px}',
+    '.fm26-inbox-message-meta b{color:#d8cfff}',
+    '.fm26-inbox-message-panel .fm26-inbox-copy{flex:1 1 auto;min-height:120px;padding:18px 4px!important;white-space:pre-wrap!important;overflow-wrap:anywhere!important;color:#f4f7ff!important}',
+    '.fm26-inbox-linked-player{display:flex;align-items:center;gap:13px;padding:12px;background:#10283c;border:1px solid #3a627d;border-radius:11px;margin-top:auto}',
+    '.fm26-inbox-linked-avatar{width:56px;height:56px;display:grid;place-items:center;overflow:hidden;border-radius:9px;background:#243c59;font-size:25px}',
+    '.fm26-inbox-linked-avatar img{width:100%;height:100%;object-fit:cover}',
+    '.fm26-inbox-linked-player b,.fm26-inbox-linked-player small,.fm26-inbox-linked-player span{display:block;color:#fff}',
+    '.fm26-inbox-linked-player small{color:#b6c5d8;margin-top:3px}.fm26-inbox-linked-player span{color:#a89bff;font-size:11px;margin-top:4px}',
+
     '.fm26-inbox-title{color:#a99cff!important}',
     '.fm26-inbox-assignment h2,.fm26-inbox-assignment strong,.fm26-inbox-detail span,.fm26-inbox-detail b,.fm26-inbox-trait,.fm26-inbox-player-name,.fm26-inbox-player-meta{color:#f3f6fc!important}',
     '.fm26-inbox-assignment .value{color:#9edee7!important}',
@@ -375,7 +402,7 @@
     '.fm26-lineup-player .photo{width:clamp(38px,3.5vw,52px)!important;height:clamp(30px,2.8vw,40px)!important;border-radius:7px!important;background:linear-gradient(145deg,#e5efff,#7da3c9)!important;color:#10253b!important;border:2px solid #f5f8ff!important}',
     '.fm26-lineup-player .photo img{display:none!important}',
     '.fm26-lineup-player b{background:#0e1c2c!important;border:1px solid #ffffff50!important;padding:2px 6px!important}',
-    '@media(max-width:760px){.fm26-search-player{align-items:flex-start;flex-wrap:wrap}.fm26-search-player .chip{margin-left:60px}.fm26-inbox-content{grid-template-columns:minmax(0,1fr)!important}.fm26-press-studio{padding:14px}}'
+    '@media(max-width:760px){.fm26-search-player{align-items:flex-start;flex-wrap:wrap}.fm26-search-player .chip{margin-left:60px}.fm26-inbox-content{grid-template-columns:minmax(0,1fr)!important}.fm26-inbox-list-panel{max-height:240px!important}.fm26-inbox-message-panel{min-height:320px!important}.fm26-press-studio{padding:14px}}'
   ].join('\n');
   document.head.appendChild(css);
 
