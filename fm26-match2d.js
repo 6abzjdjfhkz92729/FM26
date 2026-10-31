@@ -24,7 +24,7 @@
     '.arena #pt .dt.aw{background:#e1b43e;color:#18130a;border:2px solid #fff6dc;box-shadow:0 2px 6px #0009}',
     '.arena #pt .dt.ref{background:#25252b;color:#fff;border:2px solid #e7e7e7}',
     '.arena #pt .dt.ass{background:#24242a;color:#fff;border:2px solid #f0d36b}',
-    '.arena #pt .ball{width:16px;height:16px;background:radial-gradient(circle at 50% 50%,#1d2733 0 13%,transparent 14%),radial-gradient(circle at 23% 22%,#202a36 0 9%,transparent 10%),radial-gradient(circle at 79% 27%,#202a36 0 9%,transparent 10%),radial-gradient(circle at 27% 78%,#202a36 0 9%,transparent 10%),radial-gradient(circle at 78% 76%,#202a36 0 9%,transparent 10%),radial-gradient(circle at 29% 23%,#fff 0,#f2f4f7 48%,#9aa5b3 100%);border:1px solid #26303c;box-shadow:0 0 0 2px #ffffff68,0 3px 7px #000b;z-index:5;animation:fm26-ball-spin .42s linear infinite}',
+    '.arena #pt .ball{width:19px;height:19px;background:transparent url(\'./fm26-ball.svg\') center/contain no-repeat;border:0;box-shadow:none;filter:drop-shadow(0 2px 3px #000b);z-index:5;animation:fm26-ball-spin .42s linear infinite}',
     '@keyframes fm26-ball-spin{to{filter:brightness(1.06);transform:translate(-50%,-50%) rotate(360deg)}}',
     '@media(max-width:700px){.arena #pt .dt{width:19px;height:19px;font-size:9px}.arena #pt .ball{width:9px;height:9px}}'
   ].join('');
