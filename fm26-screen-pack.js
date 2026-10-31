@@ -510,7 +510,7 @@
     if (isInbox) {
       $('fm26-ref-menu')?.classList.remove('show');
       renderRail('inbox');
-      $('vw').innerHTML = messageMarkup();
+      $('vw').innerHTML = (window.FM26Enhancements && typeof window.FM26Enhancements.inboxMarkup === 'function') ? window.FM26Enhancements.inboxMarkup() : messageMarkup();
       wireInbox();
       return;
     }
