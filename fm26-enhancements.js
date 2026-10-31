@@ -60,17 +60,16 @@
     if (!S || S.view !== 'home') return;
     const fixture = typeof nxt === 'function' ? nxt() : (S.fx || []).find(f => !f.played && (f.home === S.club || f.away === S.club));
     const opponent = fixture ? (fixture.home === S.club ? fixture.away : fixture.home) : S.club;
-    const rating = ratingFor(opponent);
-    const fill = rating * 20;
-    document.querySelectorAll('.fm26-pack-stars').forEach(el => {
+    const paint = (el,club) => {
+      const rating = ratingFor(club), fill = rating * 20;
       el.style.backgroundImage = 'linear-gradient(90deg,#ffd45c 0%,#f6bc42 '+fill+'%,#69778f '+fill+'%,#69778f 100%)';
-      el.style.backgroundClip = 'text';
-      el.style.webkitBackgroundClip = 'text';
-      el.style.color = 'transparent';
-      el.style.webkitTextFillColor = 'transparent';
-      el.title = 'Niveau estimé du club : ' + rating.toFixed(1).replace('.',',') + ' / 5';
+      el.style.backgroundClip = 'text'; el.style.webkitBackgroundClip = 'text';
+      el.style.color = 'transparent'; el.style.webkitTextFillColor = 'transparent';
+      el.title = 'Niveau estimé de '+club+' : '+rating.toFixed(1).replace('.',',')+' / 5';
       el.setAttribute('aria-label',el.title);
-    });
+    };
+    document.querySelectorAll('.fm26-pack-stars').forEach(el => paint(el,opponent));
+    document.querySelectorAll('.fm26-ref-stars').forEach((el,i) => paint(el,i===0 ? S.club : opponent));
   }
 
   function playerCatalogue() {
@@ -265,6 +264,41 @@
     newSeason = function () { archiveSeason(); return oldNewSeason.apply(this,arguments); };
   }
 
+  function worldCompetitionsMarkup() {
+    ensureState();
+    const countries = {'France':'Ligue 1','Angleterre':'Premier League','Espagne':'La Liga','Italie':'Serie A','Allemagne':'Bundesliga'};
+    const country = S.fm26Country || '';
+    if (countries[country]) {
+      const league=countries[country], clubs=(LG&&LG[league])||[];
+      return '<main class="fm26-pack-page"><div class="page-intro"><div><p class="eyebrow">CENTRE DES COMPÉTITIONS</p><h1>'+esc(country)+'</h1><p>'+esc(league)+' · '+clubs.length+' clubs référencés dans FM26</p></div></div><section class="pn"><h3>'+esc(league)+'</h3><div class="fm26-world-club-grid">'+clubs.map(club=>'<div class="fm26-world-club">'+(typeof crest==='function'?crest(club,42):'')+'<b>'+esc(club)+'</b>'+(club===S.club?'<span class="b h">Ton club</span>':'')+'</div>').join('')+'</div></section></main>';
+    }
+    const continental = country==='Continental';
+    const titles = continental ? [
+      ['UEFA','Ligue des champions UEFA','Compétition européenne de clubs'],
+      ['UEFA','Ligue Europa','Compétition européenne de clubs'],
+      ['UEFA','Ligue Conférence UEFA','Compétition européenne de clubs'],
+      ['CONMEBOL','Copa Libertadores','Compétition sud-américaine de clubs'],
+      ['AFC','AFC Champions League Elite','Compétition asiatique de clubs'],
+      ['CAF','Ligue des champions CAF','Compétition africaine de clubs'],
+      ['CONCACAF','CONCACAF Champions Cup','Compétition nord-américaine de clubs'],
+      ['OFC','OFC Pro League','Compétition océanienne de clubs']
+    ] : [
+      ['FIFA','Coupe Intercontinentale de la FIFA 2026','Tournoi annuel des champions des six confédérations'],
+      ['FIFA','Derby des Amériques','Étape de la Coupe Intercontinentale 2026'],
+      ['FIFA','Challenger Cup','Étape de qualification pour la finale intercontinentale']
+    ];
+    return '<main class="fm26-pack-page"><div class="page-intro"><div><p class="eyebrow">CENTRE DES COMPÉTITIONS</p><h1>'+(continental?'Compétitions continentales':'Compétitions intercontinentales')+'</h1><p>Calendrier des grands tournois de clubs et des compétitions entre confédérations.</p></div></div><div class="fm26-world-tournament-grid">'+titles.map(t=>'<article class="pn fm26-world-tournament"><small>'+t[0]+'</small><h2>'+t[1]+'</h2><p>'+t[2]+'</p><span class="b m">Catalogue de compétition</span></article>').join('')+'</div><p class="fm26-pack-note">Les tournois sont affichés dans le centre du monde. Leur calendrier et leurs classements ne sont pas encore reliés au moteur de simulation de ta carrière.</p></main>';
+  }
+
+  const oldCompetitionView = V && V.comp;
+  if (V) {
+    V.comp = function () {
+      if (S && S.fm26World && ['Continental','Intercontinental'].includes(S.fm26Country)) return worldCompetitionsMarkup();
+      if (S && S.fm26World && ['France','Angleterre','Espagne','Italie','Allemagne'].includes(S.fm26Country)) return worldCompetitionsMarkup();
+      return typeof oldCompetitionView === 'function' ? oldCompetitionView() : '';
+    };
+  }
+
   const oldManager = V && V.mgr;
   if (V) {
     V.mgr = function () {
@@ -397,6 +431,16 @@
     '.fm26-trophy-card{display:flex;align-items:center;gap:14px;padding:16px;background:linear-gradient(145deg,#293b55,#18283e);border:1px solid #7b6e4a;border-radius:12px;color:#fff}',
     '.fm26-trophy-icon{font-size:34px}.fm26-trophy-card small{display:block;color:#c3cfe0;margin-top:4px}',
     '.fm26-pack-stars{font-size:clamp(20px,2.2vw,34px);letter-spacing:-3px;color:#e6b84c!important;text-shadow:0 2px 8px #0005;margin:7px 0 15px}',
+    '.fm26-world-club-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;padding:10px}',
+    '.fm26-world-club{display:flex;align-items:center;gap:10px;min-width:0;padding:10px;background:#192b43;border:1px solid #344d6c;border-radius:9px;color:#fff}',
+    '.fm26-world-club b{flex:1;min-width:0;overflow-wrap:anywhere}',
+    '.fm26-world-tournament-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}',
+    '.fm26-world-tournament small{color:#a99aff;font-weight:900;letter-spacing:.12em}',
+    '.fm26-world-tournament h2{margin:9px 0;color:#f5f7ff;font-size:19px}',
+    '.fm26-world-tournament p{color:#b7c6da;min-height:40px}',
+    '.fm26-lineup-player .photo b{max-width:none!important;padding:0!important;background:transparent!important;border:0!important;color:#172a41!important;font-size:clamp(13px,1.15vw,18px)!important}',
+    '.fm26-ref-stars{color:#e6b84c!important;text-shadow:0 2px 8px #0005}',
+
     '.fm26-lineup-field{background:repeating-linear-gradient(90deg,#2d8b4e 0 8.33%,#267b43 8.33% 16.66%)!important;box-shadow:0 12px 34px #0008,inset 0 0 50px #102f1b!important}',
     '.fm26-lineup-field:before,.fm26-lineup-field:after,.fm26-lineup-circle,.fm26-lineup-box{border-color:#eaffec!important}',
     '.fm26-lineup-player .photo{width:clamp(38px,3.5vw,52px)!important;height:clamp(30px,2.8vw,40px)!important;border-radius:7px!important;background:linear-gradient(145deg,#e5efff,#7da3c9)!important;color:#10253b!important;border:2px solid #f5f8ff!important}',
