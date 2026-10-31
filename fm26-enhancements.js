@@ -269,6 +269,40 @@
     return '<main class="fm26-pack-page"><div class="page-intro"><div><p class="eyebrow">PALMARÈS DU MANAGER</p><h1>Vitrine des trophées</h1><p>Chaque titre remporté au terme d’une saison est conservé dans cette vitrine.</p></div></div><section class="pn"><div class="fm26-trophy-grid">'+(rows||'<div class="fm26-search-empty">Aucun trophée enregistré pour le moment. Remporte un championnat pour inaugurer ta vitrine.</div>')+'</div></section></main>';
   }
 
+  function modernPostMarkup() {
+    if (!M || !M.f) return '<main class="fm26-pack-page"><section class="pn">Aucun compte rendu disponible.</section></main>';
+    const f=M.f, stats=M.stats||{}, home=String(f.home||'Équipe domicile'), away=String(f.away||'Équipe extérieure');
+    const scoreHome=Number(M.h)||0, scoreAway=Number(M.a)||0;
+    const userHome=home===S.club, userScore=userHome?scoreHome:scoreAway, rivalScore=userHome?scoreAway:scoreHome;
+    const verdict=userScore>rivalScore?'VICTOIRE':userScore<rivalScore?'DÉFAITE':'MATCH NUL';
+    const resultClass=userScore>rivalScore?'win':userScore<rivalScore?'loss':'draw';
+    const pair=key=>Array.isArray(stats[key])?stats[key].map(x=>Number(x)||0):null;
+    const shown=(values,decimals)=>values?values.map(x=>decimals!=null?x.toFixed(decimals):String(x)).join(' – '):'—';
+    const possession=[Number(M.ps)||50,100-(Number(M.ps)||50)];
+    const shots=pair('shots')||((M.sh||[0,0]).map(x=>Number(x)||0));
+    const rows=[
+      ['Possession',shown(possession.map(x=>Math.round(x)),'%')],
+      ['Tirs',shown(shots)],
+      ['Tirs cadrés',shown(pair('shotsOnTarget'))],
+      ['Buts attendus · xG',shown(pair('xg'),2)],
+      ['Passes réussies',pair('completed')&&pair('passes')?pair('completed').map((x,i)=>x+'/'+pair('passes')[i]).join(' – '):'—'],
+      ['Corners',shown(pair('corners'))],
+      ['Fautes',shown(pair('fouls'))],
+      ['Cartons jaunes',shown(pair('yellow'))],
+      ['Cartons rouges',shown(pair('red'))]
+    ];
+    const players=(Array.isArray(M.matchXI)&&M.matchXI.length?M.matchXI:(typeof xi==='function'?xi():[])).filter(Boolean);
+    const best=players.slice().sort((a,b)=>(Number(b.form)||0)-(Number(a.form)||0))[0];
+    const events=(M.ev||[]).slice(0,14);
+    const statsHTML=rows.map(row=>'<div class="fm26-post-stat"><b>'+esc(row[1].split(' – ')[0])+'</b><span>'+esc(row[0])+'</span><b style="text-align:right">'+esc(row[1].split(' – ')[1]||'')+'</b></div>').join('');
+    const eventsHTML=events.length?events.map(ev=>'<article class="fm26-post-event"><time>'+esc(ev.m)+"'</time><i>'+esc(ev.k||'•')+'</i><p>'+esc(ev.t||'Événement de match')+'</p></article>").join(''):'<p class="mu">Aucun événement détaillé enregistré.</p>';
+    const clubName=userHome?home:away;
+    const topClub=typeof crest==='function'?crest(home,64):'';
+    const bottomClub=typeof crest==='function'?crest(away,64):'';
+    return '<main class="fm26-post-page"><header class="page-intro"><div><p class="eyebrow">FM26 · ANALYSE D’APRÈS-MATCH</p><h1>Compte rendu du match</h1><p>'+esc(f.comp||S.lg)+' · '+esc(typeof fd==='function'?fd(f.date):f.date)+'</p></div><span class="fm26-post-verdict '+resultClass+'">'+verdict+'</span></header><section class="fm26-post-hero"><div class="fm26-post-team">'+topClub+'<b>'+esc(home)+'</b></div><div class="fm26-post-score"><small>RÉSULTAT FINAL</small><strong>'+scoreHome+' – '+scoreAway+'</strong><span class="fm26-post-verdict '+resultClass+'">'+verdict+'</span></div><div class="fm26-post-team">'+bottomClub+'<b>'+esc(away)+'</b></div></section><div class="fm26-post-grid"><section class="fm26-post-panel"><h3>Statistiques de la rencontre</h3>'+statsHTML+(best?'<div class="fm26-post-player"><span class="medal">★</span><div><b>Joueur le mieux noté · '+esc(best.name)+'</b><small>'+esc(best.pos||'')+' · Note '+esc(Number(best.form||0).toFixed(1))+'</small></div></div>':'')+'</section><section class="fm26-post-panel"><h3>Temps forts</h3><div class="fm26-post-events">'+eventsHTML+'</div></section></div><section class="fm26-post-panel" style="margin-top:14px"><h3>Lecture du match</h3><p class="mu">'+(userScore>rivalScore?'Ton équipe repart avec les trois points. La direction et les supporters attendent de confirmer cette dynamique.':userScore<rivalScore?'Ton équipe devra analyser les occasions concédées et travailler la réaction collective.':'Les deux équipes se quittent sur un score de parité. Le prochain match permettra de rebondir.')+'</p></section></main>';
+  }
+  if (typeof V !== 'undefined') V.post = modernPostMarkup;
+
   const oldNewSeason = typeof newSeason === 'function' ? newSeason : null;
   if (oldNewSeason) {
     newSeason = function () { archiveSeason(); return oldNewSeason.apply(this,arguments); };
