@@ -402,9 +402,9 @@
 
   function updateSectionForView() {
     if (S.view === 'home') section = 'coach';
-    else if (S.view === 'mgr') section = 'coach';
+    else if (S.view === 'mgr') section = S.fm26Panel === 'options' ? 'opt' : 'coach';
     else if (S.view === 'comp') section = 'world';
-    else if (S.view === 'squad') section = 'search';
+    else if (S.view === 'squad') section = (S.fm26SearchMode || ['scout-results','shortlist','recommended','scouting','staff','contracts'].includes(S.fm26Panel)) ? 'search' : 'club';
     else if (S.view === 'fin' || S.view === 'jobs') section = 'search';
     else if (S.view === 'tactics' || S.view === 'sched') section = 'club';
   }
