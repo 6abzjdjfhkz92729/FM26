@@ -246,7 +246,7 @@
       '<div class="oh-scorebar"><div class="oh-clock" id="oh-clock">00\'</div>'+
       '<div class="oh-team home"><span>'+homeShort+'</span></div><div class="oh-score"><b id="oh-home-score">'+Number(M.h||0)+'</b><span>–</span><b id="oh-away-score">'+Number(M.a||0)+'</b></div>'+
       '<div class="oh-team away"><span>'+awayShort+'</span></div><div class="oh-league">'+league+'</div></div>'+
-      '<div class="oh-topright"><button class="oh-iconbtn" data-oh-action="settings" title="Commandes">⚙</button><button class="oh-iconbtn oh-pause" id="oh-pause" data-oh-action="pause">'+(M.p?'Reprendre':'Pause')+'</button></div></header>'+
+      '<div class="oh-topright"><button class="oh-iconbtn" data-oh-action="settings" title="Commandes">⚙</button><button class="oh-iconbtn oh-pause" id="oh-pause" data-oh-action="'+(M.done?'continue':'pause')+'">'+(M.done?'Compte rendu':M.p?'Reprendre':'Pause')+'</button></div></header>'+
       '<section class="oh-stage"><canvas id="oh-canvas" aria-label="Terrain de football vu du dessus"></canvas><div id="oh-panel-root">'+panelMarkup()+'</div><div id="oh-paused" class="oh-paused" style="display:'+(M.p?'grid':'none')+'"><span>MATCH EN PAUSE</span></div><div id="oh-goalflash" class="oh-goalflash" style="display:none">⚽ BUT !</div></section>'+
       '<footer class="oh-bottom"><button class="oh-bottom-icon" data-oh-action="stats" title="Statistiques">▣</button>'+
       '<div class="oh-comment" id="oh-comment">'+esc(M.cm||'Coup d’envoi. Les équipes se mettent en place.')+'</div>'+
@@ -309,7 +309,7 @@
     if(hs)hs.textContent=String(M.h||0);
     if(as)as.textContent=String(M.a||0);
     if(comment && M.cm && M.cm!==state.lastComment){comment.textContent=M.cm;state.lastComment=M.cm;}
-    const pause=$('oh-pause');if(pause)pause.textContent=M.p?'Reprendre':'Pause';
+    const pause=$('oh-pause');if(pause){pause.textContent=M.done?'Compte rendu':M.p?'Reprendre':'Pause';pause.dataset.ohAction=M.done?'continue':'pause';}
     const overlay=$('oh-paused');if(overlay)overlay.style.display=M.p?'grid':'none';
     const subs=$('oh-subs');if(subs)subs.textContent='↔ '+Math.max(0,5-(M.subsUsed||0))+'/5';
     const tactic=document.querySelector('.oh-action.mentality');if(tactic&&S.tc)tactic.textContent=S.tc.m||'Balanced';
@@ -333,7 +333,7 @@
     state.raf=requestAnimationFrame(loop);
   }
   function pauseMatch() {
-    if(!M)return;
+    if(!M || M.done)return;
     M.p=!M.p;
     if(M.p){try{clearInterval(T);}catch(_){}}
     else{try{clearInterval(T);M.sp=state.interval;T=setInterval(tick,state.interval);}catch(_){}}
@@ -353,6 +353,7 @@
     if(!button || !document.body.classList.contains('fm26-overhead-live'))return;
     const action=button.dataset.ohAction;
     if(action==='pause'){pauseMatch();return;}
+    if(action==='continue'){if(typeof cont==='function')cont();return;}
     if(action==='speed'){setSpeed(Number(button.dataset.speed)||2);return;}
     if(action==='stats'){state.panel=state.panel==='stats'?'':'stats';const root=$('oh-panel-root');if(root)root.innerHTML=panelMarkup();return;}
     if(action==='settings'){state.panel=state.panel==='settings'?'':'settings';const root=$('oh-panel-root');if(root)root.innerHTML=panelMarkup();return;}
