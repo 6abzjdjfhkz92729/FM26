@@ -354,6 +354,6 @@
       return output;
     };
   }
-  window.FM26ImmersiveCareer={version:'1.0.0',refreshDaily:()=>{if(S){ensureIssue(S.date,true);save();if(S.view==='home')render();}},getDailyIssue:()=>S?ensureIssue(S.date,false):null,getPressReply:journalistReply};
+  window.FM26ImmersiveCareer={version:'1.0.0',refreshDaily:()=>{if(S){ensureIssue(S.date,true);save();if(S.view==='home')render();}},getDailyIssue:()=>S?ensureIssue(S.date,false):null,getPressReply:journalistReply,continueCareer:cont,simulateWorldFixtures:simulateWorldFixtures};
   if(S){ensureIssue(S.date,false);save();}
 })();
