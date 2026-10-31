@@ -357,6 +357,14 @@
     updateHud();
   }
   document.addEventListener('click',event=>{
+    const canvas=event.target.closest('#oh-canvas');
+    if(canvas && document.body.classList.contains('fm26-overhead-live')){
+      const rect=canvas.getBoundingClientRect(),x=event.clientX-rect.left,y=event.clientY-rect.top;
+      let hit=null,best=Infinity;
+      state.playerRefs.forEach(ref=>{const d=(ref.x-x)*(ref.x-x)+(ref.y-y)*(ref.y-y);if(d<best){best=d;hit=ref;}});
+      if(hit && best<Math.pow(Math.max(24,rect.height*.055),2)){state.selectedPlayer=hit;state.panel='player';const root=$('oh-panel-root');if(root)root.innerHTML=panelMarkup();}
+      return;
+    }
     const button=event.target.closest('[data-oh-action]');
     if(!button || !document.body.classList.contains('fm26-overhead-live'))return;
     const action=button.dataset.ohAction;
@@ -365,7 +373,7 @@
     if(action==='speed'){setSpeed(Number(button.dataset.speed)||2);return;}
     if(action==='stats'){state.panel=state.panel==='stats'?'':'stats';const root=$('oh-panel-root');if(root)root.innerHTML=panelMarkup();return;}
     if(action==='settings'){state.panel=state.panel==='settings'?'':'settings';const root=$('oh-panel-root');if(root)root.innerHTML=panelMarkup();return;}
-    if(action==='close'){state.panel='';const root=$('oh-panel-root');if(root)root.innerHTML='';return;}
+    if(action==='close'){state.panel='';state.selectedPlayer=null;const root=$('oh-panel-root');if(root)root.innerHTML='';return;}
     if(action==='subs'){
       if(window.FM26MatchDay && typeof window.FM26MatchDay.openSubstitutions==='function')window.FM26MatchDay.openSubstitutions();
       return;
@@ -386,7 +394,7 @@
   });
   V.match=function(){
     document.body.classList.add('fm26-overhead-live');
-    state.panel='';
+    state.panel='';state.selectedPlayer=null;state.playerRefs.clear();
     const html=markup();
     requestAnimationFrame(beginLoop);
     return html;
