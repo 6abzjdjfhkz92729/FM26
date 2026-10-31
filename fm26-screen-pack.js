@@ -340,10 +340,8 @@
       const pos = formation[i] || formation[formation.length - 1] || [50,50];
       const left = Math.max(5,Math.min(95,Number(pos[0]) || 50));
       const top = 100 - Math.max(8,Math.min(92,Number(pos[1]) || 50));
-      const initials = String(p.name || 'J').split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase();
       const short = String(p.name || 'Joueur').split(' ').slice(-1)[0];
-      const photo = portraitSrc(p,i);
-      return '<button class="fm26-lineup-player ' + (preSelectedSlot === i ? 'selected' : '') + '" type="button" style="--x:' + left + '%;--y:' + top + '%" data-pack-lineup="slot" data-slot="' + i + '" title="Choisir ' + esc(p.name) + '"><span class="photo">' + (photo ? '<img src="' + esc(photo) + '" alt="Portrait de ' + esc(p.name) + '">' : esc(initials)) + '</span><b>' + esc(short) + '</b><small>' + esc(p.pos) + ' · ' + esc(p.no) + '</small></button>';
+      return '<button class="fm26-lineup-player ' + (preSelectedSlot === i ? 'selected' : '') + '" type="button" style="--x:' + left + '%;--y:' + top + '%" data-pack-lineup="slot" data-slot="' + i + '" title="Choisir ' + esc(p.name) + '"><span class="photo"><b>' + esc(p.no || (i+1)) + '</b></span><b>' + esc(short) + '</b><small>' + esc(p.pos) + '</small></button>';
     }).join('');
     const benchRows = bench.map(p => '<button class="fm26-lineup-bench-row" type="button" data-pack-lineup="bench" data-player="' + esc(p.id) + '"><span class="num">' + esc(p.no) + '</span><span><strong>' + esc(p.name) + '</strong><small>' + esc(p.pos) + ' · ' + esc(p.ovr) + ' · ' + esc(p.cond) + '%</small></span><small>' + esc(Number(p.form || 0).toFixed(1)) + '</small></button>').join('');
     return '<main class="fm26-lineup-page"><header class="fm26-lineup-top"><div class="club home">' + (typeof crest === 'function' ? crest(f.home,44) : '') + '<span>' + esc(f.home) + '</span></div>' +
