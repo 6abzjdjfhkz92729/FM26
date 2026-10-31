@@ -261,9 +261,9 @@
     return '<main class="fm26-pack-page"><div class="fm26-pack-grid">' +
       '<div class="fm26-pack-col"><section class="fm26-pack-fixture"><div class="fm26-pack-fixture-inner"><div class="fm26-pack-club">' + clubCrest + '<strong>' + esc(opponent) + '</strong><div class="fm26-pack-stars">★★★★★</div></div>' +
       '<div><p class="fm26-pack-eyebrow">' + esc(when) + (selected ? ' (' + (selected.home === S.club ? 'À domicile' : 'À l’extérieur') + ')' : '') + '</p><h1>' + esc(opponent) + '</h1>' +
-      '<div class="fm26-pack-stars">★★★★★</div><p class="fm26-pack-comp">' + esc(selected ? (selected.comp || S.lg) : S.lg) + '</p>' +
+      '<p class="fm26-pack-comp">' + esc(selected ? (selected.comp || S.lg) : S.lg) + '</p>' +
       '<div class="fm26-pack-label">FORME RÉCENTE</div><div class="fm26-pack-form">' + getForm() + '</div>' +
-      '<div class="fm26-pack-label">ENTRAÎNEUR</div><strong style="font-size:clamp(15px,1.45vw,24px)">' + esc(S.mg || 'Manager') + '</strong></div></div></section>' +
+      '</div></div></section>' +
       '<section class="fm26-pack-section"><div class="fm26-pack-section-head">CLASSEMENT · ' + esc(S.lg) + '</div>' +
       '<div class="fm26-pack-minirow">Position : <b>' + rank + 'e</b> &nbsp; Points : <b>' + esc(mine.pts) + '</b> &nbsp; Différence de buts : <b>' + (mine.gd > 0 ? '+' : '') + esc(mine.gd) + '</b></div>' +
       '<div class="fm26-pack-minirow">Budget transferts : <b>€' + esc(S.bud) + ' M</b> &nbsp; Direction : <b>' + esc(S.board) + '%</b> &nbsp; Supporters : <b>' + esc(S.fans) + '%</b></div>' +
@@ -348,7 +348,7 @@
       '<div style="text-align:center"><b>COMPOSITION D’ÉQUIPE</b><small style="display:block;color:#c4d0dc">' + esc(f.comp || S.lg) + ' · ' + esc(dateOf(f.date)) + '</small></div>' +
       '<div class="club away"><span>' + esc(f.away) + '</span>' + (typeof crest === 'function' ? crest(f.away,44) : '') + '</div></header>' +
       '<section class="fm26-lineup-stage"><div class="fm26-lineup-stadium"></div><div class="fm26-lineup-field"><div class="fm26-lineup-circle"></div><div class="fm26-lineup-box top"></div><div class="fm26-lineup-box bottom"></div>' + pitchPlayers + '</div>' +
-      '<div class="fm26-lineup-club-crest">' + (typeof crest === 'function' ? crest(S.club,150) : '') + '</div><aside class="fm26-lineup-bench"><h2>REMPLAÇANTS</h2>' + (benchRows || '<p>Aucun remplaçant disponible.</p>') + '</aside></section>' +
+      '<div class="fm26-lineup-club-crest">' + (typeof crest === 'function' ? crest(S.club,150) : '') + '</div><aside class="fm26-lineup-bench"><h2>REMPLAÇANTS</h2>' + (benchRows || '<p>Aucun remplaçant disponible.</p>') + '<div class="fm26-lineup-coach"><span class="fm26-lineup-coach-mark">FM</span><div><small>TON COACH</small><b>' + esc(S.mg || 'Entraîneur principal') + '</b><span>Préparation et gestion de l’équipe</span></div></div></aside></section>' +
       '<footer class="fm26-lineup-bottom"><div><label for="fm26-pack-formation">Formation</label> <select id="fm26-pack-formation">' + Object.keys(FM).map(k => '<option value="' + esc(k) + '" ' + (S.tc.f === k ? 'selected' : '') + '>' + esc(k) + '</option>').join('') + '</select>' +
       '<span style="margin-left:10px;color:#c6d0db;font-size:12px">' + esc(preSelectedSlot == null ? 'Sélectionne un titulaire puis un remplaçant.' : 'Titulaire sélectionné : ' + (lineup[preSelectedSlot] ? lineup[preSelectedSlot].name : '')) + '</span></div>' +
       '<div class="actions"><button class="fm26-pack-button secondary" type="button" data-pack-lineup="clear">Réinitialiser</button><button class="fm26-pack-button" type="button" data-pack-lineup="start">ALLER AU MATCH →</button></div></footer></main>';
