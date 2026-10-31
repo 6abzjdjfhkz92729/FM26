@@ -280,23 +280,25 @@
     const shown=(values,decimals)=>values?values.map(x=>decimals!=null?x.toFixed(decimals):String(x)).join(' – '):'—';
     const possession=[Number(M.ps)||50,100-(Number(M.ps)||50)];
     const shots=pair('shots')||((M.sh||[0,0]).map(x=>Number(x)||0));
+    const shotsOnTarget=pair('shotsOnTarget'),xg=pair('xg'),completed=pair('completed'),passes=pair('passes');
+    const corners=pair('corners'),fouls=pair('fouls'),yellow=pair('yellow'),red=pair('red');
+    const value=(arr,index,decimals)=>arr? (decimals==null?String(arr[index]):arr[index].toFixed(decimals)) : '—';
     const rows=[
-      ['Possession',shown(possession.map(x=>Math.round(x)),'%')],
-      ['Tirs',shown(shots)],
-      ['Tirs cadrés',shown(pair('shotsOnTarget'))],
-      ['Buts attendus · xG',shown(pair('xg'),2)],
-      ['Passes réussies',pair('completed')&&pair('passes')?pair('completed').map((x,i)=>x+'/'+pair('passes')[i]).join(' – '):'—'],
-      ['Corners',shown(pair('corners'))],
-      ['Fautes',shown(pair('fouls'))],
-      ['Cartons jaunes',shown(pair('yellow'))],
-      ['Cartons rouges',shown(pair('red'))]
+      ['Possession',Math.round(possession[0])+'%',Math.round(possession[1])+'%'],
+      ['Tirs',value(shots,0),value(shots,1)],
+      ['Tirs cadrés',value(shotsOnTarget,0),value(shotsOnTarget,1)],
+      ['Buts attendus · xG',value(xg,0,2),value(xg,1,2)],
+      ['Passes réussies',completed&&passes?completed[0]+'/'+passes[0]:'—',completed&&passes?completed[1]+'/'+passes[1]:'—'],
+      ['Corners',value(corners,0),value(corners,1)],
+      ['Fautes',value(fouls,0),value(fouls,1)],
+      ['Cartons jaunes',value(yellow,0),value(yellow,1)],
+      ['Cartons rouges',value(red,0),value(red,1)]
     ];
     const players=(Array.isArray(M.matchXI)&&M.matchXI.length?M.matchXI:(typeof xi==='function'?xi():[])).filter(Boolean);
     const best=players.slice().sort((a,b)=>(Number(b.form)||0)-(Number(a.form)||0))[0];
     const events=(M.ev||[]).slice(0,14);
-    const statsHTML=rows.map(row=>'<div class="fm26-post-stat"><b>'+esc(row[1].split(' – ')[0])+'</b><span>'+esc(row[0])+'</span><b style="text-align:right">'+esc(row[1].split(' – ')[1]||'')+'</b></div>').join('');
-    const eventsHTML=events.length?events.map(ev=>'<article class="fm26-post-event"><time>'+esc(ev.m)+"'</time><i>'+esc(ev.k||'•')+'</i><p>'+esc(ev.t||'Événement de match')+'</p></article>").join(''):'<p class="mu">Aucun événement détaillé enregistré.</p>';
-    const clubName=userHome?home:away;
+    const statsHTML=rows.map(row=>'<div class="fm26-post-stat"><b>'+esc(row[1])+'</b><span>'+esc(row[0])+'</span><b style="text-align:right">'+esc(row[2])+'</b></div>').join('');
+    const eventsHTML=events.length?events.map(ev=>'<article class="fm26-post-event"><time>'+esc(ev.m)+"'</time><i>"+esc(ev.k||'•')+"</i><p>"+esc(ev.t||'Événement de match')+"</p></article>").join(''):'<p class="mu">Aucun événement détaillé enregistré.</p>';
     const topClub=typeof crest==='function'?crest(home,64):'';
     const bottomClub=typeof crest==='function'?crest(away,64):'';
     return '<main class="fm26-post-page"><header class="page-intro"><div><p class="eyebrow">FM26 · ANALYSE D’APRÈS-MATCH</p><h1>Compte rendu du match</h1><p>'+esc(f.comp||S.lg)+' · '+esc(typeof fd==='function'?fd(f.date):f.date)+'</p></div><span class="fm26-post-verdict '+resultClass+'">'+verdict+'</span></header><section class="fm26-post-hero"><div class="fm26-post-team">'+topClub+'<b>'+esc(home)+'</b></div><div class="fm26-post-score"><small>RÉSULTAT FINAL</small><strong>'+scoreHome+' – '+scoreAway+'</strong><span class="fm26-post-verdict '+resultClass+'">'+verdict+'</span></div><div class="fm26-post-team">'+bottomClub+'<b>'+esc(away)+'</b></div></section><div class="fm26-post-grid"><section class="fm26-post-panel"><h3>Statistiques de la rencontre</h3>'+statsHTML+(best?'<div class="fm26-post-player"><span class="medal">★</span><div><b>Joueur le mieux noté · '+esc(best.name)+'</b><small>'+esc(best.pos||'')+' · Note '+esc(Number(best.form||0).toFixed(1))+'</small></div></div>':'')+'</section><section class="fm26-post-panel"><h3>Temps forts</h3><div class="fm26-post-events">'+eventsHTML+'</div></section></div><section class="fm26-post-panel" style="margin-top:14px"><h3>Lecture du match</h3><p class="mu">'+(userScore>rivalScore?'Ton équipe repart avec les trois points. La direction et les supporters attendent de confirmer cette dynamique.':userScore<rivalScore?'Ton équipe devra analyser les occasions concédées et travailler la réaction collective.':'Les deux équipes se quittent sur un score de parité. Le prochain match permettra de rebondir.')+'</p></section></main>';
@@ -513,6 +515,7 @@
     '.fm26-post-score strong{font-size:clamp(34px,4vw,58px);font-weight:950;letter-spacing:.05em;font-variant-numeric:tabular-nums;color:#fff}',
     '.fm26-post-score small{font-size:10px;font-weight:900;letter-spacing:.16em;color:#aebed2}',
     '.fm26-post-verdict{display:inline-flex;padding:6px 11px;border-radius:99px;background:#293d54;border:1px solid #5c7291;color:#dce9f5;font-size:11px;font-weight:900}',
+    '.fm26-post-verdict.win{background:#174b3a;border-color:#3b936d;color:#a9f0ce}.fm26-post-verdict.loss{background:#5b2936;border-color:#a34e62;color:#ffc4d0}.fm26-post-verdict.draw{background:#3a4657;border-color:#71839a;color:#e0e9f3}',
     '.fm26-post-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(270px,.85fr);gap:14px;margin-top:14px;align-items:start}',
     '.fm26-post-panel{padding:16px;background:#17263a;border:1px solid #344d6b;border-radius:13px;min-width:0}',
     '.fm26-post-panel h3{margin:0 0 12px;font-size:16px;color:#eff5ff}',
