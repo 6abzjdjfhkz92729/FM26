@@ -127,6 +127,19 @@
     return combined.filter(p => [p.name,p.club,p.pos,p.nationality].some(v => norm(v).includes(q)));
   }
 
+  function inboxMarkup() {
+    ensureState();
+    const messages = S.ib || [];
+    const idx = Math.max(0,Math.min(messages.length-1,Number(S.mi)||0));
+    const m = messages[idx] || {s:'Direction du club',t:'Aucun message',b:'Ta boîte de réception est vide.',d:S.date,r:true};
+    const fullText = String(m.t||'')+' '+String(m.b||'');
+    const catalogue = playerCatalogue();
+    const player = catalogue.find(p=>p.name && norm(fullText).includes(norm(p.name)));
+    const list = messages.map((x,i)=>'<button type="button" class="fm26-inbox-list-item '+(i===idx?'active':'')+'" data-pack-mail="select" data-index="'+i+'"><b>'+esc(x.t||'Message')+'</b><small>'+esc(x.s||'Staff du club')+' · '+esc(dateOf(x.d||S.date))+'</small><span class="'+(x.r?'read':'unread')+'">'+(x.r?'Lu':'Non lu')+'</span></button>').join('');
+    const playerPanel = player ? '<section class="fm26-inbox-linked-player"><div class="fm26-inbox-linked-avatar">'+(player.photo?'<img src="'+esc(player.photo)+'" alt="">':'⚽')+'</div><div><b>'+esc(player.name)+'</b><small>'+esc(player.club)+' · '+esc(player.pos)+'</small><span>'+(player.level==='—'?'Niveau non renseigné':'Niveau '+esc(player.level)+'/100')+'</span></div></section>' : '';
+    return '<main class="fm26-inbox-page fm26-inbox-split"><div class="fm26-inbox-content"><section class="fm26-inbox-panel fm26-inbox-list-panel"><div class="fm26-inbox-title">BOÎTE DE RÉCEPTION · '+messages.length+'</div><div class="fm26-inbox-list">'+(list||'<p class="fm26-inbox-empty">Aucun message reçu.</p>')+'</div></section><section class="fm26-inbox-panel fm26-inbox-message-panel"><div class="fm26-inbox-title">'+esc(m.t||'MESSAGE DU CLUB')+'</div><div class="fm26-inbox-message-meta"><b>'+esc(m.s||'Staff du club')+'</b><span>'+esc(typeof fd==='function'?fd(m.d||S.date):(m.d||S.date))+'</span><span>'+(m.r?'Consulté':'Nouveau message')+'</span></div><div class="fm26-inbox-copy">'+esc(m.b||'Aucun détail complémentaire pour ce message.')+'</div>'+playerPanel+'</section></div><footer class="fm26-inbox-actions"><button class="primary" type="button" data-pack-mail="report">Marquer comme lu</button><button type="button" data-pack-mail="list">Actualiser la boîte</button><button type="button" data-pack-mail="previous" '+(idx<=0?'disabled':'')+'>◀ Précédent</button><button type="button" data-pack-mail="next" '+(idx>=messages.length-1?'disabled':'')+'>Suivant ▶</button></footer></main>';
+  }
+
   function playerSearchMarkup() {
     ensureState();
     const q = S.fm26SearchQuery || '';
@@ -369,6 +382,7 @@
   function refresh() {
     ensureReopenButton();
     paintStars();
+    if (typeof CID !== 'undefined' && CID) { CID['Leeds United']=CID['Leeds']||'341'; CID['Leeds United FC']=CID['Leeds']||'341'; }
   }
 
   function findCurrentQuery() {
@@ -443,6 +457,8 @@
     if (sectionBtn) {
       const key=sectionBtn.dataset.packSection;
       if (key==='search') { e.preventDefault(); e.stopImmediatePropagation(); openSearch(); return; }
+      if (key==='club') { S.fm26SearchMode=false; S.fm26Panel=''; }
+      if (key==='home' || key==='inbox') { S.fm26SearchMode=false; }
       if (key==='world') { e.preventDefault(); e.stopImmediatePropagation(); S.fm26World=true; S.fm26Country=''; S.view='comp'; save(); render(); return; }
       if (key==='coach') { e.preventDefault(); e.stopImmediatePropagation(); S.fm26Panel='confidence'; S.fm26SearchMode=false; S.view='mgr'; save(); render(); return; }
       if (key==='opt') { e.preventDefault(); e.stopImmediatePropagation(); S.fm26Panel='options'; S.fm26SearchMode=false; S.view='mgr'; save(); render(); return; }
@@ -473,7 +489,7 @@
   };
 
   window.FM26Enhancements = {
-    version:'2.0.0',toggleRails,playerSearchMarkup,scoutingResultsMarkup,shortlistMarkup,pressMarkup,richHistoryMarkup,richTrophiesMarkup,refresh
+    version:'2.1.0',toggleRails,playerSearchMarkup,inboxMarkup,scoutingResultsMarkup,shortlistMarkup,pressMarkup,richHistoryMarkup,richTrophiesMarkup,refresh
   };
 
   if (S) ensureState();
