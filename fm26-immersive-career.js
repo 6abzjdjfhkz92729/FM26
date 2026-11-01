@@ -24,126 +24,120 @@
   const pad18 = (title,lines,fallback) => ({title,lines:lines.concat(Array.from({length:Math.max(0,18-lines.length)},()=>fallback||'Le staff poursuivra son observation lors de la prochaine échéance.')).slice(0,18)});
 
   function buildIssue(date) {
-    const club=S.club||'Club actuel',league=S.lg||'Championnat',games=played(),last=games[games.length-1]||null,next=nextMatch(),recent=games.slice(-5);
+    const club=S.club||'Club actuel',league=S.lg||'Championnat';
+    const games=played(),last=games[games.length-1]||null,next=nextMatch(),recent=games.slice(-5);
     const tab=tableInfo(),rows=tab.rows,market=transferMessages(),targets=(S.shortlist||[]).slice(0,3);
-    const others=(S.fx||[]).filter(f=>f.played&&(!f.comp||f.comp===league)&&f.home!==club&&f.away!==club&&String(f.date||'').slice(0,10)===String(date).slice(0,10));
-    const low=(S.sq||[]).filter(p=>Number(p.cond)<65).sort((a,b)=>Number(a.cond)-Number(b.cond)).slice(0,3);
-    const cond=avgCondition(S.sq||[]),board=cl(S.board||0,0,100),fans=cl(S.fans||0,0,100),morale=cl(S.mor||0,0,100);
-    const leaders=rows.slice(0,3).map((r,i)=>(i+1)+'. '+r.c+' ('+r.pts+' pts)').join(' · ')||'Le classement attend ses premiers résultats';
-    const lastStats=last&&last.stats?last.stats:{},shots=Array.isArray(lastStats.shots)?lastStats.shots:[0,0],xg=Array.isArray(lastStats.xg)?lastStats.xg:[0,0],side=last?(last.home===club?0:1):0;
-    const forGoals=games.reduce((n,f)=>n+scoreParts(f)[f.home===club?0:1],0),against=games.reduce((n,f)=>n+scoreParts(f)[f.home===club?1:0],0);
+    const day=String(date||S.date||'2026-08-01').slice(0,10);
+    const others=(S.fx||[]).filter(f=>f.played&&(!f.comp||f.comp===league)&&f.home!==club&&f.away!==club&&String(f.date||'').slice(0,10)===day);
+    const squad=Array.isArray(S.sq)?S.sq:[];
+    const low=squad.filter(p=>Number(p.cond)<65).sort((a,b)=>Number(a.cond)-Number(b.cond)).slice(0,3);
+    const cond=avgCondition(squad),board=cl(S.board||0,0,100),fans=cl(S.fans||0,0,100),morale=cl(S.mor||0,0,100);
+    const leaders=rows.slice(0,3).map((r,i)=>(i+1)+'e, '+r.c+' avec '+r.pts+' points').join(' ; ')||'le classement attend ses premiers résultats';
+    const lastStats=last&&last.stats?last.stats:{},shots=Array.isArray(lastStats.shots)?lastStats.shots:[0,0],xg=Array.isArray(lastStats.xg)?lastStats.xg:[0,0];
+    const side=last?(last.home===club?0:1):0,opponent=last?(last.home===club?last.away:last.home):'';
+    const ownShots=Number(shots[side])||0,ownXg=Number(xg[side])||0;
+    const scored=games.reduce((n,f)=>n+scoreParts(f)[f.home===club?0:1],0);
+    const conceded=games.reduce((n,f)=>n+scoreParts(f)[f.home===club?1:0],0);
     const wins=recent.filter(f=>resultOf(f)==='V').length,draws=recent.filter(f=>resultOf(f)==='N').length,losses=recent.filter(f=>resultOf(f)==='D').length;
-    const lastTransfer=market.length?market[0].t:'Aucune opération confirmée dans les messages';
-    const tracked=targets.length?targets.map(p=>p.name).join(', '):'Aucune cible dans la liste';
-    const world=pad18('Le panorama du football',[
-      'LE MONDE DU FOOT · ÉDITION DU '+dateLabel(date).toUpperCase(),
-      'Le journal suit les résultats et les classements de l’univers simulé de cette carrière.',
-      others.length?'Plusieurs rencontres de '+league+' ont été enregistrées à cette date.':'La journée ne contient pas de nouveau résultat de championnat saisi.',
-      others.length?'Résultats suivis : '+others.slice(0,3).map(scoreLine).join(' ; ')+'.':'Le classement reste le meilleur indicateur de la hiérarchie du championnat.',
-      'En tête du tableau : '+leaders+'.',
-      'Les clubs les plus réguliers consolident progressivement leurs ambitions.',
-      'Les équipes proches au classement savent que chaque point peut compter.',
-      'La différence de buts reste un indicateur important lorsque les points sont serrés.',
-      'Les matchs à l’extérieur peuvent bouleverser une série positive.',
-      'Les prochains face-à-face entre concurrents directs seront particulièrement suivis.',
-      'Les équipes en difficulté cherchent d’abord à retrouver une organisation stable.',
-      'Les entraîneurs doivent adapter leurs choix à la densité du calendrier.',
-      'Les jeunes joueurs restent une piste pour apporter de l’énergie aux effectifs.',
-      'Le staff médical et les préparateurs jouent un rôle important dans les périodes chargées.',
-      'Le calendrier des prochaines journées pèsera sur les rotations.',
-      next?'Prochain match de '+club+' : '+(next.home===club?next.away:next.home)+' le '+shortDate(next.date)+'.':'Aucun prochain match n’est actuellement programmé pour '+club+'.',
-      'Cette rubrique concerne le monde du football simulé dans ta sauvegarde, et non des dépêches réelles extérieures.',
-      'Les résultats à venir actualiseront les tendances de cette édition.'
-    ],'Le classement évoluera avec les prochaines journées.');
-    const transfers=pad18('Mercato et recrutement',[
-      'MERCATO · LES COULISSES DU MARCHÉ',
-      'Dernière information de mercato : '+lastTransfer+'.',
-      market.length?String(market[0].b||'Le dossier reste à suivre.'):'Aucune arrivée ou aucun départ officiel n’est confirmé aujourd’hui dans ta carrière.',
-      'Joueurs suivis actuellement : '+tracked+'.',
-      'La priorité est de relier chaque piste à un besoin précis de l’effectif.',
-      'Le salaire et la durée du contrat comptent autant que l’indemnité de transfert.',
-      'Une recrue doit trouver une place claire dans le projet sportif.',
-      'Les départs doivent être évalués selon la profondeur disponible à chaque poste.',
-      'Les joueurs proches de la fin de leur contrat méritent une attention particulière.',
-      'Les recruteurs doivent distinguer une opportunité d’un besoin urgent.',
-      'Le centre de formation peut offrir une solution complémentaire.',
-      'Les jeunes joueurs ont besoin d’un temps de jeu cohérent pour progresser.',
-      'La direction surveille la masse salariale et le budget restant.',
-      'Une négociation n’est pas considérée comme conclue tant que la carrière ne l’enregistre pas.',
-      'Le staff technique doit transmettre ses priorités au directeur sportif.',
-      'Les performances récentes peuvent modifier la valeur estimée des cibles.',
-      'Le prochain rapport de recrutement précisera les profils observés.',
-      'Le mercato de '+club+' reste guidé par les informations disponibles dans cette sauvegarde.'
-    ],'Le marché sera actualisé dès qu’une information sera enregistrée.');
-    const clubLines=pad18('Le point sur '+club,[
-      'À LA UNE DU CLUB · '+String(club).toUpperCase(),
-      last?'Dernier résultat : '+scoreLine(last)+'.':'Le club attend son premier résultat officiel.',
-      last?'Le dernier match est une '+(resultOf(last)==='V'?'victoire à confirmer':resultOf(last)==='D'?'défaite qui appelle une réaction':'rencontre partagée qui laisse des enseignements')+'.':'Le premier match donnera les premières indications sur la saison.',
-      last?'Tirs du club : '+(Number(shots[side])||0)+'.':'Les statistiques apparaîtront après la première rencontre.',
-      last?'Buts attendus du club : '+(Number(xg[side])||0).toFixed(2)+'.':'Le staff prépare l’analyse du prochain adversaire.',
-      'Position actuelle : '+(tab.rank?tab.rank+'e sur '+rows.length:'pas encore classé')+'.',
-      tab.mine?'Total de points : '+tab.mine.pts+' · différence de buts : '+tab.mine.gd+'.':'Le classement sera disponible après les premiers résultats.',
-      'La condition physique moyenne du groupe est de '+cond+'%.',
-      low.length?'Joueurs sous le seuil de vigilance : '+low.map(p=>p.name+' ('+p.cond+'%)').join(', ')+'.':'Aucun titulaire ne passe actuellement sous 65% de condition.',
-      'La rotation doit tenir compte du poste naturel, de la forme et de la fatigue.',
-      'Le staff observe les espaces entre la défense, le milieu et l’attaque.',
-      'La qualité des occasions compte autant que le nombre de tirs.',
-      'Les défenseurs doivent protéger la profondeur et aider la première relance.',
-      'Les milieux doivent proposer des solutions autour du porteur.',
-      'Les attaquants sont évalués sur leurs appels et leur efficacité.',
-      next?'Prochain rendez-vous : '+next.home+' contre '+next.away+' en '+(next.comp||league)+'.':'Aucun match n’est prévu dans le calendrier actuel.',
-      'Le prochain entraînement devra répondre aux besoins identifiés dans les matchs.',
-      'Le club reste le sujet central de cette édition locale.'
-    ],'Le staff transmettra un nouveau point après la prochaine rencontre.');
-    const manager=pad18('Le rapport du manager',[
-      'L’ANALYSE DU MANAGER · '+String(S.mg||'Entraîneur').toUpperCase(),
-      String(S.mg||'Le manager')+' dirige actuellement '+club+'.',
-      'Forme sur les cinq derniers matchs : '+recentForm(recent)+'.',
-      'Sur cette période : '+wins+' victoire(s), '+draws+' nul(s) et '+losses+' défaite(s).',
-      'La carrière compte '+games.length+' rencontre(s) officielle(s) terminée(s).',
-      'Buts marqués par le club : '+forGoals+'.',
-      'Buts encaissés : '+against+'.',
-      'Confiance de la direction : '+board+'%.',
-      'Popularité auprès des supporters : '+fans+'%.',
-      'Moral collectif : '+morale+'%.',
-      'Organisation avec ballon : '+String(S.tc&&S.tc.f||'4-3-3')+'.',
-      'Organisation sans ballon : '+String(S.tc&&(S.tc.offF||S.tc.f)||'4-4-2')+'.',
-      'Style de jeu : '+String(S.tc&&S.tc.s||'Control Possession')+'.',
-      'Mentalité : '+String(S.tc&&S.tc.m||'Balanced')+'.',
-      'Les déclarations du manager seront comparées aux choix tactiques.',
-      'La condition des joueurs devra guider les décisions de rotation.',
-      'Le staff attend une progression cohérente dans la création et la défense.',
-      'Le bilan du manager évoluera avec les résultats et les décisions de carrière.'
-    ],'Le manager sera de nouveau évalué après la prochaine échéance.');
-    const reactions=pad18('Supporters, vestiaire et direction',[
-      'VESTIAIRE · SUPPORTERS · DIRECTION',
-      'La popularité des supporters est de '+fans+'%.',
-      fans>=75?'Les tribunes affichent une confiance élevée.':fans>=55?'Les tribunes restent attentives et attendent de la régularité.':fans>=35?'La patience du public commence à être mise à l’épreuve.':'Les supporters demandent une réaction rapide.',
-      'La confiance de la direction est de '+board+'%.',
-      board>=75?'Le conseil soutient clairement le travail du staff.':board>=55?'La direction garde une confiance mesurée.':board>=35?'Les dirigeants attendent des résultats plus constants.':'La pression sur le poste d’entraîneur est élevée.',
-      'Le moral du groupe se situe à '+morale+'%.',
-      morale>=75?'Le vestiaire aborde la période avec confiance.':morale>=55?'L’ambiance reste correcte, mais les joueurs attendent de la clarté.':morale>=35?'Certains joueurs ont besoin de dialogue et de repères.':'Le staff doit restaurer la confiance du groupe.',
-      'Les joueurs observent la cohérence entre les promesses et le temps de jeu.',
-      'Les remplaçants attendent des occasions de gagner leur place.',
-      'Les cadres du vestiaire peuvent aider à maintenir l’unité du groupe.',
-      'Les supporters valorisent l’engagement et les résultats.',
-      'Une victoire peut renforcer la confiance sans régler tous les problèmes tactiques.',
-      'Une défaite doit être analysée sans chercher un responsable unique.',
-      'Les échanges individuels peuvent apaiser les frustrations.',
-      'La direction suit aussi les objectifs et la stabilité financière.',
-      'Le public attend une équipe identifiable et fidèle à son projet.',
-      'Le prochain match donnera un nouvel indice sur la dynamique du club.',
-      'Les réactions évolueront avec les prochains résultats.'
-    ],'Les réactions seront réévaluées à la prochaine journée.');
-    const sections=[world,transfers,clubLines,manager,reactions];
-    return {club:club,league:league,date:String(date).slice(0,10),key:String(club)+'|'+String(date).slice(0,10),sections:sections,lines:sections.flatMap(s=>s.lines)};
+    const best=squad.slice().sort((a,b)=>(Number(b.form)||0)-(Number(a.form)||0))[0]||null;
+    const scorer=squad.slice().sort((a,b)=>(Number(b.g)||0)-(Number(a.g)||0))[0]||null;
+    const result=last?resultOf(last):'';
+    const nextOpponent=next?(next.home===club?next.away:next.home):'';
+    const budget=Number(S.bud)||0;
+    const formText=recentForm(recent);
+    const articles=[];
+
+    let leadHeadline,leadDeck,leadParagraphs;
+    if(!last){
+      leadHeadline=club+' cherche encore son premier repère';
+      leadDeck='La saison est lancée, mais le terrain n’a pas encore livré son premier verdict. Le staff avance entre préparation, gestion de l’effectif et observation du calendrier.';
+      leadParagraphs=[
+        'À '+club+', l’heure est encore à la construction. Sans rencontre officielle à commenter, le travail se concentre sur les automatismes, l’équilibre des lignes et la manière dont le groupe pourra répondre aux premières exigences du championnat.',
+        'Le classement ne raconte pas encore d’histoire et les chiffres restent à écrire. Le premier rendez-vous donnera une indication plus nette sur les intentions du manager, notamment sur la place accordée au ballon et sur la capacité de l’équipe à se réorganiser dès sa perte.',
+        next?'Le prochain match est déjà dans toutes les têtes : '+club+' retrouvera '+nextOpponent+' le '+shortDate(next.date)+'. La préparation devra permettre d’arriver à cette échéance avec un onze cohérent et un groupe suffisamment frais.':'Le calendrier ne propose pas encore de prochaine affiche. Le staff dispose donc d’un peu de temps pour poursuivre son travail.'
+      ];
+    }else{
+      leadHeadline=result==='V'?club+' avance, mais refuse de s’emballer':result==='D'?club+' face à ses responsabilités après le revers':'Un point pour '+club+', et plusieurs questions à résoudre';
+      leadDeck=club+' a vécu '+(result==='V'?'une victoire':result==='D'?'une défaite':'un match nul')+' face à '+opponent+'. Le score de '+scoreLine(last)+' fixe le résultat ; le contenu de la rencontre, lui, offre déjà quelques pistes pour la suite.';
+      const outcome=result==='V'
+        ?'Le résultat récompense le travail du groupe, sans pour autant effacer les séquences qui ont demandé davantage de maîtrise.'
+        :result==='D'
+          ?'Le résultat impose une réaction, mais l’analyse ne peut pas se limiter au tableau d’affichage : les occasions créées, les espaces concédés et la gestion des temps faibles devront être examinés.'
+          :'Le partage des points laisse un sentiment contrasté. L’équipe a su rester dans le match, mais elle n’a pas transformé toutes ses périodes favorables en avantage décisif.';
+      leadParagraphs=[
+        'Le '+shortDate(last.date)+', '+club+' a croisé '+opponent+' dans une rencontre dont le score — '+scoreLine(last)+' — résume imparfaitement les débats. '+outcome,
+        'Les chiffres donnent un premier éclairage. '+club+' a tenté '+ownShots+' tirs et affiche '+ownXg.toFixed(2)+' but(s) attendu(s) selon les données enregistrées dans la carrière. Ces indicateurs ne remplacent pas le regard sur le terrain, mais ils permettent de distinguer une équipe qui parvient à se créer des situations d’une formation qui subit trop longtemps.',
+        'Au classement, '+(tab.rank?club+' occupe la tab.rank+'e place avec '+(tab.mine?tab.mine.pts:0)+' point(s).':'la position de '+club+' reste à préciser.')+' Sur les cinq dernières rencontres, la dynamique se lit ainsi : '+formText+'.',
+        next?'Le prochain rendez-vous contre '+nextOpponent+', programmé le '+shortDate(next.date)+', apportera un nouvel élément de réponse. Le staff devra décider s’il prolonge les choix qui ont fonctionné ou s’il corrige les secteurs qui ont coûté des occasions.':'Le calendrier offre désormais au staff une période d’analyse avant la prochaine échéance.'
+      ];
+    }
+    articles.push({type:'lead',title:'À la une',kicker:'LE MATCH ET SES ENSEIGNEMENTS',headline:leadHeadline,deck:leadDeck,paragraphs:leadParagraphs});
+
+    const leagueHeadline=others.length?'La journée redistribue quelques cartes en '+league:'La hiérarchie de '+league+' se dessine progressivement';
+    const leagueParagraphs=others.length
+      ?[
+        'La journée du '+shortDate(day)+' a ajouté de nouveaux résultats au tableau de '+league+'. '+others.slice(0,3).map(scoreLine).join(' ; ')+'. Ces rencontres alimentent une hiérarchie qui reste encore susceptible d’évoluer.',
+        'En tête, '+leaders+'. Les écarts de points prennent progressivement du relief, mais les confrontations directes et la différence de buts peuvent encore modifier l’ordre établi.',
+        next?'Pour '+club+', le calendrier ne laisse pas le temps de regarder longtemps les autres : '+nextOpponent+' se présente comme le prochain test.':'Les prochaines affiches permettront de mesurer la solidité des équipes les mieux placées.'
+      ]
+      :[
+        'Aucune autre rencontre de championnat n’a été enregistrée à cette date dans cette sauvegarde. Le panorama reste donc calme, mais la saison continue de se structurer au fil des matches déjà joués.',
+        'Le haut du tableau est actuellement occupé par '+leaders+'. Derrière, les écarts restent à surveiller : une série de résultats peut rapidement rapprocher des équipes que le classement semble encore séparer.',
+        'La course ne se résume pas aux points. La différence de buts, la régularité à domicile et la capacité à prendre des points à l’extérieur pèseront au fil des journées.'
+      ];
+    articles.push({type:'story',title:'Le championnat',kicker:'LE TOUR DE LA LIGUE',headline:leagueHeadline,deck:'Les résultats de la carrière, le classement et les prochaines affiches dessinent le paysage de la compétition.',paragraphs:leagueParagraphs});
+
+    const transferHeadline=market.length?'Le mercato s’anime autour de '+club:'À '+club+', le recrutement se prépare sans précipitation';
+    const transferParagraphs=market.length
+      ?[
+        'Le dernier message reçu par le club concerne « '+String(market[0].t||'un dossier de recrutement')+' ». '+String(market[0].b||'Le dossier reste en cours d’examen.'),
+        targets.length?'Dans le même temps, le réseau suit notamment '+targets.map(p=>p.name).join(', ')+'. Ces noms restent des pistes tant qu’aucun accord n’est enregistré dans la carrière.':'La sélection de recrutement ne comporte pas encore de cible supplémentaire. Le staff devra préciser les postes à renforcer avant de multiplier les démarches.',
+        'Avec une enveloppe annoncée de '+budget.toFixed(1)+' M€, la cellule doit arbitrer entre indemnité, salaire et place dans la rotation. Une arrivée ne sera utile que si elle répond à un besoin clairement identifié.'
+      ]
+      :[
+        'Aucune offre ni arrivée officielle n’apparaît aujourd’hui dans les messages de la carrière. Le marché reste donc un chantier ouvert plutôt qu’un dossier déjà conclu.',
+        targets.length?'Le réseau garde toutefois un œil sur '+targets.map(p=>p.name).join(', ')+'. Ces profils constituent une première base de travail, à confronter aux besoins réels de l’effectif.':'Aucun joueur n’est actuellement placé dans la sélection. Le recrutement pourra commencer par l’étude des postes où la profondeur est la plus faible.',
+        'Le budget disponible est estimé à '+budget.toFixed(1)+' M€. La marge de manœuvre devra être appréciée avec les salaires, les contrats en cours et les éventuels départs. Une piste suivie n’est pas un transfert bouclé.'
+      ];
+    articles.push({type:'story',title:'Mercato',kicker:'ENQUÊTE SUR LES DOSSIERS DU CLUB',headline:transferHeadline,deck:'La direction sportive doit faire coïncider les besoins du terrain avec les limites économiques de la saison.',paragraphs:transferParagraphs});
+
+    const pressure=board<35?'La marge d’erreur se réduit et chaque décision sera observée de près.':board<60?'La direction attend davantage de continuité avant de renforcer son soutien.':'Le manager dispose d’un crédit de confiance, qu’il devra confirmer dans la durée.';
+    const managerHeadline=board<40?'Le banc sous pression à '+club:board>75?'Le projet du manager gagne du crédit':'Le manager attendu sur la régularité';
+    articles.push({
+      type:'story',title:'Le banc',kicker:'DANS LE BUREAU DU MANAGER',headline:managerHeadline,
+      deck:String(S.mg||'Le manager')+' est jugé sur une période qui mêle résultats, organisation collective et gestion du groupe.',
+      paragraphs:[
+        'Depuis le début de son mandat, '+String(S.mg||'le manager')+' a dirigé '+games.length+' rencontre(s), pour '+wins+' victoire(s), '+draws+' nul(s) et '+losses+' défaite(s) sur la séquence récente. Le bilan comptable — '+scored+' but(s) marqué(s), '+conceded+' encaissé(s) — donne un cadre à l’évaluation.',
+        'Sur le terrain, le projet repose sur un '+String(S.tc&&S.tc.f||'4-3-3')+' avec le ballon et un '+String(S.tc&&(S.tc.offF||S.tc.f)||'4-4-2')+' sans ballon. Le style '+String(S.tc&&S.tc.s||'Control Possession')+' et la mentalité '+String(S.tc&&S.tc.m||'Balanced')+' définissent les intentions, mais leur efficacité dépendra de la qualité d’exécution.',
+        'La confiance de la direction est évaluée à '+board+' %, celle des supporters à '+fans+' %. '+pressure+' Le vestiaire, lui, affiche un moral de '+morale+' %, indicateur à surveiller au même titre que la forme individuelle.'
+      ]
+    });
+
+    const atmosphere=morale>=75?'L’ambiance du vestiaire est décrite comme positive.':morale>=55?'Le groupe reste mobilisé, même si la régularité demeure attendue.':morale>=35?'La période appelle davantage de dialogue et de clarté dans les rôles.':'Le climat est fragile et le staff doit retisser de la confiance.';
+    const supporters=fans>=75?'Les tribunes restent derrière l’équipe.':fans>=55?'Le public observe les progrès avec prudence.':fans>=35?'L’impatience commence à se faire sentir.':'Les supporters attendent un signal fort.';
+    const standout=best?best.name+' ('+Number(best.form||0).toFixed(1)+'/10)':'aucun joueur ne se détache encore nettement';
+    const reactionHeadline=morale<40?'Au vestiaire, l’heure est au dialogue':'Supporters et vestiaire attendent la confirmation';
+    articles.push({
+      type:'story',title:'Les coulisses',kicker:'TRIBUNES ET VESTIAIRE',headline:reactionHeadline,
+      deck:'Au-delà du résultat, la dynamique d’un club se mesure aussi à la confiance qui circule entre les joueurs, le staff et le public.',
+      paragraphs:[
+        atmosphere+' Les indicateurs de la sauvegarde placent le moral collectif à '+morale+' %. Les joueurs les mieux notés ne peuvent toutefois pas masquer les questions de rotation et de condition physique.',
+        supporters+' La popularité du club atteint '+fans+' %. Le public attend une équipe identifiable, capable de défendre ensemble et de montrer de l’intention lorsqu’elle récupère le ballon.',
+        'Dans le groupe, '+standout+' ressort actuellement des évaluations. '+(low.length?'La condition de '+low.map(p=>p.name+' ('+p.cond+' %)').join(', ')+' mérite une attention particulière.':'Aucun joueur ne se trouve sous le seuil de vigilance physique retenu par le staff.')+' La prochaine composition sera un signal concret envoyé au vestiaire.'
+      ]
+    });
+
+    const paragraphs=articles.flatMap(a=>a.paragraphs);
+    return {version:2,club:club,league:league,date:day,key:String(club)+'|'+day,sections:articles,lines:paragraphs,
+      facts:{rank:tab.rank,points:tab.mine?tab.mine.pts:0,budget:budget,last:last?scoreLine(last):'—',next:next?next.home+' – '+next.away:'—',condition:cond}
+    };
   }
 
   function ensureIssue(date,refresh) {
     if(!S)return null;
     S.fm26DailyIssues=Array.isArray(S.fm26DailyIssues)?S.fm26DailyIssues:[];
     const key=String(S.club)+'|'+String(date).slice(0,10),i=S.fm26DailyIssues.findIndex(x=>x.key===key);
-    if(i>=0&&!refresh)return S.fm26DailyIssues[i];
+    if(i>=0&&!refresh&&Number(S.fm26DailyIssues[i].version)>=2)return S.fm26DailyIssues[i];
     const issue=buildIssue(date);
     if(i>=0)S.fm26DailyIssues[i]=issue;else S.fm26DailyIssues.push(issue);
     S.fm26DailyIssues=S.fm26DailyIssues.slice(-30);
@@ -152,9 +146,21 @@
 
   function dailyMarkup(issue) {
     if(!issue)return '';
-    const sections=issue.sections.map(s=>'<section class="fm26-daily-section"><h3>'+esc(s.title)+'</h3>'+s.lines.map((line,i)=>'<p><span>'+String(i+1).padStart(2,'0')+'</span>'+esc(line)+'</p>').join('')+'</section>').join('');
-    return '<section id="fm26-daily-paper" class="fm26-daily-paper"><header><div><small>LE MONDE DU FOOT · JOURNAL DE CARRIÈRE</small><h2>La gazette de '+esc(issue.club)+'</h2><p>Édition du '+esc(dateLabel(issue.date))+' · '+issue.lines.length+' lignes · '+esc(issue.league)+'</p></div><button type="button" data-fm26-daily-toggle>Lire l’édition complète ↓</button></header><div class="fm26-daily-body">'+sections+'</div><footer>Édition générée à partir des résultats, effectifs, transferts et réactions de cette sauvegarde.</footer></section>';
+    const sections=Array.isArray(issue.sections)?issue.sections:[];
+    const paragraphs=section=>(Array.isArray(section.paragraphs)?section.paragraphs:Array.isArray(section.lines)?section.lines:[]).map(p=>'<p>'+esc(p)+'</p>').join('');
+    const lead=sections[0]||{kicker:'À LA UNE',headline:'Le football continue',deck:'Les informations de ta carrière sont réunies dans cette édition.',paragraphs:[]};
+    const secondary=sections.slice(1).map(section=>'<article class="fm26-paper-story"><div class="fm26-paper-kicker">'+esc(section.kicker||section.title||'FOOTBALL')+'</div><h3>'+esc(section.headline||section.title||'Le point du jour')+'</h3><p class="fm26-paper-deck">'+esc(section.deck||'')+'</p><div class="fm26-paper-copy">'+paragraphs(section)+'</div></article>').join('');
+    const crestHtml=typeof crest==='function'?crest(issue.club,86):'<span class="fm26-paper-monogram">'+esc(String(issue.club||'FM').slice(0,2).toUpperCase())+'</span>';
+    const facts=issue.facts||{};
+    const lineCount=sections.reduce((n,section)=>n+(Array.isArray(section.paragraphs)?section.paragraphs.length:Array.isArray(section.lines)?section.lines.length:0),0);
+    return '<section id="fm26-daily-paper" class="fm26-daily-paper">'+
+      '<div class="fm26-paper-masthead"><div><div class="fm26-paper-brand">LA GAZETTE <span>DU FOOT</span></div><div class="fm26-paper-tagline">Le journal quotidien de ta carrière</div></div><div class="fm26-paper-edition"><b>ÉDITION CLUB</b><span>'+esc(dateLabel(issue.date))+'</span><span>'+esc(issue.league)+'</span></div></div>'+
+      '<div class="fm26-paper-ribbon"><span>FOOTBALL · ANALYSE · MERCATO</span><button type="button" data-fm26-daily-toggle>Lire l’édition complète ↓</button></div>'+
+      '<article class="fm26-paper-lead"><div class="fm26-paper-lead-copy"><div class="fm26-paper-kicker">'+esc(lead.kicker||'À LA UNE')+'</div><h2>'+esc(lead.headline||'Le point du jour')+'</h2><p class="fm26-paper-deck">'+esc(lead.deck||'')+'</p><div class="fm26-paper-byline">Rédaction de la Gazette · Édition du '+esc(shortDate(issue.date))+'</div><div class="fm26-paper-copy fm26-paper-lead-body">'+paragraphs(lead)+'</div></div><aside class="fm26-paper-club"><div class="fm26-paper-club-crest">'+crestHtml+'</div><h3>'+esc(issue.club)+'</h3><div class="fm26-paper-club-stat"><span>Classement</span><b>'+(facts.rank?facts.rank+'e':'—')+'</b></div><div class="fm26-paper-club-stat"><span>Points</span><b>'+esc(facts.points==null?'—':facts.points)+'</b></div><div class="fm26-paper-club-stat"><span>Budget</span><b>'+esc(Number(facts.budget||0).toFixed(1))+' M€</b></div><div class="fm26-paper-next"><small>PROCHAIN RENDEZ-VOUS</small><b>'+esc(facts.next||'À déterminer')+'</b></div></aside></article>'+
+      '<div class="fm26-paper-section-head"><span>LES AUTRES HISTOIRES</span><span>'+lineCount+' paragraphes · Univers simulé</span></div><div class="fm26-paper-columns">'+secondary+'</div>'+
+      '<footer class="fm26-paper-footer"><b>La Gazette du foot</b><span>Édition fictive générée à partir des résultats, effectifs, transferts et décisions enregistrés dans ta sauvegarde. Les citations et angles éditoriaux sont narratifs, pas des dépêches réelles.</span></footer></section>';
   }
+
   function attachDaily() {
     if(!S||S.view!=='home')return;
     const view=$('vw');if(!view)return;
