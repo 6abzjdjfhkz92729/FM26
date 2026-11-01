@@ -31,7 +31,7 @@ function transfers(){let q=(S.transferSearch||'').toLowerCase(),list=(S.mk||[]).
 V.mgr=manager;
 const prevComp=V.comp;V.comp=()=>S.fm26World?world():(prevComp?prevComp():'');
 const prevFin=V.fin;V.fin=()=>S.fm26Transfers?transfers():(prevFin?prevFin():'');
-const prevInbox=V.inbox;V.inbox=()=>{let base=prevInbox?prevInbox():'';if(!/Arsenal/i.test(S.club||''))return base;let list=(S.sq||[]).filter(p=>/saka|odegaard|rice|saliba|gabriel|gyökeres|raya/i.test(p.name));return base+'<div class="pn" style="margin-top:12px"><h3>Effectif d’Arsenal</h3>'+(list.map(p=>'<div class="ar"><b>'+esc(p.name)+'</b><span>'+esc(p.pos)+' · '+esc(p.ovr)+'</span></div>').join('')||'<p class="mu">Aucun joueur correspondant dans l’effectif chargé.</p>')+'</div>';};
+// L’affichage de la messagerie est centralisé dans le module d’interface de référence.
 document.addEventListener('click',function(e){
 const item=e.target.closest('[data-pack-view][data-pack-label]');
 if(!item)return;
