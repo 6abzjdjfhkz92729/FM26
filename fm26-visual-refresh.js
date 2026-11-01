@@ -21,13 +21,13 @@
     ::selection{background:#9d65e8;color:#fff}
     ::-webkit-scrollbar{width:10px;height:10px}
     ::-webkit-scrollbar-track{background:#111218}
-    ::-webkit-scrollbar-thumb{background:#354865;border:2px solid #111218;border-radius:20px}
-    ::-webkit-scrollbar-thumb:hover{background:#7865df}
+    ::-webkit-scrollbar-thumb{background:#41434d;border:2px solid #111218;border-radius:20px}
+    ::-webkit-scrollbar-thumb:hover{background:#b65fc8}
 
     #setup{
       background:
         radial-gradient(ellipse at 12% 0%,#6349d94d,transparent 38%),
-        radial-gradient(ellipse at 94% 100%,#16b8c42b,transparent 42%),
+        radial-gradient(ellipse at 94% 100%,#d14b982b,transparent 42%),
         linear-gradient(140deg,#111217,#22232a 55%,#191a21)!important;
     }
     #setup .sc{
@@ -36,7 +36,7 @@
       box-shadow:0 28px 80px #020710a6, inset 0 1px #ffffff12!important;
     }
     #setup .setup-mark{
-      background:linear-gradient(135deg,#886cff,#39cbd4)!important;
+      background:linear-gradient(135deg,#886cff,#cf4d9d)!important;
       box-shadow:0 10px 35px #6f59e35c!important;border-radius:14px!important;
     }
     #setup h1{letter-spacing:-.045em!important}
@@ -66,7 +66,7 @@
     .si:hover{background:#ffffff0e!important;color:#fff!important}
     .si.on{
       color:#fff!important;border-left-color:#8d78ff!important;
-      background:linear-gradient(90deg,#765de64a,#37c7d21a)!important;
+      background:linear-gradient(90deg,#765de64a,#d14b9b1a)!important;
       box-shadow:inset 0 0 24px #9d65e81c!important;
     }
     .si .nav-icon svg{stroke:currentColor!important}
@@ -229,18 +229,18 @@
       background:#1a2c45!important;color:#f4f7ff!important;
     }
     .fm26-inbox-list button.active{
-      border-color:#9b87ff!important;background:linear-gradient(100deg,#6d58d33d,#34b9c51b)!important;
+      border-color:#9b87ff!important;background:linear-gradient(100deg,#6d58d33d,#d14b9b1b)!important;
     }
 
     .fm26-lineup-page{
-      background:#0c1b2c!important;color:#f5f8ff!important;
+      background:#1c1d24!important;color:#f5f8ff!important;
     }
     .fm26-lineup-top,.fm26-lineup-bottom{
       background:linear-gradient(100deg,#202129,#282a33)!important;
       border-color:#454751!important;
     }
     .fm26-lineup-bench{
-      background:linear-gradient(180deg,#282a33,#101f35)!important;
+      background:linear-gradient(180deg,#282a33,#22232c)!important;
       border-left:1px solid #67616f!important;color:#f5f8ff!important;
     }
     .fm26-lineup-bench h2{color:#d8a9ee!important;letter-spacing:.1em!important}
@@ -259,21 +259,21 @@
     .fm26-matchday{
       background:
         radial-gradient(ellipse at 50% 100%,#3a2848 0%,transparent 42%),
-        linear-gradient(155deg,#0c1727,#08111e)!important;
+        linear-gradient(155deg,#1d1e26,#17181e)!important;
     }
     .md-topbar{
-      background:linear-gradient(100deg,#0b1524,#172a44 60%,#0d1b2d)!important;
+      background:linear-gradient(100deg,#202129,#292a32 60%,#1a1b23)!important;
       border-bottom:1px solid #415a7a!important;
       box-shadow:0 8px 24px #02091466!important;
     }
     .md-clock{
-      background:linear-gradient(160deg,#9d65e8,#4d6bd0)!important;
+      background:linear-gradient(160deg,#9d65e8,#7e58cc)!important;
       border-right:1px solid #b0a5ff!important;
     }
     .md-score-team.home,.md-score-team.away{filter:saturate(.82) brightness(.92)}
     .md-score-number{color:#fff!important;text-shadow:0 3px 18px #000!important}
     .md-pause-btn{
-      background:linear-gradient(115deg,#9d65e8,#587fe2)!important;
+      background:linear-gradient(115deg,#9d65e8,#a54ad0)!important;
       border-left:1px solid #d8a9ee!important;font-weight:900!important;
     }
     .md-pause-btn.paused{background:linear-gradient(115deg,#7a4b9a,#573a68)!important}
@@ -283,21 +283,21 @@
     }
     .md-commentary{
       background:linear-gradient(100deg,#65456e,#493451)!important;
-      color:#f6fcff!important;border-left:3px solid #49d6d3!important;
+      color:#f6fcff!important;border-left:3px solid #db74b6!important;
     }
-    .md-bottom{background:#0d1929!important;border-top:1px solid #454751!important}
-    .md-bottom-icon,.md-tool{background:#13243a!important;border-color:#344a67!important;color:#e8efff!important}
-    .md-tool:hover,.md-bottom-icon:hover{background:#233b59!important}
+    .md-bottom{background:#202129!important;border-top:1px solid #454751!important}
+    .md-bottom-icon,.md-tool{background:#292a32!important;border-color:#464751!important;color:#e8efff!important}
+    .md-tool:hover,.md-bottom-icon:hover{background:#3a3343!important}
     .md-tool .purple{color:#e2b5ed!important}
     .md-drawer,.md-modal{
-      background:linear-gradient(145deg,#192b43,#101d30)!important;
-      border:1px solid #4b6385!important;border-radius:14px!important;
+      background:linear-gradient(145deg,#2c2a35,#1b1c23)!important;
+      border:1px solid #56535f!important;border-radius:14px!important;
       box-shadow:0 24px 70px #0009!important;
     }
     .md-drawer-head,.md-modal-head,.md-modal-foot{border-color:#3d5575!important}
-    .md-btn{border-radius:9px!important;background:#283d59!important;border-color:#5a7294!important}
+    .md-btn{border-radius:9px!important;background:#35333f!important;border-color:#65586d!important}
     .md-btn.primary{background:linear-gradient(115deg,#9d65e8,#c253c2)!important;border-color:#ac9dff!important}
-    .md-btn.blue{background:linear-gradient(115deg,#8e54cb,#5a4e8f)!important;border-color:#59c4d3!important}
+    .md-btn.blue{background:linear-gradient(115deg,#8e54cb,#5a4e8f)!important;border-color:#d56cae!important}
     .md-btn.selected{outline:2px solid #b5a8ff!important;background:#433b78!important}
     .md-progress-dot.done{background:#49d4b1!important}
     .md-progress-dot.live{background:#a89aff!important;box-shadow:0 0 12px #a89aff!important}
@@ -314,8 +314,8 @@
     }
     .fm26-ref-menu-item:hover{background:#9d65e82e!important;color:#fff!important}
     .fm26-ref-menu-section{color:#d8a9ee!important;letter-spacing:.1em!important}
-    .fm26-ref-toolbar{background:#1a2d49!important;border:1px solid #405a7d!important}
-    .fm26-ref-info{background:linear-gradient(145deg,#1c9aa4,#176a84)!important}
+    .fm26-ref-toolbar{background:#2b2c35!important;border:1px solid #55505e!important}
+    .fm26-ref-info{background:linear-gradient(145deg,#9153b8,#63406f)!important}
     .fm26-ref-continue{
       background:linear-gradient(115deg,#9d65e8,#cc4fb0 58%,#db438f)!important;
       border:1px solid #d8a9ee!important;box-shadow:0 8px 22px #6957da4a!important;
