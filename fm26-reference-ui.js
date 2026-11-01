@@ -4,12 +4,13 @@
 
   const css = [
     'body.fm26-ref-active{overflow:hidden}',
-    '#app:not(.hid){position:fixed!important;left:50%!important;top:50%!important;width:2000px!important;height:924px!important;min-height:924px!important;grid-template-columns:208px 1792px!important;transform-origin:center center;z-index:2;background:radial-gradient(ellipse 900px 500px at 70% 30%,#34353b 0%,transparent 70%),radial-gradient(ellipse 700px 400px at 30% 80%,#2a2b31 0%,transparent 70%),radial-gradient(ellipse at 50% 50%,#202126 0%,#141519 100%);}',
-    '#side{position:relative!important;width:208px!important;height:924px!important;overflow:hidden!important;display:block!important;padding:0!important;background:#1c1f2e!important;border-right:0!important;z-index:32}',
-    '#main{position:relative!important;width:1792px!important;height:924px!important;min-width:1792px!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;background:transparent!important}',
-    '#hd{position:relative!important;flex:0 0 91px!important;width:1792px!important;height:91px!important;min-height:91px!important;display:block!important;padding:0!important;margin:0!important;background:#202126!important;border:0!important;overflow:hidden!important;z-index:3}',
-    '#vw{position:relative!important;flex:0 0 833px!important;width:1792px!important;height:833px!important;max-height:833px!important;overflow:hidden!important;padding:0!important;margin:0!important;background:transparent!important}',
-    '#vw>.fm26-ref-home,#vw>.fm26-ref-inbox,#vw>.fm26-ref-pre{position:relative;width:1792px;height:833px;overflow:hidden;color:#f4f4f6;font-family:Barlow Condensed,Arial,sans-serif}',
+    'body.fm26-ref-active:not(.fm26-overhead-live) #fm26-manager-sidebar,body.fm26-ref-active:not(.fm26-overhead-live) #fm26-rails-reopen{display:none!important}',
+    'body.fm26-ref-active:not(.fm26-overhead-live) #app:not(.hid){position:fixed!important;left:50%!important;top:50%!important;width:2000px!important;height:924px!important;min-height:924px!important;grid-template-columns:208px 1792px!important;transform-origin:center center;z-index:2;background:radial-gradient(ellipse 900px 500px at 70% 30%,#34353b 0%,transparent 70%),radial-gradient(ellipse 700px 400px at 30% 80%,#2a2b31 0%,transparent 70%),radial-gradient(ellipse at 50% 50%,#202126 0%,#141519 100%);}',
+    'body.fm26-ref-active:not(.fm26-overhead-live) #side{position:relative!important;width:208px!important;height:924px!important;overflow:hidden!important;display:block!important;padding:0!important;background:#1c1f2e!important;border-right:0!important;z-index:32}',
+    'body.fm26-ref-active:not(.fm26-overhead-live) #main{position:relative!important;width:1792px!important;height:924px!important;min-width:1792px!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;background:transparent!important}',
+    'body.fm26-ref-active:not(.fm26-overhead-live) #hd{position:relative!important;flex:0 0 91px!important;width:1792px!important;height:91px!important;min-height:91px!important;display:block!important;padding:0!important;margin:0!important;background:#202126!important;border:0!important;overflow:hidden!important;z-index:3}',
+    'body.fm26-ref-active:not(.fm26-overhead-live) #vw{position:relative!important;flex:0 0 833px!important;width:1792px!important;height:833px!important;max-height:833px!important;overflow:hidden!important;padding:0!important;margin:0!important;background:transparent!important}',
+    'body.fm26-ref-active:not(.fm26-overhead-live) #vw>.fm26-ref-home,body.fm26-ref-active:not(.fm26-overhead-live) #vw>.fm26-ref-inbox,body.fm26-ref-active:not(.fm26-overhead-live) #vw>.fm26-ref-pre{position:relative;width:1792px;height:833px;overflow:hidden;color:#f4f4f6;font-family:Barlow Condensed,Arial,sans-serif}',
     '.fm26-ref-panel{position:absolute;box-sizing:border-box;background:rgba(65,66,72,.72);border:1px solid #55565c;overflow:hidden}',
     '.fm26-ref-panel-head{height:57px;background:#626369;color:#fff;padding:11px 10px;font-size:27px;line-height:1.25;font-weight:700;box-sizing:border-box}',
     '.fm26-ref-row{position:relative;height:66px;display:flex;align-items:center;gap:15px;background:rgba(44,45,51,.95);border-bottom:1px solid #3b3c43;padding:5px 14px;box-sizing:border-box;min-width:0}',
@@ -74,11 +75,11 @@
     '.fm26-ref-small-panel-title{font-size:32px;font-weight:800;text-align:center}',
     '.fm26-ref-pre .fm26-ref-form{gap:6px}.fm26-ref-pre .fm26-ref-formbox{width:27px;height:27px;font-size:18px}',
     '.fm26-ref-pre-quote{position:absolute;left:917px;top:619px;width:855px;height:188px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:28px;line-height:1.35;padding:0 15px;box-sizing:border-box}',
-    '@media(max-width:820px){#app:not(.hid){grid-template-columns:208px 1792px!important;width:2000px!important;height:924px!important}#side{width:208px!important;display:block!important;padding:0!important}#main{width:1792px!important;min-width:1792px!important}#hd{display:block!important;height:91px!important;min-height:91px!important}#vw{padding:0!important;height:833px!important;max-height:833px!important}#hd small{display:block!important}}'
+    '@media(max-width:820px){body.fm26-ref-active:not(.fm26-overhead-live) #app:not(.hid){grid-template-columns:208px 1792px!important;width:2000px!important;height:924px!important}body.fm26-ref-active:not(.fm26-overhead-live) #side{width:208px!important;display:block!important;padding:0!important}body.fm26-ref-active:not(.fm26-overhead-live) #main{width:1792px!important;min-width:1792px!important}body.fm26-ref-active:not(.fm26-overhead-live) #hd{display:block!important;height:91px!important;min-height:91px!important}body.fm26-ref-active:not(.fm26-overhead-live) #vw{padding:0!important;height:833px!important;max-height:833px!important}body.fm26-ref-active:not(.fm26-overhead-live) #hd small{display:block!important}}'
   ].join('\n');
   const style = document.createElement('style');
   style.id = 'fm26-reference-ui-style';
-  style.textContent = css;
+  style.textContent = '@layer fm26-ref {\n' + css + '\n}';
   document.head.appendChild(style);
 
   const $ = id => document.getElementById(id);
@@ -236,7 +237,9 @@
     };
   }
   function renderTopBar() {
-    const d = new Date(String(S.date || '2025-08-01') + 'T12:00:00');
+    const rawDate = String(S.date || '2025-08-01').slice(0,10);
+    const parsedDate = new Date(/^\\d{4}-\\d{2}-\\d{2}$/.test(rawDate) ? rawDate + 'T12:00:00' : '2025-08-01T12:00:00');
+    const d = Number.isNaN(parsedDate.getTime()) ? new Date('2025-08-01T12:00:00') : parsedDate;
     const weekdays = ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
     const months = ['JAN','FÉV','MAR','AVR','MAI','JUIN','JUIL','AOÛT','SEP','OCT','NOV','DÉC'];
     const isPre = S.view === 'pre';
@@ -269,7 +272,11 @@
     };
   }
   function renderShell() {
-    if (!S || $('app').classList.contains('hid')) return;
+    const app = $('app');
+    if (!S || !app || app.classList.contains('hid')) {
+      document.body.classList.remove('fm26-ref-active','fm26-ref-home-view');
+      return;
+    }
     renderRail();
     renderTopBar();
     renderMenu();
@@ -277,10 +284,19 @@
   }
   function fitStage() {
     const app = $('app');
-    if (!app || app.classList.contains('hid')) { document.body.classList.remove('fm26-ref-active'); return; }
+    if (!app || app.classList.contains('hid')) {
+      document.body.classList.remove('fm26-ref-active','fm26-ref-home-view');
+      return;
+    }
+    if ((S && S.view === 'match') || document.body.classList.contains('fm26-overhead-live')) {
+      document.body.classList.remove('fm26-ref-active','fm26-ref-home-view');
+      app.style.removeProperty('transform');
+      return;
+    }
     document.body.classList.add('fm26-ref-active');
+    document.body.classList.toggle('fm26-ref-home-view', !!S && S.view === 'home');
     const scale = Math.min(window.innerWidth / 2000, window.innerHeight / 924);
-    app.style.transform = 'translate(-50%,-50%) scale(' + Math.max(0.08, scale) + ')';
+    app.style.setProperty('transform', 'translate(-50%,-50%) scale(' + Math.max(0.08, scale) + ')', 'important');
   }
   function matchRows(list) {
     if (!list.length) return '<div class="fm26-ref-matchrow"><span class="match-date">—</span><span></span><span class="match-name">Aucun match enregistré</span><span></span><span class="match-score">—</span></div>';
@@ -310,8 +326,10 @@
     const recent = all.filter(f => f.played).slice().sort((a,b) => String(b.date).localeCompare(String(a.date))).slice(0,5);
     const selected = next || recent[0];
     const opp = selected ? opponent(selected) : 'Aucun adversaire';
-    const diff = selected ? Math.round((new Date(String(selected.date) + 'T12:00:00') - new Date(String(S.date) + 'T12:00:00')) / 86400000) : 0;
-    const when = !selected ? 'Aucun match programmé' : selected.played ? 'Dernier match' : diff <= 0 ? 'Aujourd’hui' : 'Dans ' + diff + ' jour' + (diff > 1 ? 's' : '');
+    const selectedDate = selected && selected.date ? new Date(String(selected.date).slice(0,10) + 'T12:00:00') : null;
+    const currentDate = new Date(String(S.date || '2025-08-01').slice(0,10) + 'T12:00:00');
+    const diff = selectedDate && !Number.isNaN(selectedDate.getTime()) && !Number.isNaN(currentDate.getTime()) ? Math.round((selectedDate - currentDate) / 86400000) : null;
+    const when = !selected ? 'Aucun match programmé' : selected.played ? 'Dernier match' : diff === null ? 'Date à confirmer' : diff <= 0 ? 'Aujourd’hui' : 'Dans ' + diff + ' jour' + (diff > 1 ? 's' : '');
     const table = typeof tbl === 'function' ? tbl() : [];
     const mine = table.find(t => t.c === club) || {pts:0,gd:0};
     const rank = Math.max(1, table.findIndex(t => t.c === club) + 1);
@@ -439,6 +457,7 @@
     const positions = [[50,88,'GB'],[21,72,'DG'],[40,76,'DC'],[60,76,'DC'],[79,72,'DD'],[36,52,'MC'],[64,52,'MC'],[50,59,'MDC'],[21,34,'AG'],[79,34,'AD'],[50,20,'AC']];
     const oppP = positions.map((p,i) => '<span class="fm26-ref-position" style="left:' + (355 + p[0]*4.7) + 'px;top:' + (8 + p[1]*3.25) + 'px">' + p[2] + '</span>').join('');
     const recentForm = form.length ? form : [];
+    const kickoff = f && (f.time || f.kickoff) ? String(f.time || f.kickoff).slice(0,5) : 'Horaire à confirmer';
     return '<div class="fm26-ref-pre">' +
       '<section class="fm26-ref-panel" style="left:22px;top:25px;width:881px;height:351px">' +
         '<div class="fm26-ref-small-panel-title" style="margin-top:9px">' + esc(f && f.comp ? f.comp : S.lg).toUpperCase() + '</div>' +
@@ -446,7 +465,7 @@
         '<div style="position:absolute;left:35px;top:91px;width:220px;text-align:center">' + crest(opp,80) + '<div style="font-size:30px;margin-top:5px">' + esc(opp) + '</div><div class="fm26-ref-stars" style="font-size:28px">★★★★★</div></div>' +
         '<div style="position:absolute;left:425px;top:128px;font-size:32px">–</div>' +
         '<div style="position:absolute;left:555px;top:91px;width:245px;text-align:center">' + crest(club,80) + '<div style="font-size:30px;margin-top:5px">' + esc(club) + '</div><div class="fm26-ref-stars">★★★★★</div><div style="margin-top:5px">' + formItems(played).replace(/fm26-ref-formbox/g,'fm26-ref-formbox').replace(/width:52px/g,'width:27px') + '</div></div>' +
-        '<div style="position:absolute;left:678px;top:306px;font-size:24px">◔</div><div style="position:absolute;left:760px;top:306px;width:8px;height:28px;background:#ccc;border-radius:4px"></div><div style="position:absolute;left:810px;top:304px;font-size:29px">' + (f ? esc(new Date(String(f.date) + 'T12:00:00').getHours()) : '—') + '</div>' +
+        '<div style="position:absolute;left:678px;top:306px;font-size:24px">◔</div><div style="position:absolute;left:760px;top:306px;width:8px;height:28px;background:#ccc;border-radius:4px"></div><div style="position:absolute;left:810px;top:304px;font-size:29px">' + esc(kickoff) + '</div>' +
       '</section>' +
       '<section class="fm26-ref-panel" style="left:22px;top:389px;width:881px;height:158px">' +
         '<div class="fm26-ref-small-panel-title" style="margin-top:9px">TACTIQUE DE MATCH</div>' +
