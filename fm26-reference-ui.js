@@ -4,6 +4,7 @@
 
   const css = [
     'body.fm26-ref-active{overflow:hidden}',
+    '.fm26-render-error{margin:34px;padding:28px;background:#252630;border:1px solid #76528f;color:#f6f4fa;border-radius:14px;font:16px/1.5 Arial,sans-serif}.fm26-render-error h2{font-size:25px;margin:8px 0}.fm26-render-error button{margin:10px 8px 0 0;padding:10px 15px;background:#955fe7;color:#fff;border-radius:7px}.fm26-render-error details{margin-top:12px;color:#c6bdce}.fm26-render-error code{display:block;white-space:pre-wrap;overflow-wrap:anywhere;margin-top:8px;color:#f3b6c8}',
     'body.fm26-ref-active:not(.fm26-overhead-live) #fm26-manager-sidebar,body.fm26-ref-active:not(.fm26-overhead-live) #fm26-rails-reopen{display:none!important}',
     'body.fm26-ref-active:not(.fm26-overhead-live) #app:not(.hid){position:fixed!important;left:50%!important;top:50%!important;width:2000px!important;height:924px!important;min-height:924px!important;grid-template-columns:208px 1792px!important;transform-origin:center center;z-index:2;background:radial-gradient(ellipse 900px 500px at 70% 30%,#34353b 0%,transparent 70%),radial-gradient(ellipse 700px 400px at 30% 80%,#2a2b31 0%,transparent 70%),radial-gradient(ellipse at 50% 50%,#202126 0%,#141519 100%);}',
     'body.fm26-ref-active:not(.fm26-overhead-live) #side{position:relative!important;width:208px!important;height:924px!important;overflow:hidden!important;display:block!important;padding:0!important;background:#1c1f2e!important;border-right:0!important;z-index:32}',
@@ -79,7 +80,7 @@
   ].join('\n');
   const style = document.createElement('style');
   style.id = 'fm26-reference-ui-style';
-  style.textContent = '@layer fm26-ref {\n' + css + '\n}';
+  style.textContent = css;
   document.head.appendChild(style);
 
   const $ = id => document.getElementById(id);
@@ -184,15 +185,66 @@
         try { localStorage.removeItem('fm26_v2'); } catch (e) {}
         $('setup').classList.remove('hid');
         $('app').classList.add('hid');
-        document.body.classList.remove('fm26-ref-active');
+        document.body.classList.remove('fm26-ref-active','fm26-screenpack-active','fm26-inbox-active','fm26-lineup-active','fm26-overhead-live');
         S = null;
       }
       renderShell();
       return;
     }
+
     openMenu = '';
-    S.view = v;
-    if (v === 'inbox') S.mi = Math.max(0, Number(S.mi) || 0);
+    const panels = {
+      'Options de l’entraîneur':'options','Paramètres':'options','Confiance':'confidence',
+      'Profil entraîneur':'profile','Historiq. entraîneur':'history','Vitrine des trophées':'trophies',
+      'Récompenses':'trophies','Vacances':'holiday','Requête dirig.':'requests',
+      'État de la partie':'state','Recherche de staff':'staff','Staff':'staff',
+      'Emplois':'jobs','Agence d’obs.':'scouting','Transferts':'transfers',
+      'Missions de recrutement':'scouting','Résultats recrut.':'scout-results',
+      'Résultats recrut':'scout-results','Sélection':'shortlist'
+    };
+    const countries = {'France':'France','Angleterre':'Angleterre','Espagne':'Espagne','Allemagne':'Allemagne','Italie':'Italie'};
+    S.fm26SearchMode = false;
+    if (panels[label]) {
+      S.fm26Panel = panels[label];
+      S.fm26World = false;
+      S.fm26Transfers = panels[label] === 'transfers';
+      S.view = panels[label] === 'jobs' ? 'jobs' : panels[label] === 'transfers' ? 'fin' : panels[label] === 'scout-results' || panels[label] === 'shortlist' ? 'squad' : 'mgr';
+    } else if (countries[label] || label === 'Continental' || label === 'International') {
+      S.fm26World = true;
+      S.fm26Country = countries[label] || (label === 'Continental' ? 'Continental' : 'Intercontinental');
+      S.fm26Transfers = false;
+      S.view = 'comp';
+    } else if (label === 'Recherche de joueur' || label === 'Rech. de joueur') {
+      S.fm26SearchMode = true;
+      S.fm26SearchQuery = S.fm26SearchQuery || '';
+      S.view = 'squad';
+    } else if (label === 'Tactique') {
+      S.view = 'tactics';
+    } else if (label === 'Calendrier' || label === 'Historiq. entraîneur') {
+      S.view = label === 'Calendrier' ? 'sched' : 'mgr';
+      if (label === 'Historiq. entraîneur') S.fm26Panel = 'history';
+    } else if (label === 'Finances') {
+      S.fm26Transfers = false;
+      S.view = 'fin';
+    } else if (label === 'Équipe première' || label === 'Équipe réserve' || label === 'Centre médical' || label === 'Centre de dév.' || label === 'Album') {
+      S.view = label === 'Centre de dév.' ? 'academy' : 'squad';
+    } else if (label === 'Rapport équipe') {
+      S.fm26Panel = 'confidence'; S.view = 'mgr';
+    } else if (label === 'Panthéon du foot') {
+      S.fm26Panel = 'trophies'; S.view = 'mgr';
+    } else if (label === 'Manuel') {
+      S.fm26Panel = 'state'; S.view = 'mgr';
+    } else if (label === 'Trouver Club' || label === 'Division du club' || label === 'Stand. de la ligue') {
+      S.fm26World = false; S.view = 'comp';
+    } else {
+      S.view = v;
+    }
+    if (S.view === 'inbox') S.mi = Math.max(0, Number(S.mi) || 0);
+    if (typeof V[S.view] !== 'function') {
+      console.warn('[FM26] Écran non disponible :', S.view, label);
+      S.view = 'home';
+    }
+    try { if (typeof sv === 'function') sv(); } catch (_) {}
     render();
   }
   function renderMenu() {
@@ -207,7 +259,7 @@
     const y0 = isSection ? 190 : 125;
     menu.innerHTML = '<div class="fm26-ref-menu-head">' + crest(S.club, 50) + '<div><div class="club-name">' + esc(S.club) + '</div><small>' + esc(m.title) + '</small></div></div>' +
       (isSection ? '<div class="fm26-ref-menu-section">' + esc(m.section) + '</div>' : '') +
-      m.items.map((item, i) => '<button class="fm26-ref-menu-item" type="button" data-view="' + esc(item[0]) + '" data-label="' + esc(item[1]) + '" style="top:' + (y0 + i * 82) + 'px"><span>' + (smallIcons[item[2]] || smallIcons.doc) + '</span><span>' + esc(item[1]) + '</span></button>').join('');
+      m.items.map((item, i) => '<button class="fm26-ref-menu-item" type="button" data-view="' + esc(item[0]) + '" data-label="' + esc(item[1]) + '" data-pack-view="' + esc(openMenu) + '" data-pack-label="' + esc(item[1]) + '" style="top:' + (y0 + i * 82) + 'px"><span>' + (smallIcons[item[2]] || smallIcons.doc) + '</span><span>' + esc(item[1]) + '</span></button>').join('');
     menu.classList.add('show');
     menu.querySelectorAll('.fm26-ref-menu-item').forEach(btn => {
       btn.addEventListener('click', () => menuAction(btn.dataset.view, btn.dataset.label));
@@ -505,20 +557,57 @@
 
   baseRender = render;
   render = function () {
-    baseRender();
-    if (S && (S.view === 'home' || S.view === 'inbox')) {
-      const view = $('vw');
-      if (view) {
-        view.innerHTML = V[S.view]();
+    let renderError = null;
+    try {
+      if (S && typeof V[S.view] !== 'function') {
+        console.warn('[FM26] Vue inconnue, retour à l’accueil :', S.view);
+        S.view = 'home';
+      }
+      baseRender();
+      if (S && (S.view === 'home' || S.view === 'inbox')) {
+        const view = $('vw');
+        const page = V[S.view];
+        if (!view || typeof page !== 'function') throw new Error('Écran ' + S.view + ' indisponible');
+        view.innerHTML = page();
         if (S.view === 'home' && window.FM26ImmersiveCareer && typeof FM26ImmersiveCareer.getDailyMarkup === 'function') {
           view.insertAdjacentHTML('beforeend', FM26ImmersiveCareer.getDailyMarkup());
         }
+        if (S.view === 'inbox') wireInbox();
       }
-      if (S.view === 'inbox') wireInbox();
+    } catch (error) {
+      renderError = error;
+      console.error('[FM26] Échec du rendu de l’écran', S && S.view, error);
+      const view = $('vw');
+      if (view) {
+        view.innerHTML = '<section class="fm26-render-error"><small>FM26 · RÉCUPÉRATION DE L’ÉCRAN</small><h2>Cette rubrique a rencontré un problème.</h2><p>Ta carrière est conservée. Reviens à l’accueil pour continuer, ou réessaie d’ouvrir cette rubrique.</p><button type="button" data-fm26-render-home>Retour à l’accueil</button><button type="button" data-fm26-render-retry>Réessayer</button><details><summary>Détail technique</summary><code></code></details></section>';
+        const detail = view.querySelector('.fm26-render-error code');
+        if (detail) detail.textContent = String(error && error.message || error);
+      }
     }
-    renderShell();
+    try { renderShell(); } catch (shellError) { console.error('[FM26] Échec du cadre principal', shellError); }
+    return !renderError;
   };
 
+  document.addEventListener('click', function (e) {
+    const home = e.target.closest('[data-fm26-render-home]');
+    const retry = e.target.closest('[data-fm26-render-retry]');
+    if (!home && !retry) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (!S) return;
+    if (home) S.view = 'home';
+    render();
+  }, true);
+
+
+  document.addEventListener('click', function (e) {
+    const back = e.target && e.target.closest ? e.target.closest('[data-fm26-back]') : null;
+    if (!back) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    openMenu = '';
+    renderShell();
+  }, true);
   window.addEventListener('resize', fitStage);
   window.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && openMenu) { openMenu = ''; renderShell(); }
