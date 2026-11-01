@@ -4,7 +4,7 @@
 if(window.FM26FixPack)return;
 const $=id=>document.getElementById(id), esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,Number(n)||0)), save=()=>{try{sv()}catch(e){}}, note=m=>typeof toast==='function'?toast(m):alert(m);
-function init(){S.managerProfile=S.managerProfile||{nationality:'France',age:42,licence:'Licence UEFA Pro',style:'Gestionnaire'};S.managerHistory=Array.isArray(S.managerHistory)?S.managerHistory:[];S.trophies=Array.isArray(S.trophies)?S.trophies:[];S.scoutingAssignments=Array.isArray(S.scoutingAssignments)?S.scoutingAssignments:[];S.jobOffers=Array.isArray(S.jobOffers)?S.jobOffers:[];S.staffSearch=S.staffSearch||'';S.transferSearch=S.transferSearch||'';S.fm26Panel=S.fm26Panel||'confidence';}
+function init(){if(!S)return;S.managerProfile=S.managerProfile||{nationality:'France',age:42,licence:'Licence UEFA Pro',style:'Gestionnaire'};S.managerHistory=Array.isArray(S.managerHistory)?S.managerHistory:[];S.trophies=Array.isArray(S.trophies)?S.trophies:[];S.scoutingAssignments=Array.isArray(S.scoutingAssignments)?S.scoutingAssignments:[];S.jobOffers=Array.isArray(S.jobOffers)?S.jobOffers:[];S.staffSearch=S.staffSearch||'';S.transferSearch=S.transferSearch||'';S.fm26Panel=S.fm26Panel||'confidence';}
 const played=()=>((S.fx||[]).filter(f=>f.played&&(f.home===S.club||f.away===S.club)));
 const result=f=>{let a=String(f.score||'0-0').split('-').map(Number),d=f.home===S.club?a[0]-a[1]:a[1]-a[0];return d>0?'V':d<0?'D':'N'};
 const row=(a,b)=>'<div class="ar"><span>'+a+'</span><b>'+b+'</b></div>';
