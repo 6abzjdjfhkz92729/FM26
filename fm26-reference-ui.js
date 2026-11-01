@@ -9,7 +9,7 @@
     'body.fm26-ref-active:not(.fm26-overhead-live) #side{position:relative!important;width:208px!important;height:924px!important;overflow:hidden!important;display:block!important;padding:0!important;background:#1c1f2e!important;border-right:0!important;z-index:32}',
     'body.fm26-ref-active:not(.fm26-overhead-live) #main{position:relative!important;width:1792px!important;height:924px!important;min-width:1792px!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;background:transparent!important}',
     'body.fm26-ref-active:not(.fm26-overhead-live) #hd{position:relative!important;flex:0 0 91px!important;width:1792px!important;height:91px!important;min-height:91px!important;display:block!important;padding:0!important;margin:0!important;background:#202126!important;border:0!important;overflow:hidden!important;z-index:3}',
-    'body.fm26-ref-active:not(.fm26-overhead-live) #vw{position:relative!important;flex:0 0 833px!important;width:1792px!important;height:833px!important;max-height:833px!important;overflow:hidden!important;padding:0!important;margin:0!important;background:transparent!important}',
+    'body.fm26-ref-active:not(.fm26-overhead-live) #vw{position:relative!important;flex:0 0 833px!important;width:1792px!important;height:833px!important;max-height:833px!important;overflow-x:hidden!important;overflow-y:auto!important;padding:0!important;margin:0!important;background:transparent!important}',
     'body.fm26-ref-active:not(.fm26-overhead-live) #vw>.fm26-ref-home,body.fm26-ref-active:not(.fm26-overhead-live) #vw>.fm26-ref-inbox,body.fm26-ref-active:not(.fm26-overhead-live) #vw>.fm26-ref-pre{position:relative;width:1792px;height:833px;overflow:hidden;color:#f4f4f6;font-family:Barlow Condensed,Arial,sans-serif}',
     '.fm26-ref-panel{position:absolute;box-sizing:border-box;background:rgba(65,66,72,.72);border:1px solid #55565c;overflow:hidden}',
     '.fm26-ref-panel-head{height:57px;background:#626369;color:#fff;padding:11px 10px;font-size:27px;line-height:1.25;font-weight:700;box-sizing:border-box}',
@@ -238,7 +238,7 @@
   }
   function renderTopBar() {
     const rawDate = String(S.date || '2025-08-01').slice(0,10);
-    const parsedDate = new Date(/^\\d{4}-\\d{2}-\\d{2}$/.test(rawDate) ? rawDate + 'T12:00:00' : '2025-08-01T12:00:00');
+    const parsedDate = new Date(/^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate + 'T12:00:00' : '2025-08-01T12:00:00');
     const d = Number.isNaN(parsedDate.getTime()) ? new Date('2025-08-01T12:00:00') : parsedDate;
     const weekdays = ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
     const months = ['JAN','FÉV','MAR','AVR','MAI','JUIN','JUIL','AOÛT','SEP','OCT','NOV','DÉC'];
