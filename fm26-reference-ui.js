@@ -346,6 +346,12 @@
       app.style.removeProperty('transform');
       return;
     }
+    // Une seule couche de mise en page doit piloter les écrans de carrière.
+    // Screen Pack et Matchday modifiaient aussi la grille du même #app,
+    // ce qui pouvait envoyer le contenu hors écran après la création de carrière.
+    document.body.classList.remove('fm26-screenpack-active','fm26-inbox-active','fm26-lineup-active','fm26-matchday-active');
+    const managerSidebar = $('fm26-manager-sidebar');
+    if (managerSidebar) managerSidebar.style.setProperty('display', 'none', 'important');
     document.body.classList.add('fm26-ref-active');
     document.body.classList.toggle('fm26-ref-home-view', !!S && S.view === 'home');
     const scale = Math.min(window.innerWidth / 2000, window.innerHeight / 924);
