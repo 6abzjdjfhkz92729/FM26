@@ -90,6 +90,52 @@
     if (known[name]) return known[name];
     return String(name || 'CLB').replace(/[^A-Za-zÀ-ÿ]/g,'').slice(0,3).toUpperCase() || 'CLB';
   }
+  function kitFor(team, side) {
+    const name = String(team || '').toLowerCase();
+    const kits = [
+      [/wolves|wolverhampton/, '#e8b33b'],
+      [/manchester city|man city/, '#77b7e4'],
+      [/arsenal/, '#d9273b'],
+      [/liverpool/, '#c82032'],
+      [/chelsea/, '#2365a8'],
+      [/manchester united|man united/, '#d5253d'],
+      [/tottenham|spurs/, '#f0f1f4'],
+      [/brighton/, '#4d9bd0'],
+      [/nottingham forest|nottm forest/, '#d9273b'],
+      [/aston villa/, '#8f2942'],
+      [/newcastle/, '#e9edf2'],
+      [/west ham/, '#8d3c59'],
+      [/crystal palace/, '#3159a0'],
+      [/everton/, '#2452a0'],
+      [/brentford/, '#c92734'],
+      [/fulham/, '#f1f1f1'],
+      [/real madrid/, '#f0f0f0'],
+      [/barcelona/, '#8e1d45'],
+      [/bayern/, '#d12636'],
+      [/inter/, '#234e9b'],
+      [/juventus/, '#24262c'],
+      [/milan/, '#c62535'],
+      [/napoli/, '#4b9acb'],
+      [/paris sg|psg|paris saint/, '#3151a0']
+    ];
+    let fill = null;
+    for (const [pattern, color] of kits) { if (pattern.test(name)) { fill = color; break; } }
+    if (!fill) fill = side === 0 ? '#e9b94c' : '#6fa8d5';
+    const rgb = fill.match(/[a-f0-9]{2}/gi).map(v => parseInt(v,16));
+    const luminance = (0.2126*rgb[0] + 0.7152*rgb[1] + 0.0722*rgb[2]) / 255;
+    return { fill, text: luminance > .58 ? '#18202a' : '#f7f9fc', edge: luminance > .58 ? '#37404b' : '#111923' };
+  }
+  function kitForSide(side) {
+    const team = side === 0 ? M.f.home : M.f.away;
+    const kit = kitFor(team, side);
+    if (side === 1 && kit.fill === kitFor(M.f.home, 0).fill) {
+      const alternate = '#6fa8d5';
+      const rgb = alternate.match(/[a-f0-9]{2}/gi).map(v => parseInt(v,16));
+      const luminance = (0.2126*rgb[0] + 0.7152*rgb[1] + 0.0722*rgb[2]) / 255;
+      return { fill: alternate, text: luminance > .58 ? '#18202a' : '#f7f9fc', edge: '#355d83' };
+    }
+    return kit;
+  }
   function currentXI(side) {
     const fixture = M && M.f;
     if (!fixture) return [];
@@ -214,14 +260,15 @@
   }
   function drawPlayer(ctx,p,x,y,r,side,index,selected) {
     const isKeeper=index===0;
-    const fill=isKeeper?(side===0?'#d6403d':'#f0d82f'):(side===0?'#e9b94c':'#6fa8d5');
-    const stroke=isKeeper?'#2a2223':(side===0?'#966b22':'#355d83');
+    const kit=kitForSide(side);
+    const fill=isKeeper?(side===0?'#d6403d':'#f0d82f'):kit.fill;
+    const stroke=isKeeper?'#2a2223':kit.edge;
     ctx.save();
     ctx.shadowColor='rgba(0,0,0,.38)';ctx.shadowBlur=5;ctx.shadowOffsetY=2;
     ctx.fillStyle=fill;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
     ctx.shadowColor='transparent';ctx.lineWidth=1.8;ctx.strokeStyle=stroke;ctx.stroke();
     if(selected){ctx.beginPath();ctx.arc(x,y,r+3.8,0,Math.PI*2);ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=2;ctx.stroke();}
-    ctx.fillStyle=side===0?'#312610':'#f1f7fc';
+    ctx.fillStyle=isKeeper?(side===0?'#fff':'#28220a'):kit.text;
     ctx.font='800 '+Math.max(9,r*.9)+'px Inter,Arial,sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(String(p.no||index+1),x,y+.3);
     ctx.restore();
@@ -278,12 +325,13 @@
     const f=M&&M.f||{};
     const home=esc(f.home||'Équipe domicile'),away=esc(f.away||'Équipe extérieure');
     const homeShort=esc(abbreviate(f.home)),awayShort=esc(abbreviate(f.away));
+    const homeKit=kitForSide(0),awayKit=kitForSide(1);
     const league=esc(f.comp||S.lg||'Championnat');
     return '<main class="oh-match">'+
       '<header class="oh-top"><button class="oh-iconbtn" data-oh-action="stats" aria-label="Statistiques">☰</button>'+
       '<div class="oh-scorebar"><div class="oh-clock" id="oh-clock">00\'</div>'+
-      '<div class="oh-team home"><span>'+homeShort+'</span></div><div class="oh-score"><b id="oh-home-score">'+Number(M.h||0)+'</b><span>–</span><b id="oh-away-score">'+Number(M.a||0)+'</b></div>'+
-      '<div class="oh-team away"><span>'+awayShort+'</span></div><div class="oh-league">'+league+'</div></div>'+
+      '<div class="oh-team home" style="background:'+homeKit.fill+';color:'+homeKit.text+'"><span>'+homeShort+'</span></div><div class="oh-score"><b id="oh-home-score">'+Number(M.h||0)+'</b><span>–</span><b id="oh-away-score">'+Number(M.a||0)+'</b></div>'+
+      '<div class="oh-team away" style="background:'+awayKit.fill+';color:'+awayKit.text+'"><span>'+awayShort+'</span></div><div class="oh-league">'+league+'</div></div>'+
       '<div class="oh-topright"><button class="oh-iconbtn" data-oh-action="settings" title="Commandes">⚙</button><button class="oh-iconbtn oh-pause" id="oh-pause" data-oh-action="'+(M.done?'continue':'pause')+'">'+(M.done?'Compte rendu':M.p?'Reprendre':'Pause')+'</button></div></header>'+
       '<section class="oh-stage"><canvas id="oh-canvas" aria-label="Terrain de football vu du dessus"></canvas><div id="oh-panel-root">'+panelMarkup()+'</div><div id="oh-paused" class="oh-paused" style="display:'+(M.p?'grid':'none')+'"><span>MATCH EN PAUSE</span></div><div id="oh-goalflash" class="oh-goalflash" style="display:none">⚽ BUT !</div></section>'+
       '<footer class="oh-bottom"><button class="oh-bottom-icon" data-oh-action="stats" title="Statistiques">▣</button>'+
@@ -358,7 +406,7 @@
   }
   function loop(ts) {
     if(!S || S.view!=='match'){cancelAnimationFrame(state.raf);document.body.classList.remove('fm26-overhead-live');state.raf=0;return;}
-    const dt=state.last?Math.min(50,ts-state.last):16;state.last=ts;state.clock+=dt;
+    const dt=state.last?Math.min(50,ts-state.last):16;state.last=ts;if(!M.p)state.clock+=dt;
     const canvas=$('oh-canvas');
     if(canvas){const ctx=canvas.getContext('2d');paint(ctx,canvas,dt);}
     updateHud();
