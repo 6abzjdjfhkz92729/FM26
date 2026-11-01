@@ -506,8 +506,17 @@
   baseRender = render;
   render = function () {
     baseRender();
+    if (S && (S.view === 'home' || S.view === 'inbox')) {
+      const view = $('vw');
+      if (view) {
+        view.innerHTML = V[S.view]();
+        if (S.view === 'home' && window.FM26ImmersiveCareer && typeof FM26ImmersiveCareer.getDailyMarkup === 'function') {
+          view.insertAdjacentHTML('beforeend', FM26ImmersiveCareer.getDailyMarkup());
+        }
+      }
+      if (S.view === 'inbox') wireInbox();
+    }
     renderShell();
-    if (S && S.view === 'inbox') wireInbox();
   };
 
   window.addEventListener('resize', fitStage);
