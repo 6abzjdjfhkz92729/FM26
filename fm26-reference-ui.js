@@ -337,25 +337,81 @@
   }
   function fitStage() {
     const app = $('app');
-    if (!app || app.classList.contains('hid')) {
+    const side = $('side');
+    const main = $('main');
+    const head = $('hd');
+    const view = $('vw');
+    const appVisible = !!app && !app.classList.contains('hid');
+
+    const appProps = ['position','inset','left','top','width','height','min-height','max-height','display','grid-template-columns','grid-template-rows','transform-origin','z-index','transform'];
+    const sideProps = ['grid-column','grid-row','position','width','height','display','overflow','padding'];
+    const mainProps = ['grid-column','grid-row','position','width','min-width','height','display','flex-direction','overflow'];
+    const headProps = ['flex','width','height','min-height','display','padding','margin','overflow'];
+    const viewProps = ['flex','width','height','max-height','overflow-x','overflow-y','padding','margin'];
+
+    const clear = (el, props) => {
+      if (!el) return;
+      props.forEach(prop => { if (el.style.getPropertyValue(prop)) el.style.removeProperty(prop); });
+    };
+
+    if (!appVisible) {
       document.body.classList.remove('fm26-ref-active','fm26-ref-home-view');
+      clear(app, appProps); clear(side, sideProps); clear(main, mainProps);
+      clear(head, headProps); clear(view, viewProps);
       return;
     }
+
     if ((S && S.view === 'match') || document.body.classList.contains('fm26-overhead-live')) {
       document.body.classList.remove('fm26-ref-active','fm26-ref-home-view');
-      app.style.removeProperty('transform');
+      clear(app, appProps); clear(side, sideProps); clear(main, mainProps);
+      clear(head, headProps); clear(view, viewProps);
       return;
     }
-    // Une seule couche de mise en page doit piloter les écrans de carrière.
-    // Screen Pack et Matchday modifiaient aussi la grille du même #app,
-    // ce qui pouvait envoyer le contenu hors écran après la création de carrière.
+
+    // La nouvelle interface doit être l'unique propriétaire de la grille.
     document.body.classList.remove('fm26-screenpack-active','fm26-inbox-active','fm26-lineup-active','fm26-matchday-active');
-    const managerSidebar = $('fm26-manager-sidebar');
-    if (managerSidebar) managerSidebar.style.setProperty('display', 'none', 'important');
     document.body.classList.add('fm26-ref-active');
     document.body.classList.toggle('fm26-ref-home-view', !!S && S.view === 'home');
-    const scale = Math.min(window.innerWidth / 2000, window.innerHeight / 924);
-    app.style.setProperty('transform', 'translate(-50%,-50%) scale(' + Math.max(0.08, scale) + ')', 'important');
+
+    const scale = Math.max(0.08, Math.min(window.innerWidth / 2000, window.innerHeight / 924));
+    const set = (el, prop, value) => {
+      if (el && (el.style.getPropertyValue(prop) !== String(value) || el.style.getPropertyPriority(prop) !== 'important')) {
+        el.style.setProperty(prop, String(value), 'important');
+      }
+    };
+
+    set(app,'position','fixed'); set(app,'inset','auto');
+    set(app,'left','50%'); set(app,'top','50%');
+    set(app,'width','2000px'); set(app,'height','924px');
+    set(app,'min-height','924px'); set(app,'max-height','924px');
+    set(app,'display','grid'); set(app,'grid-template-columns','208px 1792px');
+    set(app,'grid-template-rows','924px'); set(app,'transform-origin','center center');
+    set(app,'z-index','2');
+    set(app,'transform','translate(-50%,-50%) scale(' + scale + ')');
+
+    set(side,'grid-column','1'); set(side,'grid-row','1');
+    set(side,'position','relative'); set(side,'width','208px');
+    set(side,'height','924px'); set(side,'display','block');
+    set(side,'overflow','hidden'); set(side,'padding','0');
+
+    set(main,'grid-column','2'); set(main,'grid-row','1');
+    set(main,'position','relative'); set(main,'width','1792px');
+    set(main,'min-width','1792px'); set(main,'height','924px');
+    set(main,'display','flex'); set(main,'flex-direction','column');
+    set(main,'overflow','hidden');
+
+    set(head,'flex','0 0 91px'); set(head,'width','1792px');
+    set(head,'height','91px'); set(head,'min-height','91px');
+    set(head,'display','block'); set(head,'padding','0');
+    set(head,'margin','0'); set(head,'overflow','hidden');
+
+    set(view,'flex','0 0 833px'); set(view,'width','1792px');
+    set(view,'height','833px'); set(view,'max-height','833px');
+    set(view,'overflow-x','hidden'); set(view,'overflow-y','auto');
+    set(view,'padding','0'); set(view,'margin','0');
+
+    const managerSidebar = $('fm26-manager-sidebar');
+    if (managerSidebar) managerSidebar.style.setProperty('display', 'none', 'important');
   }
   function matchRows(list) {
     if (!list.length) return '<div class="fm26-ref-matchrow"><span class="match-date">—</span><span></span><span class="match-name">Aucun match enregistré</span><span></span><span class="match-score">—</span></div>';
@@ -616,6 +672,28 @@
     renderShell();
   }, true);
   window.addEventListener('resize', fitStage);
+  // Certains modules réécrivent la grille après le rendu initial.
+  // Ce garde-fou restaure le cadrage si une classe ou un style concurrent reprend #app.
+  if (typeof MutationObserver !== 'undefined') {
+    let repairingStage = false;
+    const stageObserver = new MutationObserver(() => {
+      if (repairingStage || !S || S.view === 'match') return;
+      const app = $('app');
+      if (!app || app.classList.contains('hid')) return;
+      const hasReferenceLayout = document.body.classList.contains('fm26-ref-active')
+        && !document.body.classList.contains('fm26-screenpack-active')
+        && app.style.getPropertyPriority('transform') === 'important'
+        && app.style.getPropertyValue('grid-template-columns') === '208px 1792px';
+      if (hasReferenceLayout) return;
+      repairingStage = true;
+      try { fitStage(); } finally { repairingStage = false; }
+    });
+    stageObserver.observe(document.body, {attributes:true, attributeFilter:['class']});
+    const app = $('app');
+    if (app) stageObserver.observe(app, {attributes:true, attributeFilter:['class','style']});
+  }
+  window.addEventListener('load', fitStage);
+  requestAnimationFrame(fitStage);
   window.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && openMenu) { openMenu = ''; renderShell(); }
   });
